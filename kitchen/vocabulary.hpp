@@ -27,8 +27,9 @@
 // TWO CONVERSATION STYLES, ON PURPOSE — this is the finding the package is built
 // to make visible rather than to hide:
 //
-//   * The RECEIPT is an authenticated answer (Loom's `Mail::answer`, deferred
-//     across the policy round trip). It is trustworthy — the diner knows Loom
+//   * The RECEIPT is an authenticated answer, deferred across the policy round
+//     trip (`Mail::defer_answer`; and see answering.hpp for why the IMMEDIATE
+//     form has to be spelled the long way). It is trustworthy — the diner knows Loom
 //     picked the recipient — and it CANNOT be inherited: an answer right belongs
 //     to the life that earned it, so an expediter being replaced must close its
 //     open conversations itself, at the one moment it is given (PrepareShutdown).
@@ -347,7 +348,7 @@ inline constexpr std::int64_t kSweepMs = 20;
 /// How many sweeps an order may sit before the kitchen gives up on it. Deadlines
 /// are counted in SWEEPS and not in milliseconds on purpose: what the kitchen is
 /// bounding is its own attention, and a sweep is the unit of attention it has.
-inline constexpr std::int64_t kOrderPatienceSweeps = 20;
+inline constexpr std::int64_t kOrderPatienceSweeps = 40;
 
 /// A station's pass over its tickets. The id is shared by every station because
 /// it is scoped to the station's own ROLE — (role, id) is the Timer's upsert

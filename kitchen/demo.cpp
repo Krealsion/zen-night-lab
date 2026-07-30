@@ -84,16 +84,16 @@ struct MaitreState {
     ZEN_SHAPE(MaitreState, 1, ZEN_FIELD(heard));
 };
 
-/// The host's one weave: it operates the kitchen (as a Manager client) and eats
-/// in it (as a diner). Two jobs in one weave because it is a demo script, not a
-/// component — a real diner would be its own weave with no lifecycle reach at
-/// all, which is exactly what the suite's diner is.
 /// The one message the host sends to start the script — an ordinary shape, so
 /// even the kick-off is a message rather than a call into a weave.
 struct Open {
     ZEN_SHAPE(Open, 1);
 };
 
+/// The host's one weave: it operates the kitchen (as a Manager client) and eats
+/// in it (as a diner). Two jobs in one weave because it is a demo script, not a
+/// component — a real diner would be its own weave with no lifecycle reach at
+/// all, which is exactly what the suite's diner is.
 class Maitre : public loom::WeaveBase<
                    Maitre, MaitreState,
                    loom::Accept<Open, loom::Result, loom::Ack, loom::Refused, OrderReceipt, Served,
@@ -134,11 +134,11 @@ public:
             outcome_done(mail);
             return;
         }
-        // The dramatic moment: once step 4's order is on the griddle, the grill
+        // The dramatic moment: once step 5's order is on the griddle, the grill
         // walks out. A swap whose successor cannot load leaves the role UNHELD —
         // the Weave Manager's own documented outcome, and the honest way to make
         // a service vanish mid-job without reaching around the architecture.
-        if (s_->step == 4 && !s_->evicted) {
+        if (s_->step == 5 && !s_->evicted) {
             s_->evicted = true;
             say("  ...the grill walks out, mid-dish, saying nothing to anyone.");
             command(mail, "evict the grill",
@@ -256,25 +256,30 @@ private:
                                     s_->so("kitchen-policy-rush"), /*graceful=*/false});
             break;
         case 4:
-            say("\n-- 4. the same order, a different brain: 'fries' now goes to the");
-            say("      specialist -- and then the grill walks out mid-dish ---------");
-            place(mail, "a3", "fries", "grill", kFallbackNone); // required: stays on the grill
+            say("\n-- 4. the same order, a different brain: 'fries' preferred at the");
+            say("      grill now goes to the specialist instead ------------------");
+            place(mail, "a3", "fries", "grill", kFallbackAnyStation);
             break;
         case 5:
-            say("\n-- 5. the grill is struck from the roster until it says otherwise -");
-            place(mail, "a4", "steak", "grill", kFallbackNone);
+            say("\n-- 5. ...but a REQUIRED preference binds even the policy that");
+            say("      disagrees -- and then the grill walks out mid-dish ---------");
+            place(mail, "a4", "fries", "grill", kFallbackNone);
             break;
         case 6:
-            say("\n-- 6. a service returns the only way a service can: by saying so --");
+            say("\n-- 6. the grill is struck from the roster until it says otherwise -");
+            place(mail, "a5", "steak", "grill", kFallbackNone);
+            break;
+        case 7:
+            say("\n-- 7. a service returns the only way a service can: by saying so --");
             command(mail, "re-open the grill",
                     loom::LoadWeave{"kitchen-grill", s_->so("kitchen-grill"),
                                     station_role("grill")});
             break;
-        case 7:
-            place(mail, "a5", "steak", "grill", kFallbackNone);
-            break;
         case 8:
-            say("\n-- 7. what does the kitchen believe about itself? ----------------");
+            place(mail, "a6", "steak", "grill", kFallbackNone);
+            break;
+        case 9:
+            say("\n-- 8. what does the kitchen believe about itself? ----------------");
             ++s_->waiting_answers;
             mail.send_to_role(kExpediterRole, KitchenStatus{});
             break;
@@ -333,7 +338,7 @@ int main() {
     // pump that returns QUIESCENT instead means nothing in this process will ever
     // speak again — say so honestly and leave rather than spin on a dead bus.
     bus.pump();
-    if (bus.pending() == 0 && script.step < 9) {
+    if (bus.pending() == 0 && script.step < 10) {
         say("\n(the bus went quiet before the script finished: no timer service deployed?)");
         return 1;
     }

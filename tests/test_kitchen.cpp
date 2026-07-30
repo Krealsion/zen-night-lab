@@ -197,7 +197,7 @@ TEST_CASE("with no policy loaded the promise still ends in a word, not silence")
     k.order("p1", "steak", "grill", kitchen::kFallbackAnyStation);
     // The routing watchdog: kOrderPatienceSweeps sweeps at kSweepMs, and a beat
     // is kBeatCapMs of virtual time, so the bound is a countable number of beats.
-    k.pump(80);
+    k.pump(140);
 
     CHECK_MESSAGE(heard(k.book(), {"receipt p1", kitchen::kRoutedRefused,
                                    "no kitchen policy answered"}),
@@ -231,7 +231,7 @@ TEST_CASE("a cook that walks out mid-dish costs a word, never a silence") {
 
     // A slow dish: the grill is bad at fries (six passes), so there is a real
     // window in which the job is held by a weave that is about to stop existing.
-    k.order("f1", "fries", "grill", kitchen::kFallbackNone);
+    k.order("f1", "brisket", "grill", kitchen::kFallbackNone);
     k.pump(10); // the receipt is issued and the Prep is on the griddle
     REQUIRE_MESSAGE(heard(k.book(), {"receipt f1", kitchen::kRoutedPreferred, "@grill"}),
                     transcript(k.book()));
@@ -241,7 +241,7 @@ TEST_CASE("a cook that walks out mid-dish costs a word, never a silence") {
     // which is the Weave Manager's own documented outcome for a swap whose
     // successor cannot load. Loom tells the expediter NOTHING about this.
     k.evict(kitchen::station_role("grill"));
-    k.pump(80);
+    k.pump(140);
 
     CHECK_MESSAGE(heard(k.book(), {"lost f1", "@grill", "never plated it"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"served f1"}));
@@ -252,10 +252,10 @@ TEST_CASE("a cook that walks out mid-dish costs a word, never a silence") {
 TEST_CASE("a station that lost a dish is struck from the roster until it returns") {
     Kitchen k;
     k.boot();
-    k.order("f2", "fries", "grill", kitchen::kFallbackNone);
+    k.order("f2", "brisket", "grill", kitchen::kFallbackNone);
     k.pump(10);
     k.evict(kitchen::station_role("grill"));
-    k.pump(80);
+    k.pump(140);
     REQUIRE_MESSAGE(heard(k.book(), {"lost f2", "struck from the roster"}), transcript(k.book()));
 
     // The grill is gone from the roster, so a REQUIRED preference for it is now
@@ -278,7 +278,7 @@ TEST_CASE("a station that lost a dish is struck from the roster until it returns
 TEST_CASE("a GRACEFUL replacement carries the dish across, and nothing is lost") {
     Kitchen k;
     k.boot();
-    k.order("g1", "fries", "grill", kitchen::kFallbackNone);
+    k.order("g1", "brisket", "grill", kitchen::kFallbackNone);
     k.pump(12); // several passes of a six-pass dish are already done
     REQUIRE_MESSAGE(heard(k.book(), {"receipt g1", "@grill"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"served g1"}));
@@ -286,16 +286,16 @@ TEST_CASE("a GRACEFUL replacement carries the dish across, and nothing is lost")
     // Same moment as the eviction above — a different ceremony. The incumbent is
     // asked first, writes its letter, and the heir claims it by role.
     k.swap(kitchen::station_role("grill"), "kitchen-grill-2", /*graceful=*/true);
-    k.pump(60);
+    k.pump(120);
 
-    CHECK_MESSAGE(heard(k.book(), {"served g1", "fries", "grill"}), transcript(k.book()));
+    CHECK_MESSAGE(heard(k.book(), {"served g1", "brisket", "grill"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"lost g1"}));
 }
 
 TEST_CASE("a HARD replacement of the same station loses the dish, and says so") {
     Kitchen k;
     k.boot();
-    k.order("h1", "fries", "grill", kitchen::kFallbackNone);
+    k.order("h1", "brisket", "grill", kitchen::kFallbackNone);
     k.pump(6);
     REQUIRE_MESSAGE(heard(k.book(), {"receipt h1", "@grill"}), transcript(k.book()));
 
@@ -304,7 +304,7 @@ TEST_CASE("a HARD replacement of the same station loses the dish, and says so") 
     // distinction between this case and the one above is the entire value of the
     // letter, and it is visible from the diner's chair.
     k.swap(kitchen::station_role("grill"), "kitchen-grill-2", /*graceful=*/false);
-    k.pump(80);
+    k.pump(140);
 
     CHECK_MESSAGE(heard(k.book(), {"lost h1", "never plated it"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"served h1"}));
@@ -338,7 +338,7 @@ TEST_CASE("a required preference binds every policy, including the one that disa
     Kitchen k;
     k.boot("kitchen-policy-rush");
     k.order("r3", "fries", "grill", kitchen::kFallbackNone);
-    k.pump(60);
+    k.pump(120);
 
     CHECK_MESSAGE(heard(k.book(), {"receipt r3", kitchen::kRoutedPreferred, "@grill"}),
                   transcript(k.book()));
@@ -350,18 +350,38 @@ TEST_CASE("a required preference binds every policy, including the one that disa
 TEST_CASE("an expediter replaced gracefully keeps the promises it already made") {
     Kitchen k;
     k.boot();
-    k.order("e1", "fries", "grill", kitchen::kFallbackNone);
+    k.order("e1", "brisket", "grill", kitchen::kFallbackNone);
     k.pump(10);
     REQUIRE_MESSAGE(heard(k.book(), {"receipt e1", "@grill"}), transcript(k.book()));
 
     k.swap(kitchen::kExpediterRole, "kitchen-expediter", /*graceful=*/true);
-    k.pump(60);
+    k.pump(120);
 
     // The dish is served by a DIFFERENT weave than the one that promised it —
     // which is exactly why the outcome could not have been an authenticated
     // answer, and exactly why the diner cannot check the sender.
-    CHECK_MESSAGE(heard(k.book(), {"served e1", "fries", "grill"}), transcript(k.book()));
+    CHECK_MESSAGE(heard(k.book(), {"served e1", "brisket", "grill"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"lost e1"}));
+}
+
+TEST_CASE("a dish plated WHILE the kitchen is changing hands is not dropped") {
+    Kitchen k;
+    k.boot();
+    // A six-pass dish and a handover started ten beats in: the plate lands inside
+    // the ceremony. This is the exact scenario a bus trace caught during this
+    // experiment — the `Plated` was delivered to the heir TWO TURNS BEFORE its own
+    // `zen.Activated`, the heir had no such job, and the inherited ticket then
+    // timed out. The handover window is what makes it survivable.
+    k.order("w9", "fries", "grill", kitchen::kFallbackNone);
+    k.pump(10);
+    REQUIRE_MESSAGE(heard(k.book(), {"receipt w9", "@grill"}), transcript(k.book()));
+    CHECK_FALSE(heard(k.book(), {"served w9"}));
+
+    k.swap(kitchen::kExpediterRole, "kitchen-expediter", /*graceful=*/true);
+    k.pump(120);
+
+    CHECK_MESSAGE(heard(k.book(), {"served w9", "fries", "grill"}), transcript(k.book()));
+    CHECK_FALSE(heard(k.book(), {"lost w9"}));
 }
 
 TEST_CASE("an expediter replaced MID-ROUTING closes the conversation it cannot bequeath") {
@@ -400,6 +420,35 @@ TEST_CASE("a receipt that Loom did not attest is ignored by the diner") {
     }
 }
 
+TEST_CASE("a forged routing answer is refused by Loom's attestation, not by luck") {
+    Kitchen k;
+    k.boot();
+    // Park the order in routing with nobody to answer it honestly, so the only
+    // RouteChoice that can arrive is the forged one.
+    k.evict(kitchen::kPolicyRole);
+    k.pump(10);
+    k.order("q1", "steak", "grill", kitchen::kFallbackAnyStation);
+    k.pump(6);
+
+    // Job numbers start at 1 and the correlation IS the job number: the rogue is
+    // handed everything a bus-watcher could have worked out for itself.
+    k.rogue_does(nightlab::testing::ForgeRouteChoice{"q1", "fryer", 1});
+    k.pump(10);
+
+    // Nothing happened. `answers_ask()` is Loom's word that a delivery is the
+    // authorized answer to a request THIS weave sent, and no weave can produce
+    // it for a conversation it was not part of — a correct shape and a correct
+    // correlation are not, and were never, enough.
+    CHECK_MESSAGE(k.book().heard.empty(), transcript(k.book()));
+
+    // ...and the promise still ends in a word, from the watchdog, on time.
+    k.pump(140);
+    CHECK_MESSAGE(heard(k.book(), {"receipt q1", kitchen::kRoutedRefused,
+                                   "no kitchen policy answered"}),
+                  transcript(k.book()));
+    CHECK(k.book().outstanding.empty());
+}
+
 TEST_CASE("a Plated for a job that is not open is ignored") {
     Kitchen k;
     k.boot();
@@ -412,14 +461,14 @@ TEST_CASE("a Plated for a job that is not open is ignored") {
 TEST_CASE("MEASURED, NOT WAVED AT: a forged Plated finishes someone else's dish") {
     Kitchen k;
     k.boot();
-    k.order("v1", "fries", "grill", kitchen::kFallbackNone); // six passes: a long window
+    k.order("v1", "brisket", "grill", kitchen::kFallbackNone); // fourteen passes: a long window
     k.pump(10);
     REQUIRE_MESSAGE(heard(k.book(), {"receipt v1", "@grill"}), transcript(k.book()));
     CHECK_FALSE(heard(k.book(), {"served v1"}));
 
     // The rogue holds nothing but an ordinary grant for an ordinary shape. The
     // job number is not a secret — it is on the wire, and it is sequential.
-    k.rogue_does(nightlab::testing::ForgePlated{"1", "fries", "grill"});
+    k.rogue_does(nightlab::testing::ForgePlated{"1", "brisket", "grill"});
     k.pump(6);
 
     // THIS IS THE SEAM, ASSERTED AS IT ACTUALLY BEHAVES. The expediter has no way
@@ -428,7 +477,22 @@ TEST_CASE("MEASURED, NOT WAVED AT: a forged Plated finishes someone else's dish"
     // forgery lands. Loom attests ANSWERS and LIFECYCLE; it does not attest
     // role-holding, and this kitchen cannot invent what the substrate does not
     // offer.
-    CHECK_MESSAGE(heard(k.book(), {"served v1", "fries", "grill"}), transcript(k.book()));
+    CHECK_MESSAGE(heard(k.book(), {"served v1", "brisket", "grill"}), transcript(k.book()));
+}
+
+TEST_CASE("a plate that names the wrong station is ignored") {
+    Kitchen k;
+    k.boot();
+    k.order("v4", "brisket", "grill", kitchen::kFallbackNone);
+    k.pump(10);
+    REQUIRE_MESSAGE(heard(k.book(), {"receipt v4", "@grill"}), transcript(k.book()));
+
+    // Everything about this forgery is right except the one thing the expediter
+    // CAN check: the job went to the grill, and this claims to come from the
+    // fryer. The sender is still unverifiable; the itinerary is not.
+    k.rogue_does(nightlab::testing::ForgePlated{"1", "brisket", "fryer"});
+    k.pump(10);
+    CHECK_FALSE_MESSAGE(heard(k.book(), {"served v4"}), transcript(k.book()));
 }
 
 TEST_CASE("a forged roster entry cannot make a station cook what it cannot cook") {
@@ -457,7 +521,7 @@ TEST_CASE("a station named by nobody real: the order ends in a word, not a wait"
     k.pump(10);
 
     k.order("v3", "steak", "ghost", kitchen::kFallbackNone);
-    k.pump(90);
+    k.pump(140);
 
     // The Prep is sent to an unheld role and refused by the bus — which the
     // expediter cannot see. The watchdog is what turns that invisible refusal

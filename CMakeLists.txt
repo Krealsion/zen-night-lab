@@ -64,4 +64,5 @@ endfunction()
 
 enable_testing()
 add_subdirectory(kitchen)
+add_subdirectory(repro)
 add_subdirectory(tests)

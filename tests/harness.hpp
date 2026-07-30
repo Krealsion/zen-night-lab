@@ -140,13 +140,39 @@ struct ForgeStationOpen {
     ZEN_SHAPE(ForgeStationOpen, 1, ZEN_FIELD(station), ZEN_FIELD(dish));
 };
 
-class Rogue : public loom::WeaveBase<Rogue, RogueState,
-                                     loom::Accept<ForgePlated, ForgeStationOpen>,
-                                     loom::Emit<kitchen::Plated, kitchen::StationOpen>> {
+/// "Answer a routing question that was never asked of you." The correlation is
+/// GIVEN to the rogue because a correlation is not a secret — it is a
+/// conversation label, visible on the bus to anyone watching, and sequential
+/// here. If knowing it were enough, the expediter's wall would be made of
+/// nothing.
+struct ForgeRouteChoice {
+    std::string order_id;
+    std::string station;
+    std::int64_t correlation = 0;
+    ZEN_SHAPE(ForgeRouteChoice, 1, ZEN_FIELD(order_id), ZEN_FIELD(station),
+              ZEN_FIELD(correlation));
+};
+
+class Rogue
+    : public loom::WeaveBase<Rogue, RogueState,
+                             loom::Accept<ForgePlated, ForgeStationOpen, ForgeRouteChoice>,
+                             loom::Emit<kitchen::Plated, kitchen::StationOpen,
+                                        kitchen::RouteChoice>> {
 public:
     void on(const ForgePlated& f, loom::Mail& mail) {
         ++state_.sent;
         mail.send_to_role(kitchen::kExpediterRole, kitchen::Plated{f.job, f.dish, f.station});
+    }
+
+    /// A perfectly-shaped RouteChoice with the right correlation, sent by a weave
+    /// that holds an ordinary grant for the shape — and no attestation, because
+    /// no weave can manufacture one.
+    void on(const ForgeRouteChoice& f, loom::Mail& mail) {
+        ++state_.sent;
+        mail.send_to_role(kitchen::kExpediterRole,
+                          kitchen::RouteChoice{f.order_id, f.station, kitchen::kRoutedPreferred,
+                                               "[rogue] trust me"},
+                          static_cast<std::uint64_t>(f.correlation));
     }
     void on(const ForgeStationOpen& f, loom::Mail& mail) {
         ++state_.sent;
@@ -223,8 +249,10 @@ public:
         loom::Grant rogue_grant;
         rogue_grant.allow_to_any(ForgePlated::zen_name, ForgePlated::zen_version);
         rogue_grant.allow_to_any(ForgeStationOpen::zen_name, ForgeStationOpen::zen_version);
+        rogue_grant.allow_to_any(ForgeRouteChoice::zen_name, ForgeRouteChoice::zen_version);
         rogue_grant.allow_to_any(kitchen::Plated::zen_name, kitchen::Plated::zen_version);
         rogue_grant.allow_to_any(kitchen::StationOpen::zen_name, kitchen::StationOpen::zen_version);
+        rogue_grant.allow_to_any(kitchen::RouteChoice::zen_name, kitchen::RouteChoice::zen_version);
         rogue_ = loom::mount_granted<Rogue>(bus_, std::move(rogue_grant));
         // Same shape as the rogue's grant, same reason: `AskStatus` is the
         // harness nudging this weave, not part of the conversation it has with

@@ -66,7 +66,7 @@ constexpr Recipe kMenu[] = {{"fries", 2}, {"wings", 3}};
 constexpr const char* kStationName = "grill";
 // The grill CAN do fries and is bad at them — which is what makes "send it to
 // the specialist" a decision with a visible consequence rather than a slogan.
-constexpr Recipe kMenu[] = {{"steak", 3}, {"burger", 2}, {"fries", 6}};
+constexpr Recipe kMenu[] = {{"steak", 3}, {"burger", 2}, {"fries", 6}, {"brisket", 14}};
 #endif
 
 #if defined(KITCHEN_STATION_LABEL)
