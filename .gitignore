@@ -1,0 +1,12 @@
+# Build output.
+build/
+
+# The pinned substrate snapshot: reproducible, not a deliverable.
+# See vendor/README.md for the exact commands that re-cut it.
+vendor/loom-src/
+vendor/loom-build/
+vendor/loom/
+
+# The vendored Zengine Timer artifacts are BINARIES copied from a sibling
+# repo's build tree. They are tracked deliberately (an experiment that cannot
+# be re-run is not evidence), so they are NOT ignored — see vendor/README.md.
