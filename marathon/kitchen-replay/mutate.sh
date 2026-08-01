@@ -43,9 +43,26 @@ FILES="expediter.cpp station.cpp policy.cpp harness.hpp"
 cd "$M" || exit 1
 mkdir -p "$BACKUP"
 
+# THE GUARD THIS HARNESS DID NOT HAVE, AND THE RUN THAT PAID FOR IT.
+# A `perl -0pe` whose pattern matches NOTHING exits 0 and writes a byte-identical
+# file. The mutation is then never applied, the suite passes for the most boring
+# reason there is, and the line reads GREEN -- indistinguishable from "the term is
+# unwatched". Night One's version of this bug was perl failing to WRITE; this one
+# is perl writing the same thing. Both wear the same costume.
+#
+# So: compare, and refuse to run at all if nothing changed. A NOT-APPLIED line is
+# a broken mutation, never evidence about the code.
+MUT_APPLIED=1
 mutate() {
     local file="$1"; shift
-    perl -0pe "$@" "$SRC/$file" > "$TMP" || return 1
+    if ! perl -0pe "$@" "$SRC/$file" > "$TMP"; then
+        MUT_APPLIED=0
+        return 1
+    fi
+    if cmp -s "$TMP" "$SRC/$file"; then
+        MUT_APPLIED=0
+        return 1
+    fi
     cp "$TMP" "$SRC/$file"
 }
 
@@ -63,8 +80,33 @@ trap restore EXIT
 
 BASE_CASES=0
 
+# Optional filter: `bash <script> 14 15` re-runs only those mutations (plus the
+# baseline and the canary, which are the trust anchors and are never skipped).
+# This exists because a NOT-APPLIED or BUILD-FAILED line has to be repaired and
+# re-run, and a RED line provably does not: a mutation that fails to apply leaves
+# a byte-identical tree, which can only ever produce the baseline result.
+ONLY="${*:-}"
+selected() {
+    [ -z "$ONLY" ] && return 0
+    [ "$1" = "--" ] && return 0
+    [ "$1" = "00" ] && return 0
+    case " $ONLY " in *" $1 "*) return 0 ;; esac
+    return 1
+}
+
 run_one() {
     local id="$1" desc="$2"
+    if ! selected "$id"; then
+        MUT_APPLIED=1
+        restore
+        return
+    fi
+    if [ "$MUT_APPLIED" -eq 0 ]; then
+        echo "$id  NOT-APPLIED    $desc   | the pattern matched nothing -- NOT a green"
+        MUT_APPLIED=1
+        restore
+        return
+    fi
     if ! cmake --build "$BUILD" -j"$(nproc)" > "$BUILD/mut-build.log" 2>&1; then
         echo "$id  BUILD-FAILED   $desc"
         restore
@@ -95,6 +137,7 @@ run_one() {
     restore
     # Restoring sources is not restoring the tree.
     cmake --build "$BUILD" -j"$(nproc)" > /dev/null 2>&1
+    MUT_APPLIED=1
 }
 
 echo "=== baseline (must be GREEN) ==="
