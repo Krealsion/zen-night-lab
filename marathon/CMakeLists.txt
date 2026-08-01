@@ -77,9 +77,14 @@ endif()
 
 enable_testing()
 
-add_subdirectory(kitchen-replay)
-add_subdirectory(download-manager)
-add_subdirectory(build-farm)
-add_subdirectory(import-pipeline)
-add_subdirectory(lobby)
-add_subdirectory(scheduler)
+# The projects, in the order they were built. A directory that does not exist yet
+# is one the marathon has not reached; the build says so rather than failing, so
+# the tree is always buildable at every point in the run.
+foreach(project IN ITEMS
+        kitchen-replay download-manager build-farm import-pipeline lobby scheduler)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${project}/CMakeLists.txt)
+        add_subdirectory(${project})
+    else()
+        message(STATUS "marathon: ${project} not built yet")
+    endif()
+endforeach()
