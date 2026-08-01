@@ -1,57 +1,67 @@
 # EVIDENCE — the architecture voting table
 
-Six applications vote. A candidate abstraction is only as real as the number of **independent**
-sightings it has. Two copies of the same fixture are one sighting.
+Six applications voted. A candidate abstraction is only as real as the number of **independent**
+sightings it has; two copies of the same fixture are one sighting.
 
 ```
-✓   genuine occurrence
-~   adjacent but materially different
-×   tested and did not appear
-B   blocked by a missing substrate fact
-    (blank = project not yet run)
+✓   genuine occurrence        ~   adjacent but materially different
+×   tested and did not appear B   blocked by a missing substrate fact
 ```
 
-Evidence scale: 0 sightings = speculation · 1 = name the shape · 2 independent = candidate
-abstraction · 3+ materially different = serious extraction candidate · repeated workaround against
-the same wall = core-design candidate.
+Evidence scale: 0 = speculation · 1 = name the shape · 2 independent = candidate · 3+ materially
+different = serious extraction candidate · repeated workaround against the same wall = core-design
+candidate.
 
-| Candidate | Kitchen | Download | Build | Import | Lobby | Scheduler | Independent | Verdict |
+| Candidate | Kitchen | Download | Build | Import | Lobby | Scheduler | Indep. | Verdict |
 |---|---|---|---|---|---|---|---:|---|
-| Promise / responsibility book | ✓ | ✓ | | | | | 2 | *pending* |
-| Order / menu resolution | ✓ | × | | | | | 1 | *pending* |
-| Role authorship (provenance) | ✓ | ✓ | | | | | 2 | *pending* |
-| Activation hold / replay | ✓ | × | | | | | 1 | *pending* |
-| Activation-sequence owner | ~ | ~ | | | | | 0 | *pending* |
-| Outcome observation ergonomics | × | × | | | | | 0 | *pending* |
-| Describe-then-hand-over *(new)* | ✓ | ✓ | | | | | 2 | *pending* |
-| Which-half-to-attest *(new)* | ✓ | ✓ | | | | | 2 | *pending* |
-| Stringified `WeaveId` on the wire *(new)* | ✓ | ✓ | | | | | 2 | *pending* |
+| **Role authorship (provenance)** | ✓ | ✓ | ✓✓ | ✓* | ✓✓✓ | ~ | **5** | **CORE-DESIGN CANDIDATE** |
+| Promise / responsibility book | ✓ | ✓ | ✓ | ~ | × | ~ | **3** | EARNED (as a *named shape*, not a helper) |
+| Describe-then-hand-over | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **6** | EARNED — and it is a **substrate gap**, not a helper |
+| Which-half-to-attest | ✓ | ✓ | ~ | ~ | ✓ | ~ | **3** | EARNED (a decision, not code) |
+| Order / menu resolution | ✓ | × | × | ✓✓ | × | × | **2** | PROMISING (+Timer = 3, but see the note) |
+| Minted-identity namespaces | ✓ | × | ✓ | ✓ | × | × | **3** | PROMISING |
+| Stringified `WeaveId` on the wire | ✓ | ✓ | ✓ | ~ | ✓ | ~ | **4** | PROMISING |
+| Activation hold / replay | ✓ | × | × | × | × | × | **1** | NAME ONLY |
+| Activation-sequence owner | ~ | ~ | ~ | ~ | ~ | × | **0** | **REJECTED** |
+| Outcome observation ergonomics | × | × | × | × | × | × | **0** | **REJECTED** |
+| Binding table should be dynamic | — | — | — | — | — | ✓ | **1** | NAME ONLY |
+| Attestation for observers | — | — | — | — | ✓ | — | **1** | NAME ONLY (but see role authorship) |
+
+\* import-pipeline is a ✓ **inverted**: it is the one project where the check IS performable, and
+the reason is exact — its counterparty is a specific weave rather than an office. That is evidence
+*about the shape of the gap*, and it is why the gap can be stated so precisely.
 
 ### Notes on the non-obvious cells
 
-- **Order/menu, Download = ×.** Tested and absent, not merely unused: a source either exists or it
-  does not. The client's choice is complete at submit time, so there is nothing to offer back.
-- **Activation hold/replay, Download = ×.** No bootstrap race arose. The successor's only startup
-  act is discharging inherited debts, and it does that *at* activation rather than before it.
-- **Sequence owner, both = ~.** Both projects have one operator and one sequence. Nothing
-  contended for the number, so nothing wanted an owner for it.
-- **Role authorship, both = ✓** and both are *defects that land*: a forged `Plated` finishes a
-  dish, a forged `DownloadCompleted` ends a transfer. Neither application can refuse it.
+- **Order/menu, Download/Build/Lobby/Scheduler = ×.** All four are *tested and absent*, not merely
+  unused. A download source either exists or it does not; a build target either has a recipe or it
+  does not; a lobby has no menu; a schedule has no menu. The shape needs a service that must
+  **offer** something it discovered, and only two of six domains had one.
+- **Sequence owner = 0.** Five projects marked `~` and one `×`. Every one has a single operator and
+  a single counter; nothing ever contended for the number, *including* the scheduler, which
+  performs two replacements of two different services in one program.
+- **Outcome ergonomics = 0 across six.** `state()` / `take_outcome()` were pleasant every time and
+  nobody wrote a line of glue around them.
+- **Promise book = 3, but the three disagree** about continuity policy, progress shape and identity
+  naming — see the final report's ranking.
 
 ---
 
 ## Sugar audit — per project
 
-The expected ordinary result is **raw replacement operations in app code = 0**.
-
-| Project | facade ops | raw ops in app code | txn ids in domain payloads | manual lifecycle wiring | manual candidate cleanup | manual outcome filtering |
+| Project | facade ops | **raw ops in app code** | txn ids in payloads | manual lifecycle wiring | manual candidate cleanup | manual outcome filtering |
 |---|---:|---:|---:|---:|---:|---:|
 | kitchen-replay | 47 | **0** | 0 | 0 | 0 | 0 |
 | download-manager | 40 | **0** | 0 | 0 | 0 | 0 |
-| build-farm | | | | | | |
-| import-pipeline | | | | | | |
-| lobby | | | | | | |
-| scheduler | | | | | | |
+| build-farm | 39 | **0** | 0 | 0 | 0 | 0 |
+| import-pipeline | 40 | **0** | 0 | 0 | 0 | 0 |
+| lobby | 30 | **0** | 0 | 0 | 0 | 0 |
+| scheduler | 41 | **0** | **2** ‡ | 0 | 0 | 0 |
+| **total** | **237** | **0** | **2** | **0** | **0** | **0** |
+
+‡ `timer::PrepareTimerHandover` carries a `transaction` field for wire legibility — its own header
+says it is *not* authority. Classified as **third-party vocabulary that predates the handle**; see
+FRICTION.md F15. It is the only place in six projects an application touched a transaction id.
 
 ---
 
@@ -59,14 +69,15 @@ The expected ordinary result is **raw replacement operations in app code = 0**.
 
 | arm | covered by |
 |---|---|
-| immediate candidate readiness | kitchen (`PrepareStation{consult=false}`), download (`verify_sources=false`) |
-| deferred candidate readiness | kitchen (`consult=true` → `AskHousePassRate`), download (`verify_sources=true` → `AskCatalogueSize`) |
-| authentic refusal | kitchen (fryer asked to be the grill; work it cannot cook), download (catalogue disagreement; unservable debt; over-bound debt) |
-| candidate failure | kitchen + download (`StartStage::CandidateLoad`, loader's own words preserved) |
-| `AdmissionPending` observed | kitchen + download (asserted between `commit` and the pump) |
-| committed outcome | kitchen + download |
-| aborted outcome | kitchen + download (`ExplicitAbort`, incumbent still serving) |
-| exact error inspection | kitchen + download (`NoRoleHolder`, `CandidateLoad`, `IncumbentBusy`, `AlreadyStarted`, `InvalidReadiness`, `CandidateRefused`) |
+| immediate candidate readiness | kitchen, download, build, import, lobby, scheduler |
+| deferred candidate readiness | kitchen (`AskHousePassRate`), download (`AskCatalogueSize`), build (`AskToolchain`), import (`AskCatalogueName`) |
+| authentic refusal | all six — 11 distinct domain reasons |
+| candidate failure | all six (`CandidateLoad`, loader's own words preserved) |
+| `AdmissionPending` observed | kitchen, download, build, import, scheduler |
+| committed outcome | all six |
+| aborted outcome | kitchen, download, build, import, lobby, scheduler |
+| exact error inspection | `NoRoleHolder`, `CandidateLoad`, `BeginTransaction`/`IncumbentBusy`, `AlreadyStarted`, `InvalidReadiness`, `CandidateRefused`, `ExplicitAbort` |
+| **a third-party service replaced** | scheduler — the Zengine **Timer**, through the Timer package's own preparation vocabulary |
 
 ---
 
@@ -74,11 +85,16 @@ The expected ordinary result is **raw replacement operations in app code = 0**.
 
 | surface | used by | felt natural? |
 |---|---|---|
-| ordinary send | kitchen (outcomes, `Prep`, `Plated`), download (progress, terminals) | yes — the default for anything that must survive replacement |
-| publication | kitchen (`StationOpen`) | yes, and **absent from download** — nothing there is an announcement to nobody in particular |
-| ordinary reply | **nobody, in either project** | never wanted: every reply is either an *answer* (must be provable) or a *role-addressed send* (must survive replacement) |
-| authenticated immediate answer | kitchen (refusals, declines, diagnostics, preparation), download (accepts, refusals, diagnostics, preparation) | yes — the workhorse now that it crosses the `.so` seam |
-| authenticated deferred answer | kitchen (receipt across routing; candidate readiness), download (terminal in the holds build; candidate readiness) | yes for a *bounded* wait; **F10** for a long one |
-| answer provenance (`answers_ask`) | kitchen (the wall on `RouteChoice`, receipts, bequests), download (the wall on `ObligationsDescribed`; a *measurement* on client traffic) | yes, and its absence is the loudest thing in both reports |
-| role-addressed delivery | every service address in both | yes — the reason replacement is invisible to callers |
-| direct delivery | outcomes to a diner/client, by id, from a stringified `WeaveId` | yes, but see **F9** |
+| ordinary send | all six | yes — the default for anything that must survive replacement |
+| publication | kitchen, farm, lobby, scheduler | yes, and **the lobby found its cost**: a publication can never be attested to anybody |
+| **ordinary `reply`** | **nobody, in any of six projects** | never wanted. Every reply is either an *answer* (must be provable) or a *role-addressed send* (must survive replacement); between those two, `reply` had no job |
+| authenticated immediate answer | all six | the workhorse, now that it crosses the `.so` seam |
+| authenticated deferred answer | kitchen, download, build, import, lobby | yes for a *bounded* wait; **F10/F11** for a long one |
+| answer provenance (`answers_ask`) | all six | yes — and its absence is the loudest thing in five of six reports |
+| role-addressed delivery | all six | yes — the reason replacement is invisible to callers |
+| direct delivery | all six | yes, but see **F9** |
+
+**The one surface nobody wanted, across six applications, is `reply`.** That is the brief's "if one
+surface never feels appropriate, that is interesting too" — and the reason is structural rather than
+stylistic: in a world where services are replaceable, *"whoever sent this"* is either too weak (you
+need proof) or too strong (you need the office, not the incarnation).

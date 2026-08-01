@@ -289,3 +289,144 @@ SIGHTING**, and the strongest single result of this project.
 **SEVERITY:** architecture pressure
 **SECOND SIGHTING:** Night One's kitchen (first, as prose), download-manager (this one, as a
 measurement)
+
+---
+
+## F12 — six projects, six identical host fixtures
+
+**PROJECT:** all six
+**TASK:** stand up a host that can load weaves, replace one, and watch the bus.
+
+**WHAT I HAD TO WRITE, six times:**
+
+1. an `Operator` weave holding a target-scoped grant on the Weave Manager, with a
+   correlation→label map so its answers can be matched;
+2. a coordinator weave holding a raw `loom::PreparedReplacement*`, re-pointed by hand (**F2**);
+3. a `Rogue` weave with hand-written `allow_to_any` grants (**F8**);
+4. a beat-counting bus observer that calls `stop()` on a budget;
+5. a `watch(WeaveId)` tap that records delivery **order**, because "activation first" is a claim
+   about order and only a tap can see order (**F1**);
+6. a `MARATHON_TRACE=1` observer.
+
+**WHY IT IS NOT AN EXTRACTION CANDIDATE (yet):** a repeating *test fixture* is much weaker evidence
+than a repeating *application*. Four of the six pieces are ordinary host wiring anybody would write
+once and copy. But **items 4 and 5 had to be invented** rather than copied from anything Zen ships,
+and they are the two that answer questions the substrate makes hard: *when do I stop pumping?* and
+*what order did things arrive in?*
+
+**CATEGORY:** missing vocabulary (test-side)
+**SEVERITY:** recurring friction
+**SECOND SIGHTING:** six of six
+
+---
+
+## F13 — a minted identity's namespace does not cross a replacement, and nothing warns
+
+**PROJECT:** import-pipeline (found by a test), and in hindsight kitchen-replay and build-farm
+
+**WHAT I WANTED TO SAY:** *this menu is a different menu from the one you were holding.*
+
+**WHAT ACTUALLY HAPPENED:** the successor's counter restarts at 1, so its first menu was called
+`m1` — exactly the name the requester was still holding from the predecessor. The stale-choice
+check then passed **on a name collision**, and a choice was acted on against a different set of
+options.
+
+**THE RULE, learned the hard way:** *the identity is per-incarnation; the **namespace** must not be.*
+A minted identity has to carry its counter across a replacement, and it is a word, so it can.
+
+**THE OTHER TWO SIGHTINGS, seen clearly only afterwards:**
+- the kitchen carries `ExpediterHandoff::next_job` — and got it right first time, which is why
+  nobody noticed it was a *category*;
+- the build farm's `attempt` number is the same shape and had the *other* failure mode: **two
+  authors** (the dispatcher counts requeues, a candidate worker counts resumptions), so the terminal
+  message said "attempt 1" while every progress line said 2.
+
+**CATEGORY:** missing vocabulary
+**SEVERITY:** recurring friction — three sightings, two of them defects
+**SECOND SIGHTING:** kitchen-replay, build-farm, import-pipeline
+
+---
+
+## F14 — the Timer binding table is authored, not dynamic
+
+**PROJECT:** scheduler
+**TASK:** run a health check every N sweeps, where N is the operator's choice.
+
+**WHAT I WANTED TO SAY:** `timers().repeat(name, period, &Self::on_check)` when the request arrives.
+
+**WHAT I HAD TO WRITE:** one authored beat, and a hand-rolled countdown per schedule — exactly what
+the kitchen's expediter wrote with the **raw** protocol, two projects and one sugar layer earlier.
+
+**WHY:** `reconcile` belongs to the binding layer, correctly — an author reconciling would be a
+second scheduler. But the layer reconciles only on an accepted activation or a `TimerReady`, so a
+binding declared after construction sits `Waiting` forever and the Timer service never hears of it.
+
+**MEASURED, including the part nobody would guess:** a binding declared at run time **starts firing
+the moment the Timer service is replaced**, because that is when the layer next reconciles.
+
+**IT IS A BOUNDARY, NOT A DEFECT** — but the layer *reads* like the general answer to "I want
+something to happen periodically" and is in fact the answer to "**this weave** has a fixed rhythm".
+
+**CATEGORY:** Zengine plumbing / real unavoidable decision
+**SEVERITY:** recurring friction
+**SECOND SIGHTING:** none — one project, but it is the only project whose rhythm was data
+
+---
+
+## F15 — a third-party preparation vocabulary makes an application touch a transaction id
+
+**PROJECT:** scheduler
+**TASK:** replace the Timer service through the handle.
+
+**WHAT I HAD TO WRITE:** `ask.transaction = static_cast<std::int64_t>(upgrade().id().value);`
+
+**WHY:** `timer::PrepareTimerHandover` carries a `transaction` field. Its own header says it is
+**not authority** and exists for wire legibility, and the coordinator keys its transaction from its
+own record. But the field is in the shape, so an application driving that service through
+`PreparedReplacement` reaches for `id()` — which the handle documents as *"diagnostics, logging,
+tests and unusual integration"*.
+
+**THE ONLY NONZERO IN THE SUGAR AUDIT ACROSS SIX PROJECTS**, and the reason is that somebody else's
+package predates the handle. Classified as such rather than as missing sugar.
+
+**CATEGORY:** package-specific ceremony
+**SEVERITY:** paper cut
+**SECOND SIGHTING:** none
+
+---
+
+## F16 — a mutation whose pattern matches nothing reports GREEN
+
+**PROJECT:** download-manager (found), all six (fixed)
+**TASK:** trust a mutation matrix.
+
+`perl -0pe` with a non-matching pattern exits 0 and writes a byte-identical file. The mutation is
+never applied, the suite passes for the most boring reason there is, and the line is
+**indistinguishable from "the term is unwatched"**. Night One's version of this bug was perl failing
+to *write*; this one is perl writing the *same thing*.
+
+Found because a mutation that plainly contradicted an assertion came back GREEN. Repaired in all
+six harnesses: `mutate()` now `cmp`s and reports `NOT-APPLIED`, which `run_one` refuses to treat as
+a result. It caught **four more** broken patterns immediately after being added.
+
+**What did NOT need re-running, and why:** a mutation that fails to apply leaves a byte-identical
+tree, which can only produce the *baseline* result — so every RED verdict is unaffected. Only
+non-RED lines were re-run.
+
+**CATEGORY:** diagnostic weakness (harness)
+**SEVERITY:** recurring friction — this is the third distinct way a Night Lab mutation harness has
+lied, after "the edit never happened" and "the build failed through a pipe"
+**SECOND SIGHTING:** Night One (a different cause, the same costume)
+
+---
+
+## F17 — doctest forbids `&&` and `||` inside an assertion
+
+**PROJECT:** build-farm
+**WHAT I HAD TO WRITE:** `const bool both = a && b; CHECK_MESSAGE(both, ...);`
+
+Pure C++/framework tax, no Zen content, recorded only so the ledger is honest about what the time
+actually went on.
+
+**CATEGORY:** C++ tax
+**SEVERITY:** paper cut
