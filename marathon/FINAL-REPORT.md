@@ -19,9 +19,9 @@ modified. Night One is preserved unaltered at `../original/` and was re-verified
 | 2 | download-manager | **GREEN** | 30 / 153 | 14 RED, 0 GREEN | RED |
 | 3 | build-farm | **GREEN** | 29 / 153 | 16 RED, 1 GREEN | RED |
 | 4 | import-pipeline | **GREEN** | 26 / 134 | 15 RED, 0 GREEN | RED |
-| 5 | lobby | **GREEN** | 17 / 99 | *see §11* | RED |
-| 6 | scheduler | **GREEN** | 18 / 113 | *see §11* | RED |
-| | **total** | **6 GREEN, 0 BLOCKED** | **159 / 848** | | |
+| 5 | lobby | **GREEN** | 17 / 99 | 12 RED, 0 GREEN | RED |
+| 6 | scheduler | **GREEN** | 18 / 113 | 9 RED, 3 GREEN | RED |
+| | **total** | **6 GREEN, 0 BLOCKED** | **159 / 848** | **80 RED, 6 GREEN** | 6 RED |
 
 Plus `repro-answer-seam` (project 1), which exits 0 and is a `ctest` case of its own.
 
@@ -426,27 +426,52 @@ original/           preserved byte-for-byte; rebuilt at its new path and re-veri
 Every mutation harness restores its sources and rebuilds, and each ends with a residue grep for its
 own marker text. Verified clean at the end of the run.
 
+### The final verification pass, run once every matrix had finished
+
+Not a claim carried forward from the middle of the run — re-measured at the end, on a clean rebuild:
+
+| # | check | result |
+|---|---|---|
+| 1 | full rebuild of the marathon tree | **0 errors, 0 warnings** under `-Werror -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion` |
+| 2 | the whole marathon under `ctest` | **7/7 passed**, 6.86 s |
+| 3 | per-suite counts | 39/196, 30/153, 29/153, 26/134, 17/99, 18/113 — **159 cases / 848 assertions**, matching every project report |
+| 4 | `repro-answer-seam` | **exit 0** — the door exists, the old defer+spend still works, and a second answer is refused *with the weave told* |
+| 5 | the original, still reconstructable | **27 / 78, SUCCESS** — exactly Night One's own numbers |
+| 6 | raw prepared-replacement primitives in application code | **0** |
+| 7 | core repos | Loom `78d64ea` clean, Zengine `f6a4c69` clean |
+
+> **A note on check 6, because the first run of it reported 3 and the number was wrong.** The grep
+> was not restricted by file type, and its three hits were all *prose* — kitchen-replay's own
+> `REPORT.md`, naming the nine primitives in the sentence that claims none of them appear. Scoped to
+> `*.cpp` and `*.hpp` the count is **0**. Recorded rather than quietly corrected: a verification
+> script that greps its own conclusions is a way to fail, and the check now says which files it
+> means.
+
 ---
 
 ## 11. Mutation results in full, and every non-RED line explained
 
-Roughly ninety mutations across six matrices. Every one rebuilds the **whole** binary and runs the
+**86 mutations plus 6 canaries across six matrices** — 80 RED, 6 GREEN, and every GREEN explained
+below. Every one rebuilds the **whole** binary and runs the
 **whole** suite under a timeout; every matrix begins with a hand-chosen canary that must come back
 RED on a **full** case count, prints the case/assertion counts on every line so identical counts are
 visible, treats a run with fewer cases than baseline as `TRUNCATED` rather than RED, and ends with a
 residue grep for its own marker text.
 
-### The GREENs — three, each a reported gap
+### The GREENs — six, each a reported gap
 
 | project | mutation | why it stayed green | what was done |
 |---|---|---|---|
 | kitchen | *an inherited roster OVERWRITES a station that announced during the handover* | **genuinely unwatched.** Making an announcement land inside the handover window deterministically needs machinery Night One judged not worth building, and this replay agreed. The term is true by construction. | **reported**, as Night One reported it |
 | kitchen | *a station adopts a letter written for a different station* | **MASKED, and the masking mechanism is the substrate's:** a `Bequest` is delivered by the Weave Manager only to the claimant of the role it names, and a station's role determines its name. Expressing the attack needs a *forged attested answer*, which the honest API cannot produce — the unsayable-attack case. | **reported as masked**, with the mechanism named |
 | build farm | *a StageDone is believed even when it names a worker the job never went to* | **masked by the terminal check:** mutation 17 cuts the same term on `JobDone` and is RED, so the itinerary rule *is* watched — on the message where believing it costs something. A mis-attributed progress line changes no outcome. | **reported as masked** |
+| scheduler (03) | *the activation hook skips the fleet's first checks* | **a genuine coverage boundary, and it is a boundary this project chose.** The hook's opening sweep only has an observable effect when the scheduler activates holding a **non-empty book**, which requires replacing **the scheduler itself** — and this project deliberately replaces its *dependencies* (its worker, and somebody else's clock) instead, because that is the composition question it exists to ask. The term is watched by the suite's activation cases for *announcement*, not for *work*. | **reported**, with the exact staging it would need |
+| scheduler (05) | *a schedule is asked again while its answer is in flight* | **the guard has two jobs and only one is watched here.** `pending`'s first job — keeping a one-shot in the book until its answer lands — is watched by mutation 04, which is RED. Its second job, refusing a *double* ask, needs the warm-up one-shot and the repeating sweep to coincide, and `boot()` pumps past the warm-up before any schedule exists. | **reported.** This is the defect the suite found on its own first run; 04 is what keeps it from returning unnoticed |
+| scheduler (09) | *a candidate worker accepts a fleet it cannot service* | **MASKED by a second term in the same handler, and this one was provable:** the narrow worker services two machines and is handed four, so the **capacity** bound (`fleet.size() > kKnownCount`) refuses before the per-machine check is ever reached. Cutting one half of a two-term protection and calling the green "unwatched" is exactly the mistake the discipline exists to prevent. | **paired cut added as mutation 12** — cut *both* terms, which expresses the behaviour ("accept any fleet") instead of the deletion of a line. **Mutation 12 is RED** on a full 18-case run, so the per-machine rule *is* watched and 09's green was masking, not a hole. |
 
 ### The repairs — and what needed re-running, and what did not
 
-Four kinds of non-result showed up, and all four are harness defects rather than evidence:
+Six kinds of non-result showed up, and all six are harness defects rather than evidence:
 
 | kind | count | cause |
 |---|---:|---|
@@ -454,6 +479,26 @@ Four kinds of non-result showed up, and all four are harness defects rather than
 | `BUILD-FAILED` | 3 | a cut that orphaned a variable or parameter under `-Werror` |
 | `TRUNCATED` | 1 | a cut that left a loop reading past a shorter vector — a crash, not a property |
 | `GREEN`-but-unexpressible | 1 | a mutation whose attack the scenario could not stage |
+| **a matrix that silently stopped** | 1 matrix, 9 lines | see below |
+| **a residue marker that matched honest code** | 1 matrix | see below |
+
+**Two of those six are failure modes I had not seen before, and both were found late enough to be
+worth writing down properly.**
+
+- **A mutation anchored on PROSE can kill the matrix, quietly.** The scheduler's mutation 03 quoted
+  a source comment containing an apostrophe (`the fleet's current state`) inside a **single-quoted**
+  shell string. The apostrophe closes the string; every following line's quoting shifts by one; and
+  `bash` finally dies on a syntax error at mutation **11** — *after* 01 and 02 have already run and
+  printed results that look perfectly normal. The `EXIT` trap still restores the tree, so nothing is
+  left mutated and nothing looks wrong. What is lost is **every mutation after the bad line**, with
+  no line printed for any of them. The rule this buys: **anchor mutations on code, never on prose** —
+  prose has apostrophes, code does not. Both remaining harnesses now also pass `bash -n` before they
+  are trusted, and the whole scheduler matrix was re-run from the baseline.
+- **A residue marker must be distinctive or it reports a phantom.** The lobby's residue grep looked
+  for `held_answer_rights = 0`, which is also how two *honest* sources initialise that field — so a
+  perfectly clean tree reported "2 remaining". A residue check whose false-positive rate is nonzero
+  trains you to ignore it, which is worse than not having one. Repaired to the full mutated
+  statement (`described.held_answer_rights = 0`), and every matrix's residue check now reads 0.
 
 **Every one was repaired and re-run.** What did **not** need re-running, and the reasoning is worth
 keeping: *a mutation that fails to apply leaves a byte-identical tree, which can only produce the
@@ -481,10 +526,17 @@ better:
   ("match with however many are here", "believe any RouteChoice", "claim you finished a transfer you
   never had the bytes for") rather than the deletion of a line, and a case goes red.
 - **MASKED** — three, each named above with the mechanism that masks it, and never reported as a
-  pass. Where the masking mechanism is the substrate's (the role-keyed `Bequest`), expressing the
-  attack would need a *forged attested answer* — which the honest API cannot produce. That is the
-  unsayable-attack case, and the honest thing is to say so rather than to write a test that passes
-  while testing nothing.
+  pass. The three are not the same kind, and the difference is the useful part:
+  - **masked by a second term in the same handler** (scheduler 09, the fleet capacity bound). This
+    one is *resolvable*, and the discipline says how: cut both terms together, so the mutation
+    expresses a behaviour rather than the deletion of a line. Mutation **12** does exactly that and
+    is RED.
+  - **masked by a cheaper check on a costlier message** (build farm, `JobDone` vs `StageDone`). The
+    rule is watched where believing a lie costs something; reported, not chased.
+  - **masked by the substrate itself** (kitchen, the role-keyed `Bequest`). Expressing the attack
+    would need a *forged attested answer* — which the honest API cannot produce. That is the
+    unsayable-attack case, and the honest thing is to say so rather than to write a test that
+    passes while testing nothing.
 - **COMPILE-ENFORCED** — no mutation needed, and no mutation possible:
   - `PreparedReplacement` is non-copyable and non-default-constructible (`static_assert`s in Loom's
     own suite);

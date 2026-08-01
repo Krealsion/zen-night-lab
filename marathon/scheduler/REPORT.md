@@ -99,7 +99,14 @@ silent-failure shape four earlier projects were built to refuse, reintroduced by
 sixth.
 
 A schedule now leaves the book when its **result** lands, not when its question goes out, and a
-`pending` flag stops the rhythm asking twice. Mutation 05 keeps it that way.
+`pending` flag stops the rhythm asking twice.
+
+**Only half of that repair is watched, and the mutation matrix is what proved it.** Mutation 04
+(*a one-shot never leaves the book*) is RED, so the erase-on-result half is defended. Mutation 05
+(*a schedule is asked again while its answer is in flight*) came back **GREEN**: the `pending`
+flag's second job needs the warm-up one-shot and the repeating sweep to coincide, and `boot()`
+pumps past the warm-up before any schedule exists, so no case in this suite ever stages a double
+ask. Reported rather than papered over — see FINAL-REPORT.md §11.
 
 Worth naming as a general lesson: **"remove it when you have asked" is only correct for work whose
 answer you do not owe anybody.**

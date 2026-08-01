@@ -430,3 +430,50 @@ actually went on.
 
 **CATEGORY:** C++ tax
 **SEVERITY:** paper cut
+
+---
+
+## F18 — a mutation anchored on PROSE can kill the whole matrix, silently
+
+**PROJECT:** scheduler (found), lobby + scheduler (both hardened)
+**TASK:** trust a mutation matrix — again.
+
+**WHAT HAPPENED:** the scheduler's mutation 03 anchored on a source **comment** containing an
+apostrophe (`the fleet's current state`), inside a **single-quoted** shell string. The apostrophe
+closes the string. Every following line's quoting shifts by one, and `bash` dies on a syntax error
+at mutation **11** — *after* 01 and 02 have already run and printed results that look completely
+normal.
+
+**WHY IT IS THE WORST COSTUME YET:** the `EXIT` trap still fires, so the tree is restored and
+nothing is left mutated. There is no crash, no red, no residue, and no line printed for any of the
+nine mutations that never ran. The only tell is the script's exit code, which is exactly the thing
+a human reading a scrolling matrix does not look at. F16's lie was *one line* claiming to be
+evidence; this one is *most of a matrix* claiming to be finished.
+
+**THE RULE:** **anchor mutations on code, never on prose.** Prose has apostrophes; code does not.
+Both harnesses that needed it were rewritten to anchor on code, both now pass `bash -n` before they
+are trusted, and the entire scheduler matrix was re-run from the baseline.
+
+**CATEGORY:** diagnostic weakness (harness)
+**SEVERITY:** recurring friction — the **fourth** distinct way a Night Lab mutation harness has
+lied, after "the edit never happened", "the build failed through a pipe", and "the pattern matched
+nothing"
+**SECOND SIGHTING:** none, and one is enough
+
+---
+
+## F19 — a residue marker that matches honest code trains you to ignore the residue check
+
+**PROJECT:** lobby
+**TASK:** prove a matrix left nothing mutated behind.
+
+**WHAT HAPPENED:** the lobby's residue grep looked for `held_answer_rights = 0`, which is also how
+two **honest** sources initialise that field. A perfectly clean tree reported *"2 remaining"*.
+
+**WHY IT MATTERS MORE THAN IT LOOKS:** a residue check exists to be believed without thinking. One
+with a nonzero false-positive rate teaches you to wave it through — and then the run where it means
+something looks exactly like the runs where it did not. Repaired to the full mutated statement
+(`described.held_answer_rights = 0`); every matrix's residue check now reads 0 on a clean tree.
+
+**CATEGORY:** diagnostic weakness (harness)
+**SEVERITY:** paper cut, with an outsized failure mode

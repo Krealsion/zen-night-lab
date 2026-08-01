@@ -159,6 +159,16 @@ run_one "10" "THE ENGINEER MISREPORTS this package's own refusal as readiness"
 mutate harness.hpp 's/    void on\(const timer::TimerCandidateDeclined& d, loom::Mail&\) \{\n        \+\+state_\.clock_declined;\n        desk_->notes\.push_back\("CLOCK candidate DECLINED: " \+ d\.reason\);\n        offer\(loom::PreparationAnswer::Refused\);/    void on(const timer::TimerCandidateDeclined\& d, loom::Mail\&) {\n        ++state_.clock_declined;\n        desk_->notes.push_back("CLOCK candidate DECLINED: " + d.reason);\n        offer(loom::PreparationAnswer::Ready);/'
 run_one "11" "THE ENGINEER MISREPORTS SOMEBODY ELSE'S SERVICE's refusal as readiness"
 
+# MASKED, AND HERE IS THE PAIRED CUT THAT PROVES IT. Mutation 09 alone stays
+# GREEN because a second term refuses first: the narrow worker services two
+# machines and is handed four, so the CAPACITY bound answers before the
+# per-machine check is ever reached. Cutting one half of a two-term protection
+# and reporting the green as "unwatched" would be exactly the mistake the
+# discipline exists to prevent -- so cut BOTH, and the pair is load-bearing.
+mutate worker.cpp 's/            if \(!knows\(m\)\) \{/            if (false) {/'
+mutate worker.cpp 's/        if \(p\.fleet\.size\(\) > kKnownCount\) \{/        if (false) {/'
+run_one "12" "PAIRED CUT: a candidate accepts a fleet it can neither hold nor service"
+
 echo
 echo "=== residue check ==="
 restore
