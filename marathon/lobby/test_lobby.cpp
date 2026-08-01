@@ -200,6 +200,40 @@ TEST_CASE("PULL: the same forgery is refused, and the wall is Loom's word") {
     CHECK(l.log(kStrict1).in_lobby);
 }
 
+TEST_CASE("PULL: the office CANNOT BORROW an attestation, even from a right it is still holding") {
+    Lobby l;
+    l.boot("lobby-matchmaker-pull");
+    // ONE seeker: not enough for a match, so the office is genuinely still
+    // holding this player's unspent answer right when it speaks personally.
+    l.join(kStrict1);
+    l.pump(4);
+    l.set_ready(kStrict1, true);
+    l.pump(4);
+    l.seek(kStrict1);
+    l.pump(4);
+    REQUIRE_FALSE(l.log(kStrict1).saw("ACTED ON"));
+
+    // The same weave, the same shape, a right it could physically spend -- and
+    // the statement still arrives unattested, because an answer right answers
+    // ONE ASK and this is not that ask. "Speaking as the office" is not a
+    // capability the office holds; it is a fact about a conversation.
+    l.office_speaks_personally("match-personal", {kStrict1});
+    l.pump(6);
+
+    CHECK_MESSAGE(l.log(kStrict1).saw("REFUSED match match-personal"),
+                  transcript(l.log(kStrict1)));
+    CHECK(l.log(kStrict1).joined_attested == 0);
+
+    // ...and the real match, when it forms, still is attested.
+    l.join(kStrict2);
+    l.pump(4);
+    l.set_ready(kStrict2, true);
+    l.pump(4);
+    l.seek(kStrict2);
+    l.pump(8);
+    CHECK(l.log(kStrict1).joined_attested == 1);
+}
+
 TEST_CASE("PULL: a lax player is still fooled -- the wall is the RECEIVER's policy") {
     Lobby l;
     l.boot("lobby-matchmaker-pull");

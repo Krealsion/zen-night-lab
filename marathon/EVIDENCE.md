@@ -49,15 +49,21 @@ the reason is exact — its counterparty is a specific weave rather than an offi
 
 ## Sugar audit — per project
 
-| Project | facade ops | **raw ops in app code** | txn ids in payloads | manual lifecycle wiring | manual candidate cleanup | manual outcome filtering |
-|---|---:|---:|---:|---:|---:|---:|
-| kitchen-replay | 47 | **0** | 0 | 0 | 0 | 0 |
-| download-manager | 40 | **0** | 0 | 0 | 0 | 0 |
-| build-farm | 39 | **0** | 0 | 0 | 0 | 0 |
-| import-pipeline | 40 | **0** | 0 | 0 | 0 | 0 |
-| lobby | 30 | **0** | 0 | 0 | 0 | 0 |
-| scheduler | 41 | **0** | **2** ‡ | 0 | 0 | 0 |
-| **total** | **237** | **0** | **2** | **0** | **0** | **0** |
+| Project | semantic facade ops | accessors | **raw ops in app code** | txn ids in payloads | manual lifecycle wiring | manual candidate cleanup | manual outcome filtering |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| kitchen-replay | 46 | 12 | **0** | 0 | 0 | 0 | 0 |
+| download-manager | 30 | 2 | **0** | 0 | 0 | 0 | 0 |
+| build-farm | 30 | 1 | **0** | 0 | 0 | 0 | 0 |
+| import-pipeline | 28 | 1 | **0** | 0 | 0 | 0 | 0 |
+| lobby | 16 | 2 | **0** | 0 | 0 | 0 | 0 |
+| scheduler | 28 | 6 | **0** | **2** ‡ | 0 | 0 | 0 |
+| **total** | **178** | **24** | **0** | **2** | **0** | **0** | **0** |
+
+*Semantic operations are `start` / `start_existing` / `ask` / `offer_current_answer` / `commit` /
+`abort` / `tick` / `state` / `take_outcome`, counted by grep. Accessors (`id`, `candidate`,
+`incumbent`, `started`, `role`, `candidate_name`) are counted separately because the handle
+documents them as diagnostics rather than operations, and almost all of them are in test
+assertions.*
 
 ‡ `timer::PrepareTimerHandover` carries a `transaction` field for wire legibility — its own header
 says it is *not* authority. Classified as **third-party vocabulary that predates the handle**; see
@@ -71,7 +77,7 @@ FRICTION.md F15. It is the only place in six projects an application touched a t
 |---|---|
 | immediate candidate readiness | kitchen, download, build, import, lobby, scheduler |
 | deferred candidate readiness | kitchen (`AskHousePassRate`), download (`AskCatalogueSize`), build (`AskToolchain`), import (`AskCatalogueName`) |
-| authentic refusal | all six — 11 distinct domain reasons |
+| authentic refusal | all six — **14 distinct domain reasons**: kitchen (wrong station; work it cannot cook), download (catalogue size; unservable debt; over-bound debt), farm (wrong worker slot; wrong toolchain; attempts exhausted), import (wrong catalogue; unreadable file; over-bound adoption), lobby (house match size), scheduler (fleet not serviced; **a third-party clock declining**) |
 | candidate failure | all six (`CandidateLoad`, loader's own words preserved) |
 | `AdmissionPending` observed | kitchen, download, build, import, scheduler |
 | committed outcome | all six |

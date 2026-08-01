@@ -16,12 +16,12 @@ Nothing in this tree writes to `Zen/Loom` or `Zen/Zengine`.
 | 2 | `download-manager/` | Is the original answer capability the right thing to hold for the whole operation? | 30 / 153 |
 | 3 | `build-farm/` | Same shape, different domain — do two independent implementations grow the same bookkeeping? | 29 / 153 |
 | 4 | `import-pipeline/` | Does *request → menu → resolved choice → receipt* reproduce outside the kitchen? | 26 / 134 |
-| 5 | `lobby/` | Are *speaker identity* and *office authorship* observably different security facts? | 16 / 95 |
+| 5 | `lobby/` | Are *speaker identity* and *office authorship* observably different security facts? | 17 / 99 |
 | 6 | `scheduler/` | Do two individually pleasant APIs stay pleasant together? | 18 / 113 |
-| | | **total** | **158 / 844** |
+| | | **total** | **159 / 848** |
 
 **Start with `FINAL-REPORT.md`.** The one-line answer: the substrate's authoring surface is in very
-good shape (237 facade operations, **zero** raw prepared-replacement calls in application code), and
+good shape (178 semantic facade operations, **zero** raw prepared-replacement calls in application code), and
 the one thing five of six applications reached for and could not have is **role-holding provenance**.
 
 ## The ledgers

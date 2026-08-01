@@ -19,9 +19,9 @@ modified. Night One is preserved unaltered at `../original/` and was re-verified
 | 2 | download-manager | **GREEN** | 30 / 153 | 14 RED, 0 GREEN | RED |
 | 3 | build-farm | **GREEN** | 29 / 153 | 16 RED, 1 GREEN | RED |
 | 4 | import-pipeline | **GREEN** | 26 / 134 | 15 RED, 0 GREEN | RED |
-| 5 | lobby | **GREEN** | 16 / 95 | *see §9* | RED |
-| 6 | scheduler | **GREEN** | 18 / 113 | *see §9* | RED |
-| | **total** | **6 GREEN, 0 BLOCKED** | **158 / 844** | | |
+| 5 | lobby | **GREEN** | 17 / 99 | *see §11* | RED |
+| 6 | scheduler | **GREEN** | 18 / 113 | *see §11* | RED |
+| | **total** | **6 GREEN, 0 BLOCKED** | **159 / 848** | | |
 
 Plus `repro-answer-seam` (project 1), which exits 0 and is a `ctest` case of its own.
 
@@ -29,7 +29,8 @@ Plus `repro-answer-seam` (project 1), which exits 0 and is a `ctest` case of its
 distinction it exists to test *is* expressible, at a price, and recording the **price** is more
 useful than recording a wall. See §5.
 
-**Every GREEN mutation is a reported gap, not a shrug** — each is named in §9 with the reason.
+**Every GREEN mutation is a reported gap, not a shrug** — each is named in §11 with its reason
+and, where it is masked, with the mechanism that masks it.
 
 ---
 
@@ -44,8 +45,15 @@ useful than recording a wall. See §5.
 | 4 | **lobby** | Four projects had by then written the same sentence about role provenance and treated it as bookkeeping. The next thing worth knowing was whether it is a *security* fact — and that needs a domain where believing a forgery costs something real. |
 | 5 | **scheduler** | Last, deliberately: the composition question ("do two pleasant APIs stay pleasant together?") is only answerable once both are familiar, and the accumulated idiom made the *friction* legible instead of drowned in novelty. |
 
-**No optional seventh project.** The evidence never split two ways — see §9 for what a seventh
-would have had to distinguish, and why nothing qualified.
+**No optional seventh project, and the brief's own test is why.** A seventh must be chosen *to
+distinguish between two architectural interpretations*, with the hypothesis stated first. After six
+the evidence never split two ways: the candidates were either **unanimous** (describe-then-hand-over,
+6/6; role provenance, 5/6), **unanimously absent** (sequence owner and outcome ergonomics, 0/6), or
+**disagreeing for a reason already understood** (the promise book's three consumers differ on
+continuity policy, and a seventh domain would add a fourth opinion rather than break a tie). The one
+thing a seventh could still settle is whether an extracted `PromiseBook` reduces ceremony or
+relocates it — and that is an *extraction experiment*, not an application, so it is ranked as errand
+5 in §8 instead.
 
 ---
 
@@ -53,8 +61,11 @@ would have had to distinguish, and why nothing qualified.
 
 > **Yes. Night Lab preferred the handle, and not because it is shorter.**
 
-**237 facade operations across six projects. Zero raw prepared-replacement operations in
-application code.** Measured, not asserted: no `begin_prepared_replacement`,
+**178 semantic facade operations across six projects. Zero raw prepared-replacement operations in
+application code.** Both numbers are grep counts, not estimates — an earlier draft of this report
+said 237 by counting the handle's *accessors* (`id()`, `candidate()`, `incumbent()`, `started()`)
+as operations. They are 24 more calls, almost all of them in test assertions, and they are counted
+separately in EVIDENCE.md. The number that matters is unchanged and exact: no `begin_prepared_replacement`,
 `ask_candidate_to_prepare`, `accept_preparation_answer`, `commit_prepared_replacement`,
 `abort_prepared_replacement`, `host_lifecycle_authority`, `load_candidate`, `seal_weave` or
 `admit_candidate` appears in any of the six.
@@ -68,16 +79,19 @@ Not missing sugar.
 
 **Why "naturally preferable" and not merely "shorter":**
 
-1. **It made the domain decisions the only decisions left.** In every project the application code
+1. **Nobody was ever tempted by the raw path.** Six applications, six domains, six replacement
+   stories, and not one of them wanted something the handle would not do — although the brief
+   explicitly invited a raw control vertical as a control.
+2. **It made the domain decisions the only decisions left.** In every project the application code
    reads: start, ask *this domain question*, offer *what I am holding*, commit *when I decide*. Six
    different domains, and the only thing that varied was the domain.
-2. **It did not care whose service it was replacing.** Project 6 drives this package's own worker
+3. **It did not care whose service it was replacing.** Project 6 drives this package's own worker
    and **the Zengine Timer** through the same five calls, from one coordinator class, and the diff
    between the two paths is four lines.
-3. **It never hid a refusal.** Twenty-plus distinct refusal reasons were inspected by name across
-   the portfolio; not one had to be reconstructed from a bool.
-4. **Nobody was ever tempted by the raw path.** Not once in six projects did an application want
-   something the handle would not do — and the brief explicitly invited a raw control vertical.
+4. **It never hid a refusal.** Every substrate refusal any project encountered was inspected by its
+   own name — `NoRoleHolder`, `CandidateLoad` (carrying the loader's own words), `IncumbentBusy`,
+   `AlreadyStarted`, `InvalidReadiness`, `CandidateRefused`, `ExplicitAbort` — and not one had to be
+   reconstructed from a bool. Each project's *domain* refusals ride on top as their own text.
 
 **The one thing the handle does not do, and it is not sugar's job:** it drives *one* conversation
 with the incoming holder and knows nothing about the outgoing one. Every project had to invent
@@ -411,3 +425,78 @@ original/           preserved byte-for-byte; rebuilt at its new path and re-veri
 
 Every mutation harness restores its sources and rebuilds, and each ends with a residue grep for its
 own marker text. Verified clean at the end of the run.
+
+---
+
+## 11. Mutation results in full, and every non-RED line explained
+
+Roughly ninety mutations across six matrices. Every one rebuilds the **whole** binary and runs the
+**whole** suite under a timeout; every matrix begins with a hand-chosen canary that must come back
+RED on a **full** case count, prints the case/assertion counts on every line so identical counts are
+visible, treats a run with fewer cases than baseline as `TRUNCATED` rather than RED, and ends with a
+residue grep for its own marker text.
+
+### The GREENs — three, each a reported gap
+
+| project | mutation | why it stayed green | what was done |
+|---|---|---|---|
+| kitchen | *an inherited roster OVERWRITES a station that announced during the handover* | **genuinely unwatched.** Making an announcement land inside the handover window deterministically needs machinery Night One judged not worth building, and this replay agreed. The term is true by construction. | **reported**, as Night One reported it |
+| kitchen | *a station adopts a letter written for a different station* | **MASKED, and the masking mechanism is the substrate's:** a `Bequest` is delivered by the Weave Manager only to the claimant of the role it names, and a station's role determines its name. Expressing the attack needs a *forged attested answer*, which the honest API cannot produce — the unsayable-attack case. | **reported as masked**, with the mechanism named |
+| build farm | *a StageDone is believed even when it names a worker the job never went to* | **masked by the terminal check:** mutation 17 cuts the same term on `JobDone` and is RED, so the itinerary rule *is* watched — on the message where believing it costs something. A mis-attributed progress line changes no outcome. | **reported as masked** |
+
+### The repairs — and what needed re-running, and what did not
+
+Four kinds of non-result showed up, and all four are harness defects rather than evidence:
+
+| kind | count | cause |
+|---|---:|---|
+| `NOT-APPLIED` | 4 | a pattern that matched nothing (**F16**) — including two where an unescaped `++` in a regex is a possessive quantifier rather than two plus signs |
+| `BUILD-FAILED` | 3 | a cut that orphaned a variable or parameter under `-Werror` |
+| `TRUNCATED` | 1 | a cut that left a loop reading past a shorter vector — a crash, not a property |
+| `GREEN`-but-unexpressible | 1 | a mutation whose attack the scenario could not stage |
+
+**Every one was repaired and re-run.** What did **not** need re-running, and the reasoning is worth
+keeping: *a mutation that fails to apply leaves a byte-identical tree, which can only produce the
+baseline result* — so every RED verdict in every matrix is unaffected by the F16 repair and stands
+as recorded. Only non-RED lines were re-run. Both mutation harnesses that needed it also gained an
+id filter (`bash <project>/mutate.sh 04 05`) so a repaired line can be re-run without redoing a
+matrix, and the canary is never skipped by the filter.
+
+### Two coverage gaps found by mutations and closed by cases, not by notes
+
+The discipline says *unwatched ≠ redundant, and the fix is a new case*:
+
+- **build farm** — *the queue is LIFO* stayed green because two builds cannot distinguish LIFO from
+  FIFO: the first is dispatched immediately and only one ever waits. A three-build case with one
+  worker was added; the mutation is now RED.
+- **import pipeline** — *a candidate adopts more conversations than the bound* stayed green because
+  nothing ever handed one more than the bound. A case was added; the mutation is now RED.
+
+### The classification the brief asks for
+
+Not every claim in this portfolio is defended by a mutation, and the ones that are not are defended
+better:
+
+- **Semantic RED** — the ordinary case, and the bulk of the ~90. A mutation expresses a *behaviour*
+  ("match with however many are here", "believe any RouteChoice", "claim you finished a transfer you
+  never had the bytes for") rather than the deletion of a line, and a case goes red.
+- **MASKED** — three, each named above with the mechanism that masks it, and never reported as a
+  pass. Where the masking mechanism is the substrate's (the role-keyed `Bequest`), expressing the
+  attack would need a *forged attested answer* — which the honest API cannot produce. That is the
+  unsayable-attack case, and the honest thing is to say so rather than to write a test that passes
+  while testing nothing.
+- **COMPILE-ENFORCED** — no mutation needed, and no mutation possible:
+  - `PreparedReplacement` is non-copyable and non-default-constructible (`static_assert`s in Loom's
+    own suite);
+  - a `TimedWeave` that forgets `using TimedWeave::on;` does not compile, and says why in a
+    sentence;
+  - a `TimedWeave` that declares its own raw `on(zen.Activated)` does not compile, and names
+    `on_timed_activation` as the alternative. **This is the one Night One asked for**, and it is the
+    strongest kind of answer: the old failure was *silent*, and the new one is a paragraph.
+- **STRUCTURALLY IMPOSSIBLE** — the hold-and-replay race. Under prepared replacement admission
+  **is** activation, in one envelope, so there is no window in which a message can reach an
+  unactivated heir. Five of six projects needed no bootstrap window at all, and that is not because
+  they were careful.
+- **COUNT-DETECTED** — every matrix prints case and assertion counts on every line, treats
+  `cases < baseline` as `TRUNCATED`, and would show identical counts across every mutation if
+  nothing had rebuilt. All three tells fired at least once during this run.

@@ -111,6 +111,13 @@ mutate registry.cpp 's/    void on\(const JoinLobby& j, loom::Mail& mail\) \{/  
 run_one "00" "CANARY: the registry refuses every join"
 
 echo
+# ⚠ MUTATIONS 04 AND 05 EACH CUT **TWO** TERMS, and the pair is deliberate. Cutting
+# only the guard leaves a loop that reads kMatchSize entries out of a shorter
+# vector -- the first cut of both did exactly that, and the run came back
+# TRUNCATED (4 of 16 cases) rather than RED. A crash is not evidence about a
+# property; it is a bad mutation. Cutting the guard AND the loop bound together
+# expresses the BEHAVIOUR ("match with however many are here") instead of the
+# deletion of a line.
 echo "=== the truth table ==="
 
 mutate matchmaker.cpp 's/                mail\.send\(who, MatchCreated\{match, names, "server-" \+ match\}\);\n            \}\n        \}\n        \/\/ Observers get the weaker fact\. See MatchStarted\./                (void)who;\n            }\n        }/'
@@ -122,16 +129,17 @@ run_one "02" "PULL never spends the right it held: the attested match becomes or
 mutate player.hpp 's/        if \(strict_ && !attested_now\) \{/        if (false) {/'
 run_one "03" "A STRICT PLAYER STOPS CHECKING: the policy knob does nothing"
 
-mutate matchmaker.cpp 's/        if \(c\.ready\.size\(\) < kMatchSize \|\| c\.ready\.size\(\) != c\.ready_weaves\.size\(\)\) \{/        if (c.ready.empty() || c.ready.size() != c.ready_weaves.size()) {/'
+mutate matchmaker.cpp 's/        if \(c\.ready\.size\(\) < kMatchSize \|\| c\.ready\.size\(\) != c\.ready_weaves\.size\(\)\) \{\n            return;\n        \}\n        std::vector<std::string> names;\n        std::vector<std::string> weaves;\n        for \(std::size_t i = 0; i < kMatchSize; \+\+i\) \{/        if (c.ready.empty() || c.ready.size() != c.ready_weaves.size()) {\n            return;\n        }\n        std::vector<std::string> names;\n        std::vector<std::string> weaves;\n        for (std::size_t i = 0; i < c.ready.size(); ++i) {/'
 run_one "04" "PUSH matches with fewer ready players than the house rule"
 
-mutate matchmaker.cpp 's/        if \(!kPull \|\| state_\.seekers\.size\(\) < kMatchSize\) \{/        if (!kPull || state_.seekers.empty()) {/'
+mutate matchmaker.cpp 's/        if \(!kPull \|\| state_\.seekers\.size\(\) < kMatchSize\) \{\n            return;\n        \}\n        std::vector<std::string> names;\n        std::vector<std::string> weaves;\n        for \(std::size_t i = 0; i < kMatchSize; \+\+i\) \{/        if (!kPull || state_.seekers.empty()) {\n            return;\n        }\n        std::vector<std::string> names;\n        std::vector<std::string> weaves;\n        for (std::size_t i = 0; i < state_.seekers.size(); ++i) {/'
+mutate matchmaker.cpp 's/        state_\.seekers\.erase\(state_\.seekers\.begin\(\),\n                             state_\.seekers\.begin\(\) \+ static_cast<std::ptrdiff_t>\(kMatchSize\)\);/        state_.seekers.clear();/'
 run_one "05" "PULL matches with fewer seekers than the house rule"
 
 mutate registry.cpp 's/            if \(m\.name == j\.player\) \{/            if (false) {/'
 run_one "06" "two players may sit in the lobby under one name"
 
-mutate registry.cpp 's/                if \(state_\.members\[i\]\.name == name\) \{/                if (false) {/'
+mutate registry.cpp 's/                if \(state_\.members\[i\]\.name == name\) \{/                if (state_.members[i].name == name \&\& false) {/'
 run_one "07" "the registry ignores MatchStarted: matched players stay in the lobby forever"
 
 echo
@@ -143,7 +151,7 @@ run_one "08" "THE PERSONAL STATEMENT BORROWS THE OFFICE'S ATTESTATION"
 mutate matchmaker.cpp 's/        described\.held_answer_rights = static_cast<std::int64_t>\(held_\.size\(\)\);/        described.held_answer_rights = 0;/'
 run_one "09" "the office hides how many players it promised an attestation it cannot hand over"
 
-mutate matchmaker.cpp 's/            state_\.seekers\.push_back\(Seeker\{w\.player, w\.weave, w\.correlation\}\);\n            \+\+state_\.stranded;/            ++state_.stranded;/'
+mutate matchmaker.cpp 's/            state_\.seekers\.push_back\(Seeker\{w\.player, w\.weave, w\.correlation\}\);\n            \+\+state_\.stranded;/            (void)w;\n            ++state_.stranded;/'
 run_one "10" "a replaced PULL matchmaker drops its inherited players entirely"
 
 mutate matchmaker.cpp 's/        if \(p\.match_size != static_cast<std::int64_t>\(kMatchSize\)\) \{/        if (false) {/'
@@ -156,7 +164,7 @@ echo
 echo "=== residue check ==="
 restore
 cmake --build "$BUILD" -j"$(nproc)" > /dev/null 2>&1
-for marker in CANARY 'if (false)' 'if (true) {' 'held_answer_rights = 0'; do
+for marker in CANARY 'if (false)' 'if (true) {' 'described.held_answer_rights = 0'; do
     hits=$(grep -rn -- "$marker" "$SRC"/*.cpp "$SRC"/*.hpp 2>/dev/null | wc -l)
     echo "  marker '$marker' remaining in sources: $hits"
 done

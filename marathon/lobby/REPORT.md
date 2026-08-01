@@ -1,7 +1,7 @@
 # Project 5 — Lobby / matchmaking
 
 **Verdict: GREEN** — and the green is the point, because what it proves is a *cost*, not a
-capability. 16 cases / 95 assertions. Mutation results in FINAL-REPORT.md.
+capability. 17 cases / 99 assertions. Mutation results in FINAL-REPORT.md.
 
 **Pinned against:** Loom `78d64ea`, Zengine `f6a4c69`, ABI v4.
 
@@ -77,7 +77,7 @@ Two matchmakers from one source, and the pair *is* the finding.
 | # | speaker | push lobby | pull lobby |
 |---|---|---|---|
 | 1 | the **current role holder**, as the office | unattested | **attested** |
-| 2 | **the same weave, personally** | *indistinguishable from 1* | **refused** — the only separation available anywhere |
+| 2 | **the same weave, personally** | *indistinguishable from 1* | **refused** — the only separation available anywhere, and it holds **even when the office is still holding an unspent answer right for that very player**: an answer right answers ONE ASK, and speaking as the office is a fact about a conversation rather than a capability the office can spend at will |
 | 3 | the **predecessor**, after replacement | **cannot speak at all** — the admission SEALS it | same |
 | 4 | an **unrelated weave** | *indistinguishable from 1* | refused |
 | 5 | the **successor**, after replacement | fine (nothing was ever attested) | **refused** — it is honest and it looks exactly like 4 |
@@ -117,7 +117,7 @@ house-rule mismatch; `NoRoleHolder` and `CandidateLoad` inspected.
 
 | | count |
 |---|---|
-| facade operations used | `start` 6, `ask` 5, `offer_current_answer` 2, `commit` 3, `abort` 1, `state` 8, `take_outcome` 5 |
+| semantic facade operations used | 16 (grep-counted; see EVIDENCE.md) |
 | **raw prepared-replacement operations in app code** | **0** |
 | manual transaction ids in domain payloads | **0** |
 | manual lifecycle authority wiring | **0** |

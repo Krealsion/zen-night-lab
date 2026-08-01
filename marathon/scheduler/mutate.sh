@@ -8,6 +8,14 @@
 # (a one-shot leaving the book before its answer came back), which now has a
 # mutation of its own so it cannot come back unnoticed.
 #
+# ⚠ ONE MORE RULE, PAID FOR HERE: ANCHOR MUTATIONS ON CODE, NEVER ON PROSE.
+# A source comment containing an apostrophe ("the fleet's current state") inside a
+# single-quoted shell string CLOSES THE STRING. Every following line's quoting
+# shifts, and bash dies on a syntax error several mutations later -- after earlier
+# ones have already run and printed results that look perfectly normal. The EXIT
+# trap still restores the tree, so nothing is left mutated; what is lost is every
+# mutation after the bad line, silently, unless somebody reads the exit code.
+#
 # Usage:  bash scheduler/mutate.sh [ids...]   (from the marathon root, under WSL)
 
 set -u
@@ -121,7 +129,7 @@ run_one "01" "the rhythm beats and nothing is ever asked"
 mutate scheduler.cpp 's/        mail\.publish\(SchedulerOpen\{static_cast<std::int64_t>\(timers\(\)\.size\(\)\),\n                                   static_cast<std::int64_t>\(state_\.book\.size\(\)\)\}\);/        (void)mail;/'
 run_one "02" "the activation hook does no domain work: nothing announces itself"
 
-mutate scheduler.cpp 's/        \/\/ A fresh scheduler knows nothing about the fleet's current state, so it\n        \/\/ asks about everything it is responsible for at once rather than waiting\n        \/\/ out a full period\. THIS is the domain work the hook exists for\.\n        for \(Schedule& s : state_\.book\) \{\n            ask_worker\(mail, s\);\n        \}//'
+mutate scheduler.cpp 's/        for \(Schedule& s : state_\.book\) \{\n            ask_worker\(mail, s\);\n        \}\n    \}\n\n    \/\/ ---- the operator/        (void)mail;\n    }\n\n    \/\/ ---- the operator/'
 run_one "03" "the activation hook skips the fleet's first checks"
 
 mutate scheduler.cpp 's/            } else \{\n                \/\/ A one-shot is finished the moment its answer lands, and not one\n                \/\/ beat sooner\.\n                state_\.book\.erase\(state_\.book\.begin\(\) \+ static_cast<std::ptrdiff_t>\(i\)\);\n            \}/            }/'
