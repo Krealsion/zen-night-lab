@@ -1,46 +1,41 @@
 # night-lab
 
-Bounded experiments on the Loom. One experiment at a time; each leaves behind runnable code,
-focused tests, a usage example, and a written-up morning report in `reports/`.
+Bounded experiments on the Loom. Nothing here is a deliverable and nothing here is a framework.
+The playground is allowed to be strange; the core is not ours to change.
 
-Nothing here is a deliverable and nothing here is a framework. The playground is allowed to be
-strange; the core is not ours to change.
+Two experiments live here, side by side, and they are pinned against **different** substrate
+commits on purpose. An experiment is evidence about the substrate it ran on; re-pointing an old
+experiment at a new Loom would destroy the record rather than extend it.
 
-## What is in the tree
+| path | what it is | pinned against |
+|---|---|---|
+| `original/` | **Night One** — the job kitchen (2026-07-30). Preserved byte-for-byte. | Loom `d7dd974`, Zengine `93eef58`, ABI v3 |
+| `marathon/` | **Night Two** — the six-project marathon. | Loom `78d64ea`, Zengine `f6a4c69`, ABI v4 |
 
-| path | what it is |
-|---|---|
-| `kitchen/` | **the job kitchen** — the current experiment. Three roles, six loadable weaves, one vocabulary, one scripted demo host. |
-| `repro/` | the smallest concrete reproducer for the one core seam the experiment found. |
-| `tests/` | the suite (`test_kitchen.cpp`), its host harness, and the mutation harness that checks the suite can go red. |
-| `vendor/` | the **pinned** Loom snapshot and Zengine Timer artifacts. See `vendor/README.md`. |
-| `reports/latest.md` | the morning report. |
+## original/
 
-## Building and running
-
-Everything is WSL/GCC. The lab consumes a pinned Loom snapshot from `vendor/loom`, never the
-live sibling tree — see `vendor/README.md` for why and for how to re-cut it.
+The first night's experiment, exactly as it was written, including its own `README.md`,
+`reports/latest.md`, `vendor/README.md` and mutation harness. It moved down one directory level
+and **nothing inside it was edited**, so the two absolute paths it hard-codes now need one extra
+component:
 
 ```sh
-cd /mnt/g/programming/cpp/Zen/playground/night-lab
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build -j"$(nproc)"
-
-ctest --test-dir build --output-on-failure   # the suite + the reproducer
-./build/kitchen/kitchen-demo                 # the usage example, on the real clock
-./build/kitchen/repro-answer-seam            # the core-seam reproducer, on its own
-
-bash tests/mutate.sh                         # does the suite actually catch anything?
-NIGHT_LAB_TRACE=1 ./build/kitchen/night-lab-tests   # every delivery and refusal, from the host's tap
+# tests/mutate.sh says LAB=/mnt/g/programming/cpp/Zen/playground/night-lab
+# it is now  .../playground/night-lab/original
 ```
 
-## House rules this lab holds itself to
+Its `build/` tree was regenerated at the new location (a CMake cache bakes in absolute source
+paths, so the old one was stale rather than valuable). Everything else is untouched.
 
-- Only existing public Loom and Zengine behaviour. No root sends after boot, no wildcard grants,
-  no direct Switchboard access from a weave, no undeclared messages, no threads, no hidden global
-  state, no silent failure.
-- A local fake is allowed only when it is **labelled** and does not invalidate the question. There
-  is exactly one in this lab — the Timer's clock — and `tests/harness.hpp` says so at the top.
+## marathon/
+
+Six materially different applications, built to make the substrate justify itself. Start with
+`marathon/README.md`; the running ledgers are `marathon/FRICTION.md` and `marathon/EVIDENCE.md`.
+
+## House rules both experiments hold themselves to
+
+- Only existing public Loom and Zengine behaviour. Nothing in this repo writes to `Zen/Loom` or
+  `Zen/Zengine`.
+- A local fake is allowed only when it is **labelled** and does not invalidate the question.
 - If an experiment appears to need a Loom or Zengine change, it does not make one. It produces the
-  smallest reproducer, describes the missing seam, and continues only if a local workaround can
-  still test the original question honestly.
+  smallest reproducer, describes the missing seam, and continues.
