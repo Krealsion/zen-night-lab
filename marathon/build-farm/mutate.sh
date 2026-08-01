@@ -117,7 +117,7 @@ run_one "00" "CANARY: the dispatcher rejects every build"
 echo
 echo "=== the operation itself ==="
 
-mutate dispatcher.cpp 's/        tell\(mail, \*b,\n             BuildProgress\{b->id, s\.worker, s\.stage, s\.index \+ 1,\n                           static_cast<std::int64_t>\(kStageCount\), s\.attempt\}\);//'
+mutate dispatcher.cpp 's/        tell\(mail, \*b,\n             BuildProgress\{b->id, s\.worker, s\.stage, s\.index \+ 1,\n                           static_cast<std::int64_t>\(kStageCount\), s\.attempt\}\);/        (void)mail;/'
 run_one "01" "progress is never forwarded to the requester"
 
 mutate dispatcher.cpp 's/                tell\(mail, done, BuildSucceeded\{done\.id, j\.worker, j\.detail, done\.attempt\}\);//'
@@ -129,7 +129,7 @@ run_one "03" "nothing is ever dispatched: every build waits forever"
 mutate dispatcher.cpp 's/    bool busy\(const std::string& worker\) const \{/    bool busy(const std::string\& worker) const {\n        { (void)worker; return false; }/'
 run_one "04" "the dispatcher piles work onto a worker that already has some"
 
-mutate dispatcher.cpp 's/            for \(const Build& b : state_\.builds\) \{\n                if \(!b\.worker\.empty\(\)\) \{\n                    continue;\n                \}/            for (Build\& b : state_.builds) {\n                if (!b.worker.empty()) {\n                    continue;\n                }\n                if (\&b != \&state_.builds.back()) { continue; }/'
+mutate dispatcher.cpp 's/                if \(!b\.worker\.empty\(\)\) \{\n                    continue;\n                \}\n                if \(avoid_last/                if (!b.worker.empty()) {\n                    continue;\n                }\n                { bool newer = false; for (const Build\& q : state_.builds) { if (\&q > \&b \&\& q.worker.empty()) { newer = true; } } if (newer) { continue; } }\n                if (avoid_last/'
 run_one "05" "the queue is LIFO: the newest waiting build goes first"
 
 mutate dispatcher.cpp 's/            if \(b\.id == s\.id && b\.requester == requester\) \{/            if (b.id == s.id \&\& b.requester == requester \&\& false) {/'
@@ -138,10 +138,10 @@ run_one "06" "one requester may open the same build id twice"
 echo
 echo "=== the two answers to absence, and the resumption contract ==="
 
-mutate dispatcher.cpp 's/            ++state_\.requeued_by_reconciliation;/            ++state_.requeued_by_reconciliation;\n            { b.patience = kAssignmentPatienceSweeps; ++at; continue; }/'
+mutate dispatcher.cpp 's/            \+\+state_\.requeued_by_reconciliation;/            ++state_.requeued_by_reconciliation;\n            { b.patience = kAssignmentPatienceSweeps; ++at; continue; }/'
 run_one "07" "RECONCILIATION does nothing: an arrival is no longer evidence"
 
-mutate dispatcher.cpp 's/            ++state_\.requeued_by_sweep;/            ++state_.requeued_by_sweep;\n            { b.patience = kAssignmentPatienceSweeps; ++at; continue; }/'
+mutate dispatcher.cpp 's/            \+\+state_\.requeued_by_sweep;/            ++state_.requeued_by_sweep;\n            { b.patience = kAssignmentPatienceSweeps; ++at; continue; }/'
 run_one "08" "THE SWEEP does nothing: silence is no longer evidence"
 
 mutate dispatcher.cpp 's/        if \(b\.attempt >= kMaxAttempts\) \{/        if (false) {/'

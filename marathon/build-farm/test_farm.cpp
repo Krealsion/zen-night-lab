@@ -160,6 +160,40 @@ TEST_CASE("THE QUEUE: a second build waits for a free worker and is told so at a
     CHECK(f.book().outstanding.empty());
 }
 
+TEST_CASE("THE QUEUE IS FIFO: with two builds waiting, the OLDER one goes first") {
+    Farm f;
+    f.boot(/*workers=*/1);
+    // Three builds and one worker. TWO of them wait, which is the smallest world
+    // in which "which waiting build goes next" is a question at all -- with only
+    // one waiting, LIFO and FIFO are the same thing, which is why the earlier
+    // queue case could not catch a mutation that reverses the order.
+    f.submit("f1", "release");
+    f.pump(2);
+    f.submit("f2", "debug");
+    f.submit("f3", "debug");
+    f.pump(120);
+
+    CHECK_MESSAGE(heard(f.book(), {"succeeded f1"}), transcript(f.book()));
+    CHECK_MESSAGE(heard(f.book(), {"succeeded f2"}), transcript(f.book()));
+    CHECK_MESSAGE(heard(f.book(), {"succeeded f3"}), transcript(f.book()));
+
+    // f2 was accepted before f3, so f2 must START before f3.
+    std::size_t f2_at = f.book().heard.size();
+    std::size_t f3_at = f.book().heard.size();
+    for (std::size_t i = 0; i < f.book().heard.size(); ++i) {
+        const std::string& l = f.book().heard[i];
+        if (f2_at == f.book().heard.size() && l.find("progress f2") != std::string::npos) {
+            f2_at = i;
+        }
+        if (f3_at == f.book().heard.size() && l.find("progress f3") != std::string::npos) {
+            f3_at = i;
+        }
+    }
+    REQUIRE_MESSAGE(f2_at < f.book().heard.size(), transcript(f.book()));
+    REQUIRE_MESSAGE(f3_at < f.book().heard.size(), transcript(f.book()));
+    CHECK_MESSAGE(f2_at < f3_at, transcript(f.book()));
+}
+
 TEST_CASE("two workers take two builds at once, and each build knows which one has it") {
     Farm f;
     f.boot();
