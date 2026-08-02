@@ -11,7 +11,7 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | descend into real code | NOT ATTEMPTED | |
 | same thing at two heights | NOT ATTEMPTED | |
 | build/run/test | PARTIAL | Gate 1: describe→launch→see works (`workshop run lighthouse`, 16-case witness suite); build is still CMake-by-hand outside the Workshop |
-| change while alive | NOT ATTEMPTED | |
+| change while alive | PARTIAL | Gate 3: poke/reload/organ-swap witnessed headless (41 cases); verified-successor ceremony at Gate 4; interactive keys at pilot |
 | find/use what others made | NOT ATTEMPTED | |
 | see provenance honestly | NOT ATTEMPTED | |
 | inspect running machine | PARTIAL | Gate 2: live tallies + refusal ring + authenticated asks; grants/replacement/timers not yet exposed |

@@ -203,8 +203,9 @@ int cmd_new(const std::string& name) {
 
 struct RunFlags {
     std::int64_t for_seconds = 0;
-    bool watch = false;  ///< also print raw tap lines (host stdout diagnostics)
-    bool refuse = false; ///< deliberately provoke one refusal, then explain it
+    bool watch = false;       ///< also print raw tap lines (host stdout diagnostics)
+    bool refuse = false;      ///< deliberately provoke one refusal, then explain it
+    bool interactive = false; ///< load the Input service; keys reach inside the live world
 };
 
 int cmd_run(const std::string& name, const RunFlags& flags) {
@@ -227,6 +228,9 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     std::vector<Boot> boots;
     boots.push_back({"(workshop) registry", "workshop-registry", "", kRegistryRole});
     boots.push_back({"(workshop) inspector", "workshop-inspector", "", kInspectorRole});
+    if (flags.interactive) {
+        boots.push_back({"(service) zengine.input", "zengine-input", "", "zengine.input"});
+    }
     for (const std::string& need : spec.needs) {
         const Service* s = find_service(need);
         if (s == nullptr) {
@@ -292,6 +296,29 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
         }
     }
 
+    // Interactive alteration targets: the swap cycle, the declared knobs, the
+    // first role-holding part as the reload target.
+    if (flags.interactive) {
+        ctx.interactive = true;
+        for (const char* stem : {"workshop-skin-log", "zengine-skin-tui-classic"}) {
+            if (auto path = resolve_artifact(spec.name, stem)) {
+                ctx.skins.push_back(SkinChoice{stem, path->string(), stem});
+            }
+        }
+        ctx.knobs = spec.knobs;
+        ctx.knob_at.assign(ctx.knobs.size(), 0);
+        for (const PartSpec& part : spec.parts) {
+            if (!part.role.empty()) {
+                ctx.alter_part = part.name;
+                ctx.alter_stem = part.stem;
+                if (auto path = resolve_artifact(spec.name, part.stem)) {
+                    ctx.alter_path = path->string();
+                }
+                break;
+            }
+        }
+    }
+
     loom::Grant reach;
     reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
     reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
@@ -299,6 +326,14 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
     if (!ctx.refusal_role.empty()) {
         reach.allow_to_role(QueryRunning::zen_name, QueryRunning::zen_version, ctx.refusal_role);
+    }
+    if (flags.interactive) {
+        reach.allow(loom::SwapWeave::zen_name, loom::SwapWeave::zen_version, manager);
+        reach.allow(loom::ReloadWeave::zen_name, loom::ReloadWeave::zen_version, manager);
+        for (const KnobSpec& knob : spec.knobs) {
+            reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
+                                knob.role);
+        }
     }
     const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
 
@@ -393,6 +428,8 @@ int main(int argc, char** argv) {
                 flags.watch = true;
             } else if (arg == "--refuse") {
                 flags.refuse = true;
+            } else if (arg == "--interactive" || arg == "-i") {
+                flags.interactive = true;
             }
         }
         return workshop::cmd_run(argv[2], flags);
@@ -401,6 +438,6 @@ int main(int argc, char** argv) {
                 "  workshop list\n"
                 "  workshop describe <toy>\n"
                 "  workshop new <name>\n"
-                "  workshop run <toy> [--for-seconds N] [--watch] [--refuse]\n");
+                "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n");
     return cmd.empty() ? 0 : 1;
 }

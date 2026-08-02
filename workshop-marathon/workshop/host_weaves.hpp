@@ -9,9 +9,12 @@
 
 #include "vocabulary.hpp"
 
+#include "input/vocabulary.hpp"
 #include "surface/vocabulary.hpp"
 #include "timer/binding.hpp"
 #include "timer/vocabulary.hpp"
+
+#include <zen/weave/poke.hpp>
 
 #include <zen/kernel/control.hpp>
 #include <zen/kernel/manager.hpp>
@@ -31,6 +34,14 @@ struct Pending {
     std::string part; ///< spec part name, or "(service) ...", "(workshop) ..."
     std::string stem;
     std::string role;
+    int action = 0; ///< 0 none; 100+i = skin i swapped in (flip on the ANSWER)
+};
+
+/// A skin the interactive operator can put on the surface.
+struct SkinChoice {
+    std::string stem;
+    std::string path;
+    std::string label;
 };
 
 struct OperatorContext {
@@ -48,6 +59,18 @@ struct OperatorContext {
     /// this role a question it has no door for.
     std::string refusal_role;
     bool refusal_fired = false;
+
+    // ---- interactive alteration (Gate 3) -----------------------------------
+    bool interactive = false;
+    std::string last_status;         ///< re-offered when a fresh skin says hello
+    std::vector<SkinChoice> skins;   ///< the swap cycle; [0] is what booted
+    std::size_t skin_idx = 0;
+    std::vector<KnobSpec> knobs;     ///< the creation's declared reach-in points
+    std::vector<std::size_t> knob_at; ///< current value index per knob
+    std::size_t knob_cursor = 0;
+    std::string alter_part;          ///< first role-holding part: reload target
+    std::string alter_stem;
+    std::string alter_path;
 };
 
 struct OperatorState {
@@ -58,12 +81,17 @@ struct OperatorState {
 
 /// The Workshop's hand on the bus. It hears the Manager's answers and turns
 /// them into published launch facts — the answer, not the wish, is what
-/// publishes. It also hears StopWish (the governor's, or anyone's) and stops
-/// the world through the shell's one lever.
+/// publishes. It hears StopWish (the governor's, or anyone's) and stops the
+/// world through the shell's one lever. Interactively it hears KeyPressed and
+/// reaches inside the live world the ordinary ways: SwapWeave (skin), Poke
+/// (declared knobs), ReloadWeave (code in place, state riding the gate).
 class OperatorWeave
     : public loom::WeaveBase<OperatorWeave, OperatorState,
-                             loom::Accept<loom::Result, loom::Ack, loom::Refused, StopWish>,
-                             loom::Emit<loom::LoadWeave, PartUp, PartFailed,
+                             loom::Accept<loom::Result, loom::Ack, loom::Refused, StopWish,
+                                          zengine::input::KeyPressed,
+                                          zengine::surface::SurfaceReady>,
+                             loom::Emit<loom::LoadWeave, loom::SwapWeave, loom::ReloadWeave,
+                                        loom::PokeWrite, PartUp, PartFailed,
                                         zengine::surface::SurfaceText>> {
 public:
     explicit OperatorWeave(OperatorContext& ctx) : ctx_(&ctx) {}
@@ -74,13 +102,71 @@ public:
 
     void on(const StopWish& wish, loom::Mail& mail) {
         status(mail, "stop: " + wish.reason);
+        quit();
+    }
+
+    /// A fresh skin said hello: re-offer the status line so it starts complete.
+    void on(const zengine::surface::SurfaceReady&, loom::Mail& mail) {
+        if (!ctx_->last_status.empty()) {
+            mail.publish(zengine::surface::SurfaceText{zengine::surface::kSlotStatus,
+                                                       ctx_->last_status});
+        }
+    }
+
+    void on(const zengine::input::KeyPressed& k, loom::Mail& mail) {
+        namespace scan = zengine::input::scan;
+        if (!ctx_->interactive) {
+            return;
+        }
+        if (k.scancode == scan::k1 && ctx_->skins.size() > 1) {
+            const std::size_t next = (ctx_->skin_idx + 1) % ctx_->skins.size();
+            const SkinChoice& s = ctx_->skins[next];
+            command(mail, "swap skin -> " + s.label, static_cast<int>(100 + next),
+                    loom::SwapWeave{zengine::surface::kSkinRole, s.stem, s.path,
+                                    /*graceful=*/false});
+        } else if (k.scancode == scan::kP && !ctx_->knobs.empty()) {
+            const KnobSpec& knob = ctx_->knobs[ctx_->knob_cursor];
+            if (!knob.values.empty()) {
+                std::size_t& at = ctx_->knob_at[ctx_->knob_cursor];
+                at = (at + 1) % knob.values.size();
+                const std::string& value = knob.values[at];
+                const std::uint64_t corr = ctx_->next_corr++;
+                ctx_->pending[corr] =
+                    Pending{"knob '" + knob.name + "' = " + value, knob.field, knob.role};
+                mail.send_to_role(knob.role, loom::PokeWrite{knob.field, value}, corr);
+                status(mail, "knob '" + knob.name + "' -> " + value + " ...");
+            }
+        } else if (k.scancode == scan::kO && ctx_->knobs.size() > 1) {
+            ctx_->knob_cursor = (ctx_->knob_cursor + 1) % ctx_->knobs.size();
+            status(mail, "knob selected: " + ctx_->knobs[ctx_->knob_cursor].name);
+        } else if (k.scancode == scan::kR && !ctx_->alter_stem.empty()) {
+            command(mail, "reload " + ctx_->alter_part + " in place (state rides the gate)", 0,
+                    loom::ReloadWeave{ctx_->alter_stem, ctx_->alter_path});
+        } else if (k.scancode == scan::kQ) {
+            quit();
+        } else if (k.scancode == scan::kC && k.name == "Ctrl+C") {
+            // The backends' dressed convenience name, trusted as a courtesy —
+            // same debt the snake host carries, same spelling.
+            quit();
+        }
+    }
+
+private:
+    template <class Cmd>
+    void command(loom::Mail& mail, const std::string& label, int action, const Cmd& cmd) {
+        const std::uint64_t corr = ctx_->next_corr++;
+        ctx_->pending[corr] = Pending{label, "", ""};
+        ctx_->pending[corr].action = action;
+        mail.send(ctx_->manager, cmd, corr);
+        status(mail, label + " ...");
+    }
+
+    void quit() {
         ctx_->quit = true;
         if (ctx_->request_stop) {
             ctx_->request_stop();
         }
     }
-
-private:
     void answered(loom::Mail& mail, const std::string& words, bool refused) {
         ++state_.answers;
         const auto it = ctx_->pending.find(mail.correlation());
@@ -94,9 +180,12 @@ private:
             mail.publish(PartFailed{ctx_->project, p.part, p.stem, words});
             status(mail, p.part + " REFUSED: " + words);
         } else {
+            if (p.action >= 100) {
+                ctx_->skin_idx = static_cast<std::size_t>(p.action - 100);
+            }
             ++ctx_->up;
             mail.publish(PartUp{ctx_->project, p.part, p.stem, p.role});
-            status(mail, p.part + " up");
+            status(mail, p.part + " " + words);
         }
         ctx_->pending.erase(it);
 
@@ -109,8 +198,12 @@ private:
     }
 
     void status(loom::Mail& mail, const std::string& text) {
+        ctx_->last_status = "[workshop] " + text;
+        if (ctx_->interactive) {
+            ctx_->last_status += "   (1 skin | p knob | r reload | q quit)";
+        }
         mail.publish(zengine::surface::SurfaceText{zengine::surface::kSlotStatus,
-                                                   "[workshop] " + text});
+                                                   ctx_->last_status});
     }
 
     OperatorContext* ctx_;

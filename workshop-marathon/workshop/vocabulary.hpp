@@ -38,17 +38,34 @@ struct PartSpec {
     ZEN_SHAPE(PartSpec, 1, ZEN_FIELD(name), ZEN_FIELD(stem), ZEN_FIELD(role));
 };
 
+/// A declared live-tweak point: "this creation invites you to reach in HERE."
+/// `field` names a ZEN_EXPOSEd state field on whatever holds `role`; `values`
+/// is a cycle of literals (Poke text form). DECLARED truth: the project says
+/// the knob exists; the runtime's Poke door is what actually enforces whether
+/// the reach is allowed (a knob naming a hidden field refuses honestly).
+struct KnobSpec {
+    std::string name;
+    std::string role;
+    std::string field;
+    std::vector<std::string> values;
+    ZEN_SHAPE(KnobSpec, 1, ZEN_FIELD(name), ZEN_FIELD(role), ZEN_FIELD(field),
+              ZEN_FIELD(values));
+};
+
 /// A creation, as its project file describes it. `needs` lists the service
 /// roles the creation expects to exist (e.g. "zengine.timer", "zengine.skin");
 /// the Workshop maps each need to a service artifact it trusts. A need the
 /// Workshop cannot supply is an honest launch failure, not a silent shrug.
+/// v2: + `knobs` (GATE-04 — evolving a shape is publishing a new version; v1
+/// files no longer admit and say so at the gate).
 struct ProjectSpec {
     std::string name;
     std::string description;
     std::vector<PartSpec> parts;
     std::vector<std::string> needs;
-    ZEN_SHAPE(ProjectSpec, 1, ZEN_FIELD(name), ZEN_FIELD(description), ZEN_FIELD(parts),
-              ZEN_FIELD(needs));
+    std::vector<KnobSpec> knobs;
+    ZEN_SHAPE(ProjectSpec, 2, ZEN_FIELD(name), ZEN_FIELD(description), ZEN_FIELD(parts),
+              ZEN_FIELD(needs), ZEN_FIELD(knobs));
 };
 
 // ---- runtime-fact tier (published from the Manager's answers) --------------

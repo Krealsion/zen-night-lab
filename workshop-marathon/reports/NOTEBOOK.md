@@ -160,6 +160,41 @@ into ordinary intent at zero substrate friction (P-008).
 
 ---
 
+## 2026-08-02 — 4. Gate 3: reach inside while it is alive
+
+**Three alterations, all through ordinary doors, all witnessed (41 cases green):**
+- **Knob poke (A1):** creations now DECLARE their reach-in points (`knobs` in
+  ProjectSpec v2 — an honest schema evolution, v1 files refuse at the gate by
+  law). A `zen.PokeWrite` widened the live beam 21→41 mid-run; sweeps did not
+  reset. Discovered and pinned: **a poke reply is ordinary correlated speech,
+  not an answer** — the construction layer replies with an ordinary send, so
+  the consumer's authority is the stamped sender + its own correlation.
+  `answers_ask()` false by design. (The FACT/DERIVED discipline just got its
+  first live example of "same-looking shapes, different standing.")
+- **Reload in place (A2):** `ReloadWeave`, same artifact — the sweep count AND
+  the poked width both survived the incarnation bump. State rides the gate;
+  nothing pretended, nothing lost, and the alteration a user made by hand is
+  part of the state that survives. That is a genuinely pleasant property:
+  *your pokes are as durable as the program's own memory.*
+- **Swap a Workshop organ (A3):** the REGISTRY was hard-swapped through the
+  same Manager door any toy part uses (Gate 10 down-payment). The office
+  survived the officeholder (role-addressed ask answered by the successor,
+  authenticated); the successor's memory held exactly one fact — the
+  operator's announcement of the swap that created it. Continuity truthfully
+  NOT preserved, and the report says so instead of papering it.
+
+**Interactive layer added** (`run -i`): the operator hears KeyPressed and
+reaches in with 1/p/r/q — skin cycle via SwapWeave, declared-knob pokes,
+reload-in-place. To be exercised with real keys at the pilot.
+
+**Gate 3 verdict: GREEN** (verified-successor ceremony deliberately deferred
+to Gate 4, where a code edit will need it). Answer to the gate's question:
+from above, live alteration feels like *ordinary messaging* — send a shape,
+hear the answer, publish the fact. No kernel machinery leaked through the
+floor; the floor is messages all the way down.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project

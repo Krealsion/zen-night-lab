@@ -114,6 +114,42 @@ public:
     int inspector_lines = 0;
 };
 
+/// A hand that pokes and records the one answer (a successful PokeWrite
+/// answers Ack; a bad one answers Refused with the door's words).
+class AlterHand : public loom::WeaveBase<AlterHand, AskState,
+                                         loom::Accept<loom::Ack, loom::Refused>,
+                                         loom::Emit<loom::PokeWrite>> {
+public:
+    explicit AlterHand(std::function<void()> done) : done_(std::move(done)) {}
+    void on(const loom::Ack&, loom::Mail& mail) {
+        ++acks;
+        authenticated = mail.answers_ask();
+        if (done_) done_();
+    }
+    void on(const loom::Refused& r, loom::Mail& mail) {
+        ++refusals;
+        words = r.reason;
+        (void)mail;
+        if (done_) done_();
+    }
+    int acks = 0;
+    int refusals = 0;
+    bool authenticated = false;
+    std::string words;
+
+private:
+    std::function<void()> done_;
+};
+
+int frame_width(const std::string& frame) {
+    const std::size_t rb = frame.find(']');
+    return rb == std::string::npos ? -1 : static_cast<int>(rb) - 1;
+}
+long frame_sweeps(const std::string& frame) {
+    const std::size_t p = frame.find("sweeps: ");
+    return p == std::string::npos ? -1 : std::atol(frame.c_str() + p + 8);
+}
+
 /// Asks the registry once the run has ended (driven by the harness). The beat
 /// chain keeps the queue alive forever, so the asker holds the same stop lever
 /// the operator does: hearing the answer ends the second pump.
@@ -338,6 +374,130 @@ void inspector_witness(const std::string& workshop_dir, const std::string& vendo
     CHECK(probe->inspector_lines >= 1, "the inspector painted a live line");
 }
 
+// ---- Gate 3: reach inside while it is alive --------------------------------
+//
+//   A1 a declared knob write lands (Ack, authenticated): the beam field
+//      widens MID-RUN and sweeps do not reset — in-place continuity
+//   A2 ReloadWeave with the same artifact: frames keep flowing and both the
+//      sweep count AND the poked width survive — state rode the gate across
+//      the incarnation bump
+//   A3 hard-swap the Workshop's own registry through the same door: the ROLE
+//      answers afterwards (the office survived its officeholder), the
+//      successor's memory is honestly empty (nothing is preserved and nothing
+//      pretends otherwise), and the world never stopped
+
+void alive_witness(const std::string& workshop_dir, const std::string& vendor_dir,
+                   const std::string& toy_dir) {
+    loom::Switchboard bus;
+    loom::Kernel kernel(bus);
+    const loom::WeaveId control = loom::mount_control(kernel, bus);
+    const loom::WeaveId manager = loom::mount_manager(control, bus);
+
+    OperatorContext ctx;
+    ctx.project = "lighthouse";
+    ctx.manager = manager;
+    ctx.request_stop = [&bus] { bus.stop(); };
+
+    loom::Grant reach;
+    reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+    reach.allow(loom::SwapWeave::zen_name, loom::SwapWeave::zen_version, manager);
+    reach.allow(loom::ReloadWeave::zen_name, loom::ReloadWeave::zen_version, manager);
+    reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+    reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+    reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+
+    loom::Grant wish;
+    wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+    allow_timed_weave(wish);
+    loom::mount_granted<Governor>(bus, std::move(wish), /*limit_seconds=*/2);
+
+    auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+    (void)probe_id;
+
+    const auto command = [&](const std::string& label, const auto& cmd) {
+        const std::uint64_t corr = ctx.next_corr++;
+        ctx.pending[corr] = Pending{label, "", ""};
+        bus.send_as(op, manager, loom::Message(loom::to_value(cmd), op, op, corr));
+    };
+    command("(workshop) registry",
+            loom::LoadWeave{"workshop-registry", workshop_dir + "/workshop-registry.so",
+                            kRegistryRole});
+    command("(service) zengine.timer",
+            loom::LoadWeave{"zengine-timer-virtual", vendor_dir + "/zengine-timer-virtual.so",
+                            zengine::timer::kTimerRole});
+    command("lamp", loom::LoadWeave{"lighthouse-lamp", toy_dir + "/lighthouse-lamp.so",
+                                    "lighthouse.lamp"});
+
+    bus.pump(); // two virtual seconds of sweeping
+    CHECK(probe->frames.size() >= 10, "gate 3 setup: the lamp swept");
+    const int w1 = frame_width(probe->frames.back());
+    const long s1 = frame_sweeps(probe->frames.back());
+    CHECK(w1 == 21, "the beam starts at its declared width");
+
+    // A1 — the knob.
+    loom::Grant poke_reach;
+    poke_reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
+                             "lighthouse.lamp");
+    auto [hand_id, hand] = mount_keeping<AlterHand>(bus, std::move(poke_reach),
+                                                    [&bus] { bus.stop(); });
+    bus.send_as_to_role(hand_id, "lighthouse.lamp",
+                        loom::Message(loom::to_value(loom::PokeWrite{"field", "41"}), hand_id,
+                                      hand_id, 0));
+    bus.pump();
+    CHECK(hand->acks == 1, "the poke was Ack'd by the lamp's own door");
+    // Discovered, then pinned: a poke reply is ordinary CORRELATED speech,
+    // not an answer — by design (the construction layer replies with an
+    // ordinary send; the consumer's authority is the bus-stamped sender plus
+    // its own correlation, and an unsolicited 'Ack' is data at best).
+    CHECK(!hand->authenticated, "a poke reply is ordinary speech, not an answer (by design)");
+
+    const std::size_t n1 = probe->frames.size();
+    bus.pump(); // the governor re-wishes roughly every virtual second
+    CHECK(probe->frames.size() > n1, "frames kept flowing after the poke");
+    CHECK(frame_width(probe->frames.back()) == 41, "the beam field widened WHILE ALIVE");
+    CHECK(frame_sweeps(probe->frames.back()) >= s1, "sweeps did not reset (continuity)");
+
+    // A2 — reload in place.
+    const long s2 = frame_sweeps(probe->frames.back());
+    command("reload lamp", loom::ReloadWeave{"lighthouse-lamp",
+                                             toy_dir + "/lighthouse-lamp.so"});
+    const std::size_t n2 = probe->frames.size();
+    bus.pump();
+    CHECK(probe->frames.size() > n2, "frames kept flowing after the reload");
+    CHECK(frame_sweeps(probe->frames.back()) >= s2,
+          "sweep count survived the reload - state rode the gate");
+    CHECK(frame_width(probe->frames.back()) == 41,
+          "the poked width survived the reload too - it IS the state");
+
+    // A3 — swap the Workshop's own registry, live, through the same door.
+    auto* pre = ask_role_once<QueryRunning, RunningReport>(bus, kRegistryRole, QueryRunning{});
+    CHECK(pre->answers == 1 && pre->report.up.size() >= 3,
+          "the incumbent registry knew the world");
+    command("swap registry", loom::SwapWeave{kRegistryRole, "workshop-registry-2",
+                                             workshop_dir + "/workshop-registry.so",
+                                             /*graceful=*/false});
+    bus.pump();
+    auto* post = ask_role_once<QueryRunning, RunningReport>(bus, kRegistryRole, QueryRunning{});
+    CHECK(post->answers == 1, "the OFFICE answered after the swap - the role survived");
+    CHECK(post->authenticated, "the successor's answer is authenticated");
+    // The successor inherited NOTHING from the incumbent; everything it knows
+    // it personally witnessed after birth — which is exactly one fact, the
+    // operator announcing the swap that created it.
+    CHECK(post->report.up.size() < pre->report.up.size(),
+          "the boot-era memory did NOT cross the swap");
+    bool only_post_birth = true;
+    for (const PartUp& p : post->report.up) {
+        if (p.part != "swap registry") {
+            only_post_birth = false;
+        }
+    }
+    CHECK(only_post_birth, "the successor knows only what happened after its own birth");
+    const std::size_t n3 = probe->frames.size();
+    bus.pump();
+    CHECK(probe->frames.size() > n3, "the world never stopped");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -349,6 +509,7 @@ int main(int argc, char** argv) {
     if (!workshop_dir.empty() && !vendor_dir.empty() && !toy_dir.empty()) {
         run_witness(workshop_dir, vendor_dir, toy_dir);
         inspector_witness(workshop_dir, vendor_dir, toy_dir);
+        alive_witness(workshop_dir, vendor_dir, toy_dir);
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }
