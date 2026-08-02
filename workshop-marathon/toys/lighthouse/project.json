@@ -1,0 +1,1 @@
+{"zen":1,"schema":"ProjectSpec","version":1,"fields":{"name":"lighthouse","description":"A beam sweeps a field; the light never stops moving.","parts":[{"name":"lamp","stem":"lighthouse-lamp","role":"lighthouse.lamp"}],"needs":["zengine.timer","zengine.skin"]}}

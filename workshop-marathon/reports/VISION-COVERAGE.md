@@ -10,7 +10,7 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | flowchart is real program | NOT ATTEMPTED | |
 | descend into real code | NOT ATTEMPTED | |
 | same thing at two heights | NOT ATTEMPTED | |
-| build/run/test | NOT ATTEMPTED | |
+| build/run/test | PARTIAL | Gate 1: describe→launch→see works (`workshop run lighthouse`, 16-case witness suite); build is still CMake-by-hand outside the Workshop |
 | change while alive | NOT ATTEMPTED | |
 | find/use what others made | NOT ATTEMPTED | |
 | see provenance honestly | NOT ATTEMPTED | |

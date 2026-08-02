@@ -62,7 +62,64 @@ Next: Gate 0 — cold onboarding. Sources in order: `Loom/zen-vision.md` (in ful
 
 ---
 
+## 2026-08-02 — 2. Gate 1: something exists
+
+**What I tried:** the smallest honest Workshop — a thin shell (the snake host's
+shape, deliberately), an operator weave that turns Manager answers into
+published `PartUp`/`PartFailed` facts, a loadable registry that accumulates
+them and answers asks, a log skin that paints every SurfaceText slot, and a
+project file (`ProjectSpec`) admitted through the one gate. First toy:
+**lighthouse** — a TimedWeave lamp sweeping a beam, alive and visible.
+
+**What Zen provided without being asked twice:** the entire operating layer.
+`mount_control` + `mount_manager` + target-scoped grants + `send_as` boot is a
+complete, message-driven launch surface; the compat JSON codec + the gate is a
+complete project-file admission story (hand-written files admit — the
+`content_id` in the envelope is optional on input, canonicalized on output);
+loaded weaves are indistinguishable peers; the virtual-clock timer service made
+the test suite exact. Boot ORDER genuinely did not matter (lamp loaded before
+its timer service still swept — TimedWeave re-asks on TimerReady, as promised).
+
+**What I invented locally:** description (`ProjectSpec`/`PartSpec`), launch
+facts (`PartUp`/`PartFailed`), the ask (`QueryRunning`→`RunningReport`), the
+stop wish (`StopWish`, honored by the operator — a bounded run is ordinary
+intent, not a host hack), the log skin, artifact stem→path resolution.
+
+**What failed, honestly:** my first run hung forever. The governor (a native
+TimedWeave) was mounted with a grant that allowed only its StopWish — its
+binding layer's `EnsureTimer` to the timer role was CapabilityDenied at every
+delivery, invisible to the sender BY LAW (send-fate seam), and I had no tap
+installed to see it. Diagnosed by reasoning, not observation. Two lessons
+recorded: (1) the fix is a reusable `allow_timed_weave(grant)` — the reach a
+native TimedWeave costs is knowable and should be spelled once; (2) **the
+inspector is not a luxury** — my first real bug of the marathon was exactly
+the class of silence Gate 2 exists to make visible. (P-007)
+
+**Witnesses:** `tests/test_workshop.cpp`, 16 cases green — spec-gate round
+trip + wrong-shape + garbage refusals; the beam MOVED across published frames
+(virtual clock); the registry's authenticated answer (answers_ask) matched
+launched reality (3 up, 1 failed); the ghost part's failure was a published
+fact carrying the loader's words. Live run: `workshop run lighthouse
+--for-seconds 6` — 4 up, 0 failed, 3 sweeps, clean governor stop.
+
+**Gate 1 verdict: GREEN.** The gate's question — does Zen naturally support
+*creation*, or only execution after manual assembly? — splits cleanly:
+OPERATING a composed world is deeply native (the Manager door is a complete
+vocabulary); DESCRIBING a creation is a thin local layer that composed out of
+existing substrate (codec + gate + door) in one sitting. The description layer
+is Workshop-local vocabulary and shows no pressure to sink lower yet.
+
+---
+
 ## DELIGHT
+
+- **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
+  file back *as the gate accepted it* — canonicalized, content-id included.
+  You see the system's understanding of your words, not an echo of them. Free
+  behavior, straight out of `compat::serialize(to_value(admitted))`; nothing
+  was built to make it possible. Also: boot order genuinely not mattering
+  (the lamp loaded before its clock and swept anyway) felt like the substrate
+  keeping a promise nobody usually keeps.
 
 - **2026-08-02, Gate 0:** the laws' DOES-NOT-MEAN sections. Four times during
   one cold read they killed a wrong assumption *before* it was written into a

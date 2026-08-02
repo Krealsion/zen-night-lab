@@ -49,6 +49,25 @@ stranger cannot choose an enforced host path through the public surface, this
 becomes CORE PRESSURE (a safety promise inexpressible from outside); if there is
 a public road, downgrade to DOCUMENTATION.
 
+### P-006 — LOCAL PATTERN (generic slot surface)
+The snake-era TUI skins paint exactly two slots ("status"/"score") and drop the
+rest; the first toy's own slot would have been invisible. The Workshop ships
+`workshop-skin-log` — an ordinary replaceable Skin painting every slot as
+scrollback. First concrete sighting of the missing general canvas/slot
+vocabulary (ties to P-005). Owner if it ever earns extraction: Zengine
+(Surface package). One sighting; stays local.
+
+### P-007 — ERGONOMIC PRESSURE + BORING FRICTION (native TimedWeave reach)
+A native `TimedWeave` needs three role-scoped grant rules (`EnsureTimer`,
+`EnsureRoleTimer`, `CancelTimer` → `zengine.timer`) that its binding layer
+speaks on its behalf. Under-grant it and the weave is silently inert: the
+CapabilityDenied refusals are visible only to a tap (send-fate seam, by law),
+so the failure reads as "nothing happens". The binding's header documents the
+cost ("WHAT IT COSTS, said up front") — the friction is that no *code* spells
+it: every host re-derives the grant list by hand. Workshop fix:
+`allow_timed_weave(grant)` helper. Probable owner if repeated: Zengine
+(binding could export its own required-grant recipe). Sightings: 1.
+
 ### P-005 — VISION AMBIGUITY (pre-registered at Gate 0, to be tested)
 "Wire ideas without writing code" meets a substrate whose visual vocabulary is
 deliberately tiny (`SurfaceText` slots; canvas "a later phase"; SDL window

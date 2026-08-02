@@ -9,6 +9,12 @@ marathon/vendor/loom/
 followups/role-authorship/vendor/loom-src/
 followups/role-authorship/vendor/loom-build/
 followups/role-authorship/vendor/loom/
+workshop-marathon/vendor/loom-src/
+workshop-marathon/vendor/loom-build/
+workshop-marathon/vendor/loom-install/
+workshop-marathon/vendor/zengine-src/
+workshop-marathon/vendor/zengine-build/
+workshop-marathon/vendor/*.log
 
 # The vendored Zengine artifacts are BINARIES copied from a sibling repo's build
 # tree. They are tracked deliberately — an experiment that cannot be re-run is
