@@ -37,9 +37,40 @@ Next: Gate 0 — cold onboarding. Sources in order: `Loom/zen-vision.md` (in ful
 
 ---
 
+## 2026-08-02 — 1. Gate 0 complete
+
+- Read the full public corpus (vision → CONTEXT → terminology → 6 guides → 9
+  reference pages → 6 law files → Zengine README/AGENTS + Timer corpus).
+  ~2.5 hours of a human's reading; the corpus is compact on purpose.
+- Verdict **GREEN with named debts** — full answers in `GATE0-ONBOARDING.md`;
+  five pressure entries opened (P-001..P-005).
+- What I was trying to do: answer the 12 onboarding questions without source.
+  10 of 12 landed from guides/reference alone. The two that didn't: the exact
+  unexported-target set (CMakeLists) and the Zengine consumption story (absent).
+- Surprises worth recording now:
+  - The substrate is *already* introspection-shaped: BusEvent taps, a journal,
+    `construct_blind` ("the console's road"), `ZEN_EXPOSE` Poke doors, manifests
+    with nested-shape references. Gate 2 has real ground to stand on.
+  - The Weave Manager control door means lifecycle commands are *messages* from
+    a granted operator weave — the snake host is already "a thin shell + an
+    ordinary weave operating the world". The Workshop wants to be born that way.
+  - The SDL window cannot hear (V1, structural). The visual Workshop will paint
+    into SDL or TUI but *listen* through the terminal. This is a constraint to
+    exhibit honestly, not to code around secretly.
+- Next: vendor the pinned substrate (old marathon's technique), then Gate 1 —
+  first toy through the smallest honest Workshop.
+
+---
+
 ## DELIGHT
 
-(reserved; used sparingly, never manufactured)
+- **2026-08-02, Gate 0:** the laws' DOES-NOT-MEAN sections. Four times during
+  one cold read they killed a wrong assumption *before* it was written into a
+  design (commit≠committed; holding≠authoring; replacement≠continuity;
+  correlation≠authentication). Documentation that anticipates your specific
+  future mistake is rare. Not manufactured: this materially changed the
+  Workshop plan (the operator-weave shape came straight from reading MSG-02's
+  "holding a Switchboard is being the host").
 
 ---
 
