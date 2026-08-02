@@ -11,6 +11,7 @@ experiment at a new Loom would destroy the record rather than extend it.
 |---|---|---|
 | `original/` | **Night One** — the job kitchen (2026-07-30). Preserved byte-for-byte. | Loom `d7dd974`, Zengine `93eef58`, ABI v3 |
 | `marathon/` | **Night Two** — the six-project marathon. | Loom `78d64ea`, Zengine `f6a4c69`, ABI v4 |
+| `workshop-marathon/` | **Night Three** — the Serious Playground marathon (2026-08-02). | Loom `61b2915`, Zengine `0356f02`, ABI v5 |
 
 ## original/
 
