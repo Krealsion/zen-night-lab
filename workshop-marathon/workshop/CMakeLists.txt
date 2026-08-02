@@ -8,6 +8,11 @@ target_link_libraries(workshop-registry PRIVATE loom::switchboard loom::core)
 target_compile_options(workshop-registry PRIVATE -fno-gnu-unique)
 set_target_properties(workshop-registry PROPERTIES PREFIX "")
 
+add_library(workshop-inspector SHARED inspector.cpp)
+target_link_libraries(workshop-inspector PRIVATE loom::switchboard loom::core zengine-vocab)
+target_compile_options(workshop-inspector PRIVATE -fno-gnu-unique)
+set_target_properties(workshop-inspector PROPERTIES PREFIX "")
+
 add_library(workshop-skin-log SHARED skin_log.cpp)
 target_link_libraries(workshop-skin-log PRIVATE loom::switchboard loom::core zengine-vocab)
 target_compile_options(workshop-skin-log PRIVATE -fno-gnu-unique)

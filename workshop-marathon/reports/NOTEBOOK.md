@@ -111,6 +111,55 @@ is Workshop-local vocabulary and shows no pressure to sink lower yet.
 
 ---
 
+## 2026-08-02 — 3. Gate 2: the machine has no secrets
+
+**What I built:** the S-3 tap bridge (the one privileged hand that watches the
+bus and immediately re-publishes everything as ordinary gated `BusFact`
+intent) + `workshop-inspector`, an ordinary loadable weave that tallies the
+facts, keeps refusal/recent rings, paints a live "inspector" slot line, and
+answers `QueryEvents` with authenticated answers. Refusals render through
+`explain.hpp` — the diagnostics table mechanized from the RefusalReason
+vocabulary (Gate 9's seed). `--watch` (raw tap) and `--refuse` (deliberate
+NotAccepted, then explained) added to `run`.
+
+**What the runtime hands an observer:** more than expected. `BusEvent` carries
+the stamped office (`authored_role`, historical fact, never recomputed), the
+sender-life diagnostics ("authored by a life that has since ended" is READABLE,
+not inferred), and expected/actual requester life+incarnation on answer
+refusals. The observation surface is genuinely introspection-shaped.
+
+**Two honest teachings the demo forced:**
+- *Queue order is not load order.* My first refusal demo enqueued its poke
+  "after the boots" and it delivered before any load had happened — the
+  steward's door is itself message-composed (Manager → control door is a
+  second hop). NoSuchTarget, target=0, plainly on the tap. Fixed by firing
+  from the operator when the last boot ANSWER arrives (the answer, not the
+  wish). This is MSG-01 discipline teaching real architecture.
+- *The inspector honestly misses what predates it* (MSG-06: publish picks
+  recipients at enqueue). A refusal from before the inspector's birth was on
+  the tap but never in its tallies — the score-weave stance, arriving
+  uninvited and correct.
+
+**Witnesses (25 cases green):** the starved-TimedWeave's CapabilityDenied
+EnsureTimer — the exact Gate 1 bug, recreated deliberately — shown by the
+inspector from the actual runtime event (I1); a role-holder's authenticated
+answer relayed with EMPTY authored_role — office authorship never invented
+from membership (I2, canary #3 pre-armed); the inspector's own answer
+authenticated + its live line via ordinary Surface intent (I3). Live demo:
+`run lighthouse --refuse` → "refused 1 … NotAccepted QueryRunning … the target
+never declared that shape".
+
+**Not yet exposed (inspector v2 material, owed to later gates):** grants/reach
+(Gate 8), replacement transaction state (Gate 3/4), timer relationships,
+artifact status. Recorded, not forgotten.
+
+**Gate 2 verdict: GREEN.** You can learn what this system is doing by
+listening to it, in its own vocabulary, without a debugger. The one privilege
+(the tap is host-tier) is recorded as S-3 and the bridge pattern converts it
+into ordinary intent at zero substrate friction (P-008).
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project

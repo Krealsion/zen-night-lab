@@ -100,11 +100,55 @@ struct StopWish {
     ZEN_SHAPE(StopWish, 1, ZEN_FIELD(reason));
 };
 
+// ---- observation tier (FACT: runtime events relayed by the S-3 bridge) -----
+
+/// One observed bus event, republished into the world by the shell's tap
+/// bridge. Truth label: FACT — reported by the Zen runtime, relayed verbatim
+/// by host machinery (the relay itself is special, recorded as S-3). The
+/// `authored_role` field is the envelope's STAMPED office fact: empty means
+/// personal speech, and the inspector must never fill it in from current
+/// role membership — holding is not authoring (MSG-07).
+struct BusFact {
+    std::int64_t seq = 0;    ///< the bridge's own monotonic observation counter
+    std::string kind;        ///< Delivered | Refused | Died | Revived
+    std::string reason;      ///< name_of(refusal.reason) when Refused, else ""
+    std::string detail;      ///< the refusal's own words, else ""
+    std::string schema;      ///< payload (delivery) or state (lifecycle) schema
+    std::int64_t schema_version = 0;
+    std::int64_t sender = 0; ///< stamped sender id value (0 = host/root)
+    std::int64_t target = 0;
+    std::string authored_role; ///< the stamped office; empty = personal speech
+    ZEN_SHAPE(BusFact, 1, ZEN_FIELD(seq), ZEN_FIELD(kind), ZEN_FIELD(reason), ZEN_FIELD(detail),
+              ZEN_FIELD(schema), ZEN_FIELD(schema_version), ZEN_FIELD(sender), ZEN_FIELD(target),
+              ZEN_FIELD(authored_role));
+};
+
+/// Ask the inspector what it has witnessed. Answer: `EventsReport`.
+struct QueryEvents {
+    ZEN_SHAPE(QueryEvents, 1);
+};
+
+/// The inspector's answer. Tallies are DERIVED (the inspector computed them
+/// from relayed FACTs); the embedded facts are the FACTs themselves, ring-
+/// capped. The inspector reports only what it witnessed — loaded late, it
+/// honestly knows less.
+struct EventsReport {
+    std::int64_t delivered = 0;
+    std::int64_t refused = 0;
+    std::vector<BusFact> recent_refusals; ///< up to kRefusalKeep, oldest first
+    std::vector<BusFact> recent;          ///< up to kRecentKeep, oldest first
+    ZEN_SHAPE(EventsReport, 1, ZEN_FIELD(delivered), ZEN_FIELD(refused),
+              ZEN_FIELD(recent_refusals), ZEN_FIELD(recent));
+};
+
 // ---- the addresses ---------------------------------------------------------
 
 /// The registry's role: ask the OFFICE what is running, so the question
 /// survives the registry weave being replaced.
 inline constexpr const char* kRegistryRole = "workshop.registry";
+
+/// The inspector's role — same reasoning.
+inline constexpr const char* kInspectorRole = "workshop.inspector";
 
 } // namespace workshop
 

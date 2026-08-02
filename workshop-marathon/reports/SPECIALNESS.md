@@ -30,6 +30,18 @@ v1 needed a place to stand. This is bootstrap debt, not fundamental: a project
 identity/bundle story (Gate 7) should replace compiled-in paths with described
 ones. Next pressure: sharing — an exported toy cannot reference my build tree.
 
+### S-3 — the tap bridge (2026-08-02, Gate 2)
+`workshop/bridge.hpp` holds the one `add_observer` hand (host-tier: only a
+Switchboard holder can watch the bus) and re-publishes every event as ordinary
+gated `BusFact` intent. Ordinary toys CANNOT install their own tap — but they
+CAN consume the bridge's facts exactly as the inspector does, so the
+*information* is not privileged, only the *faucet*. Evidence it must remain
+special: observation is host authority by Loom's own trust boundary (a weave
+that could tap the bus could read every private conversation). Next pressure
+that would shrink it: none expected — but Gate 10 must show the inspector
+itself being inspected/replaced through ordinary doors, proving the faucet is
+the ONLY privilege left in the observation story.
+
 ### NOT special, recorded deliberately: the registry, the log skin, and the
 governor are ordinary weaves (loadable/replaceable/inspectable through the
 same doors as any toy part); the operator is native but speaks only granted

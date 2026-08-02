@@ -14,8 +14,8 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | change while alive | NOT ATTEMPTED | |
 | find/use what others made | NOT ATTEMPTED | |
 | see provenance honestly | NOT ATTEMPTED | |
-| inspect running machine | NOT ATTEMPTED | |
-| messages/moving parts visible | NOT ATTEMPTED | |
+| inspect running machine | PARTIAL | Gate 2: live tallies + refusal ring + authenticated asks; grants/replacement/timers not yet exposed |
+| messages/moving parts visible | PARTIAL | Gate 2: every delivery/refusal relayed as BusFact with stamped office + life diagnostics; no visual flow view yet |
 | protected vs not protected visible | NOT ATTEMPTED | |
 | intentional path toward safety | NOT ATTEMPTED | |
 | optional teaching | NOT ATTEMPTED | |

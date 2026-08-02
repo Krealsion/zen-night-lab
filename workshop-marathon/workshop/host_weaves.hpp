@@ -21,7 +21,9 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 
 namespace workshop {
 
@@ -40,6 +42,12 @@ struct OperatorContext {
     std::int64_t failed = 0;
     loom::WeaveId manager{};
     std::function<void()> request_stop;
+    /// The refusal demo: when the last boot ANSWER arrives (not when the boot
+    /// wishes were queued — the steward's door is itself message-composed, so
+    /// "after the boots" in queue order is BEFORE any load has happened), ask
+    /// this role a question it has no door for.
+    std::string refusal_role;
+    bool refusal_fired = false;
 };
 
 struct OperatorState {
@@ -91,6 +99,13 @@ private:
             status(mail, p.part + " up");
         }
         ctx_->pending.erase(it);
+
+        if (ctx_->pending.empty() && !ctx_->refusal_role.empty() && !ctx_->refusal_fired) {
+            ctx_->refusal_fired = true;
+            mail.send_to_role(ctx_->refusal_role, QueryRunning{});
+            status(mail, "refusal demo: asked '" + ctx_->refusal_role +
+                             "' a question it has no door for");
+        }
     }
 
     void status(loom::Mail& mail, const std::string& text) {
@@ -141,6 +156,64 @@ public:
 private:
     Handle beat_;
 };
+
+/// mount(), but keeping the instance pointer — the same construction the
+/// installed mount<>() performs inline, for native host hands the shell (or a
+/// test) wants to read afterwards.
+template <class Self, class... Args>
+std::pair<loom::WeaveId, Self*> mount_keeping(loom::Switchboard& bus, loom::Grant grant,
+                                              Args&&... args) {
+    auto weave = std::make_unique<Self>(std::forward<Args>(args)...);
+    Self* raw = weave.get();
+    loom::WeaveId id = bus.register_weave(std::move(weave), std::move(grant));
+    raw->zen_set_self(id);
+    return {id, raw};
+}
+
+struct AskState {
+    std::int64_t asked = 0;
+    ZEN_SHAPE(AskState, 1, ZEN_FIELD(asked));
+};
+
+/// A native hand that asks a role one question and records the one answer.
+/// The beat chain keeps the queue alive forever, so hearing the answer pulls
+/// the same stop lever the operator uses; a quiescent bus returns on its own.
+template <class Query, class Report>
+class AskOnce : public loom::WeaveBase<AskOnce<Query, Report>, AskState, loom::Accept<Report>,
+                                       loom::Emit<Query>> {
+public:
+    explicit AskOnce(std::function<void()> done) : done_(std::move(done)) {}
+
+    void on(const Report& r, loom::Mail& mail) {
+        ++answers;
+        authenticated = mail.answers_ask();
+        report = r;
+        if (done_) {
+            done_();
+        }
+    }
+
+    int answers = 0;
+    bool authenticated = false;
+    Report report;
+
+private:
+    std::function<void()> done_;
+};
+
+/// Ask `role` one `Query`, pump until the answer (or quiescence), return what
+/// came back. The ask rides the gated role-addressed path with a real grant,
+/// exactly as a toy would ask.
+template <class Query, class Report>
+AskOnce<Query, Report>* ask_role_once(loom::Switchboard& bus, const char* role, const Query& q) {
+    loom::Grant reach;
+    reach.allow_to_role(Query::zen_name, Query::zen_version, role);
+    auto [id, hand] =
+        mount_keeping<AskOnce<Query, Report>>(bus, std::move(reach), [&bus] { bus.stop(); });
+    bus.send_as_to_role(id, role, loom::Message(loom::to_value(q), id, id, 0));
+    bus.pump();
+    return hand;
+}
 
 } // namespace workshop
 

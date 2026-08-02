@@ -13,6 +13,7 @@
 // every Zengine suite): naps book their duration and return, so "the beam
 // swept N cells" is an exact integer nobody waited for.
 
+#include "bridge.hpp"
 #include "host_weaves.hpp"
 #include "vocabulary.hpp"
 
@@ -100,6 +101,9 @@ public:
         if (t.slot == "lighthouse") {
             frames.push_back(t.text);
         }
+        if (t.slot == "inspector") {
+            ++inspector_lines;
+        }
     }
     void on(const PartUp& p, loom::Mail&) { up.push_back(p); }
     void on(const PartFailed& p, loom::Mail&) { failed.push_back(p); }
@@ -107,6 +111,7 @@ public:
     std::vector<std::string> frames;
     std::vector<PartUp> up;
     std::vector<PartFailed> failed;
+    int inspector_lines = 0;
 };
 
 /// Asks the registry once the run has ended (driven by the harness). The beat
@@ -233,6 +238,106 @@ void run_witness(const std::string& workshop_dir, const std::string& vendor_dir,
     (void)probe_id;
 }
 
+// ---- Gate 2: the machine has no secrets ------------------------------------
+//
+//   I1  a refusal the inspector shows came from an ACTUAL runtime event: a
+//       deliberately under-granted native TimedWeave (the exact Gate 1 bug,
+//       recreated on purpose) appears as CapabilityDenied EnsureTimer
+//   I2  the inspector does NOT invent office authorship: a role-holder's
+//       authenticated answer is personal speech, and the relayed fact says so
+//   I3  the inspector's answer is itself authenticated, and its live line is
+//       visible through the same Surface intent as everything else
+
+void inspector_witness(const std::string& workshop_dir, const std::string& vendor_dir,
+                       const std::string& toy_dir) {
+    loom::Switchboard bus;
+    loom::Kernel kernel(bus);
+    const loom::WeaveId control = loom::mount_control(kernel, bus);
+    const loom::WeaveId manager = loom::mount_manager(control, bus);
+
+    install_bus_fact_bridge(bus); // the REAL S-3 bridge, not a copy
+
+    OperatorContext ctx;
+    ctx.project = "lighthouse";
+    ctx.manager = manager;
+    ctx.request_stop = [&bus] { bus.stop(); };
+
+    loom::Grant reach;
+    reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+    reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+    reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+    reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+
+    loom::Grant wish;
+    wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+    allow_timed_weave(wish);
+    loom::mount_granted<Governor>(bus, std::move(wish), /*limit_seconds=*/2);
+
+    // The starved twin: a native TimedWeave whose grant covers NOTHING it
+    // needs. Its EnsureTimer must surface as a real CapabilityDenied — the
+    // silence that cost an hour at Gate 1, now visible by construction.
+    loom::mount_granted<Governor>(bus, loom::Grant{}, /*limit_seconds=*/9999);
+
+    auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+    (void)probe_id;
+
+    const auto boot = [&](const std::string& part, const std::string& stem,
+                          const std::string& path, const std::string& role) {
+        const std::uint64_t corr = ctx.next_corr++;
+        ctx.pending[corr] = Pending{part, stem, role};
+        bus.send_as(op, manager,
+                    loom::Message(loom::to_value(loom::LoadWeave{stem, path, role}), op, op,
+                                  corr));
+    };
+    boot("(workshop) registry", "workshop-registry", workshop_dir + "/workshop-registry.so",
+         kRegistryRole);
+    boot("(workshop) inspector", "workshop-inspector", workshop_dir + "/workshop-inspector.so",
+         kInspectorRole);
+    boot("(service) zengine.timer", "zengine-timer-virtual",
+         vendor_dir + "/zengine-timer-virtual.so", zengine::timer::kTimerRole);
+    boot("lamp", "lighthouse-lamp", toy_dir + "/lighthouse-lamp.so", "lighthouse.lamp");
+
+    bus.pump(); // ends at 2 virtual seconds via the healthy governor
+
+    // I2 setup: a role-holder answers an ask — personal speech, by law.
+    auto* running = ask_role_once<QueryRunning, RunningReport>(bus, kRegistryRole,
+                                                              QueryRunning{});
+    CHECK(running->answers == 1, "registry answered (gate 2 setup)");
+
+    auto* events = ask_role_once<QueryEvents, EventsReport>(bus, kInspectorRole, QueryEvents{});
+    CHECK(events->answers == 1, "the inspector answered");
+    CHECK(events->authenticated, "the inspector's answer is Loom-authenticated");
+    CHECK(events->report.delivered > 0, "the inspector witnessed deliveries");
+
+    // I1 — the starved weave's real refusal, visible and named.
+    bool starved_seen = false;
+    for (const BusFact& f : events->report.recent_refusals) {
+        if (f.reason == "CapabilityDenied" && f.schema == "EnsureTimer") {
+            starved_seen = true;
+        }
+    }
+    CHECK(events->report.refused >= 1, "refusals were witnessed at all");
+    CHECK(starved_seen, "the starved TimedWeave's CapabilityDenied EnsureTimer is shown");
+
+    // I2 — the registry's RunningReport delivery is in the recent facts and
+    // carries NO office authorship, though its sender holds workshop.registry.
+    bool report_fact_seen = false;
+    bool report_fact_personal = true;
+    for (const BusFact& f : events->report.recent) {
+        if (f.schema == "RunningReport") {
+            report_fact_seen = true;
+            report_fact_personal = report_fact_personal && f.authored_role.empty();
+        }
+    }
+    CHECK(report_fact_seen, "the registry's answer delivery was relayed as a fact");
+    CHECK(report_fact_personal,
+          "a role-holder's answer is PERSONAL speech - authorship not invented");
+
+    // I3 — the inspector's live line arrived through ordinary Surface intent.
+    CHECK(probe->inspector_lines >= 1, "the inspector painted a live line");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -243,6 +348,7 @@ int main(int argc, char** argv) {
     spec_gate();
     if (!workshop_dir.empty() && !vendor_dir.empty() && !toy_dir.empty()) {
         run_witness(workshop_dir, vendor_dir, toy_dir);
+        inspector_witness(workshop_dir, vendor_dir, toy_dir);
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }

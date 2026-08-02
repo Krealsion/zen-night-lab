@@ -68,6 +68,15 @@ it: every host re-derives the grant list by hand. Workshop fix:
 `allow_timed_weave(grant)` helper. Probable owner if repeated: Zengine
 (binding could export its own required-grant recipe). Sightings: 1.
 
+### P-008 — LOCAL PATTERN (observation republication bridge) + DISCOVERED
+The bus tap is host-tier by design; the Workshop's bridge converts it into
+ordinary published `BusFact` intent so the inspector (and any curious toy) is
+an ordinary consumer. Zero substrate friction — the runtime's BusEvent already
+carries everything an honest observer needs (stamped office, life diagnostics,
+expected/actual requester on answer refusals). Classify the tap surface
+DISCOVERED; the bridge LOCAL PATTERN. Sightings: 1 (inspector). Watch for
+toys wanting bus-facts directly (would be sighting 2).
+
 ### P-005 — VISION AMBIGUITY (pre-registered at Gate 0, to be tested)
 "Wire ideas without writing code" meets a substrate whose visual vocabulary is
 deliberately tiny (`SurfaceText` slots; canvas "a later phase"; SDL window

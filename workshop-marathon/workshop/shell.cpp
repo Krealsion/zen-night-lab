@@ -20,6 +20,8 @@
 //   workshop new <name>               scaffold a creation (emits admittable JSON)
 //   workshop run <toy> [--for-seconds N]
 
+#include "bridge.hpp"
+#include "explain.hpp"
 #include "host_weaves.hpp"
 #include "vocabulary.hpp"
 
@@ -199,7 +201,13 @@ int cmd_new(const std::string& name) {
     return 0;
 }
 
-int cmd_run(const std::string& name, std::int64_t for_seconds) {
+struct RunFlags {
+    std::int64_t for_seconds = 0;
+    bool watch = false;  ///< also print raw tap lines (host stdout diagnostics)
+    bool refuse = false; ///< deliberately provoke one refusal, then explain it
+};
+
+int cmd_run(const std::string& name, const RunFlags& flags) {
     std::string error;
     auto loaded = read_spec(toy_file(name), error);
     if (!loaded) {
@@ -218,6 +226,7 @@ int cmd_run(const std::string& name, std::int64_t for_seconds) {
     };
     std::vector<Boot> boots;
     boots.push_back({"(workshop) registry", "workshop-registry", "", kRegistryRole});
+    boots.push_back({"(workshop) inspector", "workshop-inspector", "", kInspectorRole});
     for (const std::string& need : spec.needs) {
         const Service* s = find_service(need);
         if (s == nullptr) {
@@ -248,23 +257,56 @@ int cmd_run(const std::string& name, std::int64_t for_seconds) {
     const loom::WeaveId control = loom::mount_control(kernel, bus);
     const loom::WeaveId manager = loom::mount_manager(control, bus);
 
+    // S-3: the tap bridge — runtime truth becomes ordinary published intent.
+    install_bus_fact_bridge(bus);
+    if (flags.watch) {
+        bus.add_observer([](const loom::BusEvent& e) {
+            if (e.kind == loom::EventKind::Refused) {
+                std::printf("~ tap: REFUSED %s (%s) sender=%llu target=%llu\n",
+                            e.schema_name.c_str(), loom::name_of(e.refusal.reason),
+                            static_cast<unsigned long long>(e.sender.value),
+                            static_cast<unsigned long long>(e.target.value));
+            }
+        });
+    }
+
     OperatorContext ctx;
     ctx.project = spec.name;
     ctx.manager = manager;
     ctx.request_stop = [&bus] { bus.stop(); };
+
+    // The refusal demo aims a QueryRunning at the first role-holding PART —
+    // a door that part never declared, so the world refuses it (NotAccepted)
+    // and the inspector gets something real to explain. The operator fires it
+    // when the last boot ANSWER arrives (queue order is not load order — the
+    // steward's door is message-composed).
+    if (flags.refuse) {
+        for (const PartSpec& part : spec.parts) {
+            if (!part.role.empty()) {
+                ctx.refusal_role = part.role;
+                break;
+            }
+        }
+        if (ctx.refusal_role.empty()) {
+            std::printf("--refuse: no role-holding part to aim at; skipping the demo\n");
+        }
+    }
 
     loom::Grant reach;
     reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
     reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
     reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
     reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    if (!ctx.refusal_role.empty()) {
+        reach.allow_to_role(QueryRunning::zen_name, QueryRunning::zen_version, ctx.refusal_role);
+    }
     const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
 
-    if (for_seconds > 0) {
+    if (flags.for_seconds > 0) {
         loom::Grant wish;
         wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
         allow_timed_weave(wish);
-        loom::mount_granted<Governor>(bus, std::move(wish), for_seconds);
+        loom::mount_granted<Governor>(bus, std::move(wish), flags.for_seconds);
     }
 
     // Birth, the same gesture as everything else: ask the steward.
@@ -275,7 +317,6 @@ int cmd_run(const std::string& name, std::int64_t for_seconds) {
                     loom::Message(loom::to_value(loom::LoadWeave{b.stem, b.path, b.role}), op,
                                   op, corr));
     }
-
     // The world runs inside pump(); the governor's wish or Ctrl-C ends it. A
     // quiescent bus means nothing will ever speak again — say so and leave.
     while (!ctx.quit) {
@@ -287,6 +328,44 @@ int cmd_run(const std::string& name, std::int64_t for_seconds) {
     }
     std::printf("\nworkshop - '%s' ended: %lld up, %lld failed\n", spec.name.c_str(),
                 static_cast<long long>(ctx.up), static_cast<long long>(ctx.failed));
+
+    // ---- what the Workshop knows, asked the ordinary way -------------------
+    // Truth labels are printed with the data: the registry/inspector answers
+    // are authenticated (Loom's word it IS the answer); tallies are DERIVED;
+    // relayed events are FACT.
+    auto* running = ask_role_once<QueryRunning, RunningReport>(bus, kRegistryRole,
+                                                              QueryRunning{});
+    if (running->answers == 1) {
+        std::printf("\n-- what launched (registry, authenticated answer: %s) --\n",
+                    running->authenticated ? "yes" : "NO");
+        for (const PartUp& p : running->report.up) {
+            std::printf("   up      %-24s %s%s%s\n", p.part.c_str(), p.stem.c_str(),
+                        p.role.empty() ? "" : "  as ", p.role.c_str());
+        }
+        for (const PartFailed& p : running->report.failed) {
+            std::printf("   FAILED  %-24s %s\n", p.part.c_str(), p.reason.c_str());
+        }
+    } else {
+        std::printf("\n-- registry gave no answer (loaded? replaced?) --\n");
+    }
+
+    auto* events = ask_role_once<QueryEvents, EventsReport>(bus, kInspectorRole, QueryEvents{});
+    if (events->answers == 1) {
+        std::printf("-- what the machine did (inspector; tallies DERIVED from relayed FACTs; "
+                    "authenticated: %s) --\n",
+                    events->authenticated ? "yes" : "NO");
+        std::printf("   delivered %lld | refused %lld\n",
+                    static_cast<long long>(events->report.delivered),
+                    static_cast<long long>(events->report.refused));
+        for (const BusFact& f : events->report.recent_refusals) {
+            std::printf("   REFUSED %s %s -> weave %lld\n", f.reason.c_str(), f.schema.c_str(),
+                        static_cast<long long>(f.target));
+            std::printf("           %s\n", explain_refusal(f.reason));
+        }
+    } else {
+        std::printf("-- inspector gave no answer (loaded? replaced?) --\n");
+    }
+
     return ctx.failed == 0 ? 0 : 1;
 }
 
@@ -305,18 +384,23 @@ int main(int argc, char** argv) {
         return workshop::cmd_new(argv[2]);
     }
     if (cmd == "run" && argc > 2) {
-        std::int64_t for_seconds = 0;
-        for (int i = 3; i + 1 < argc + 1; ++i) {
-            if (std::string(argv[i]) == "--for-seconds" && i + 1 < argc) {
-                for_seconds = std::atoll(argv[i + 1]);
+        workshop::RunFlags flags;
+        for (int i = 3; i < argc; ++i) {
+            const std::string arg = argv[i];
+            if (arg == "--for-seconds" && i + 1 < argc) {
+                flags.for_seconds = std::atoll(argv[++i]);
+            } else if (arg == "--watch") {
+                flags.watch = true;
+            } else if (arg == "--refuse") {
+                flags.refuse = true;
             }
         }
-        return workshop::cmd_run(argv[2], for_seconds);
+        return workshop::cmd_run(argv[2], flags);
     }
     std::printf("workshop — the Serious Playground prototype (Night Lab III)\n"
                 "  workshop list\n"
                 "  workshop describe <toy>\n"
                 "  workshop new <name>\n"
-                "  workshop run <toy> [--for-seconds N]\n");
+                "  workshop run <toy> [--for-seconds N] [--watch] [--refuse]\n");
     return cmd.empty() ? 0 : 1;
 }
