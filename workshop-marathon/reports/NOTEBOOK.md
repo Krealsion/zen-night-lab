@@ -366,6 +366,38 @@ failure of the experiment.
 
 ---
 
+## 2026-08-02 — 10. Gates 9 & 10: teaching from live truth; peers, not gods
+
+**Gate 9 (89 cases green):** the `h` key asks the running part "what are
+you?" and the answer is the part's OWN `zen.PokeStructure` — real schema
+name, real version, every field with its kind and openness ("pokeable" /
+"read-only" / "hidden"), rendered as one line of Surface intent. Nothing
+hard-coded; a freshly imported stranger toy teaches identically. Beside it:
+the refusal explainer (Gate 2), the gate's canonicalized `describe`, the
+safety view. All optional, all dismissible (lines of intent), none blocking.
+Verdict: **GREEN** — the system contains enough truth to explain itself, and
+the Workshop's whole teaching surface is a RENDERER of that truth.
+
+**Gate 10:** the observer observed, and replaced, through the same doors as
+any toy: `PokeDescribe` named the inspector's real structure; `PokeRead
+delivered` read its live tally; `ReloadWeave` through the steward carried
+that tally across the incarnation bump. Earlier, A3 hard-swapped the
+REGISTRY through the same door. The interrogation of what remains privileged:
+- the SHELL (S-1): fundamental today — someone must own pump/mounts. No toy
+  asked to cross it.
+- compiled-in paths (S-2): bootstrap debt; bundles (Gate 7) already carry
+  artifacts beside descriptions, pointing at the exit.
+- the tap faucet (S-3): fundamental by Loom's own trust boundary; the
+  INFORMATION is fully public (BusFact), only the faucet is privileged.
+- the build runner (S-4): bootstrap debt; a build-watcher weave is the shape
+  of its removal.
+Verdict: **GREEN for the attempted subsystems** — inspector and registry are
+peers in every sense that matters today (inspectable, replaceable, addressed
+by office, no private doors). The shell is the honest remaining god, counted
+and bounded.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project

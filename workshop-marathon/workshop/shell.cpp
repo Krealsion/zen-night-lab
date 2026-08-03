@@ -523,6 +523,15 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
             reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
                                 knob.role);
         }
+        if (!ctx.alter_part.empty()) {
+            for (const PartSpec& part : spec.parts) {
+                if (!part.role.empty()) {
+                    reach.allow_to_role(loom::PokeDescribe::zen_name,
+                                        loom::PokeDescribe::zen_version, part.role);
+                    break;
+                }
+            }
+        }
     }
     const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
 

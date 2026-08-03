@@ -40,8 +40,10 @@ struct Pending {
     int action = 0; ///< 0 none; kActionSet; 50 knob; 100+i = skin i swapped in
 };
 
-inline constexpr int kActionSet = 60; ///< a declared `set` poke — not a part;
-                                      ///< its ok is a status line, never PartUp
+inline constexpr int kActionSet = 60;  ///< a declared `set` poke — not a part;
+                                       ///< its ok is a status line, never PartUp
+inline constexpr int kActionHelp = 70; ///< a "what is this?" PokeDescribe — the
+                                       ///< answer becomes a help line of intent
 
 /// A skin the interactive operator can put on the surface.
 struct SkinChoice {
@@ -134,6 +136,17 @@ struct OperatorState {
     ZEN_SHAPE(OperatorState, 1, ZEN_FIELD(answers));
 };
 
+/// Render a live part's structure (the zen.PokeStructure answer) as one
+/// honest teaching line: the real schema, the real fields, what is open.
+inline std::string render_structure(const loom::PokeStructure& s) {
+    std::string out = s.state_schema + " v" + std::to_string(s.state_version) + ":";
+    for (const loom::PokeFieldInfo& f : s.fields) {
+        out += " " + f.name + "(" + f.type +
+               (f.hidden ? ", hidden" : (f.writable ? ", pokeable" : ", read-only")) + ")";
+    }
+    return out;
+}
+
 /// The Workshop's hand on the bus. It hears the Manager's answers and turns
 /// them into published launch facts — the answer, not the wish, is what
 /// publishes. It hears StopWish (the governor's, or anyone's) and stops the
@@ -142,7 +155,8 @@ struct OperatorState {
 /// (declared knobs), ReloadWeave (code in place, state riding the gate).
 class OperatorWeave
     : public loom::WeaveBase<OperatorWeave, OperatorState,
-                             loom::Accept<loom::Result, loom::Ack, loom::Refused, StopWish,
+                             loom::Accept<loom::Result, loom::Ack, loom::Refused,
+                                          loom::PokeStructure, StopWish,
                                           zengine::input::KeyPressed,
                                           zengine::surface::SurfaceReady>,
                              loom::Emit<loom::LoadWeave, loom::SwapWeave, loom::ReloadWeave,
@@ -154,6 +168,9 @@ public:
     void on(const loom::Result& r, loom::Mail& mail) { answered(mail, r.value, false); }
     void on(const loom::Ack&, loom::Mail& mail) { answered(mail, "done", false); }
     void on(const loom::Refused& r, loom::Mail& mail) { answered(mail, r.reason, true); }
+    void on(const loom::PokeStructure& s, loom::Mail& mail) {
+        answered(mail, render_structure(s), false);
+    }
 
     void on(const StopWish& wish, loom::Mail& mail) {
         status(mail, "stop: " + wish.reason);
@@ -193,6 +210,16 @@ public:
             }
         } else if (k.scancode == scan::kV) {
             render_schematic(mail);
+        } else if (k.scancode == scan::kH && !ctx_->alter_part.empty()) {
+            // "What is this?" — answered by the running thing itself: the
+            // part's own Poke door describes its real structure (fields,
+            // kinds, what is open to manipulation). Teaching material derived
+            // from live truth, never a hard-coded tutorial. Dismissible by
+            // being one line of intent; absent until asked.
+            const std::uint64_t corr = ctx_->next_corr++;
+            ctx_->pending[corr] = Pending{"what is " + ctx_->alter_part, "",
+                                          first_role(), kActionHelp};
+            mail.send_to_role(first_role(), loom::PokeDescribe{}, corr);
         } else if (k.scancode == scan::kU) {
             if (ctx_->update_command.empty() || ctx_->alter_stem.empty()) {
                 status(mail, "no rebuild target configured");
@@ -239,6 +266,15 @@ private:
             ctx_->request_stop();
         }
     }
+
+    std::string first_role() const {
+        for (const PartSpec& part : ctx_->parts) {
+            if (!part.role.empty()) {
+                return part.role;
+            }
+        }
+        return "";
+    }
     void answered(loom::Mail& mail, const std::string& words, bool refused) {
         ++state_.answers;
         const auto it = ctx_->pending.find(mail.correlation());
@@ -247,6 +283,19 @@ private:
             return;
         }
         const Pending& p = it->second;
+        if (p.action == kActionHelp) {
+            if (refused) {
+                mail.publish(zengine::surface::SurfaceText{
+                    "help", p.part + ": the door refused - " + words});
+            } else {
+                mail.publish(zengine::surface::SurfaceText{"help", p.part + ": " + words});
+                mail.publish(zengine::surface::SurfaceText{
+                    "help.hint", "declared knobs poke ZEN_EXPOSEd fields; v redraws the "
+                                 "schematic; this line came from the running part itself"});
+            }
+            ctx_->pending.erase(it);
+            return;
+        }
         if (p.action == kActionSet) {
             if (refused) {
                 ++ctx_->failed;
@@ -297,8 +346,8 @@ private:
     void status(loom::Mail& mail, const std::string& text) {
         ctx_->last_status = "[workshop] " + text;
         if (ctx_->interactive) {
-            ctx_->last_status += "   (v schematic | 1 skin | p knob | r reload | u update | "
-                                 "q quit)";
+            ctx_->last_status += "   (v schematic | h what-is | 1 skin | p knob | r reload | "
+                                 "u update | q quit)";
         }
         mail.publish(zengine::surface::SurfaceText{zengine::surface::kSlotStatus,
                                                    ctx_->last_status});

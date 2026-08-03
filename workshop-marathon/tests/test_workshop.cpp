@@ -113,6 +113,9 @@ public:
         if (t.slot.rfind("schematic.", 0) == 0) {
             schematic.push_back(t.text);
         }
+        if (t.slot.rfind("help", 0) == 0) {
+            help.push_back(t.text);
+        }
     }
     void on(const PartUp& p, loom::Mail&) { up.push_back(p); }
     void on(const PartFailed& p, loom::Mail&) { failed.push_back(p); }
@@ -121,6 +124,7 @@ public:
     std::vector<std::string> frames;
     std::vector<std::string> pond_rows;
     std::vector<std::string> schematic;
+    std::vector<std::string> help;
     std::vector<PartUp> up;
     std::vector<PartFailed> failed;
     std::vector<std::int64_t> flashes;
@@ -130,10 +134,16 @@ public:
 /// A hand that pokes and records the one answer (a successful PokeWrite
 /// answers Ack; a bad one answers Refused with the door's words).
 class AlterHand : public loom::WeaveBase<AlterHand, AskState,
-                                         loom::Accept<loom::Ack, loom::Refused, loom::Result>,
+                                         loom::Accept<loom::Ack, loom::Refused, loom::Result,
+                                                      loom::PokeStructure>,
                                          loom::Emit<loom::PokeWrite, loom::PokeRead>> {
 public:
     explicit AlterHand(std::function<void()> done) : done_(std::move(done)) {}
+    void on(const loom::PokeStructure& s, loom::Mail&) {
+        ++results;
+        words = render_structure(s);
+        if (done_) done_();
+    }
     void on(const loom::Ack&, loom::Mail& mail) {
         ++acks;
         authenticated = mail.answers_ask();
@@ -1121,6 +1131,124 @@ void safety_witness(const std::string& workshop_dir, const std::string& vendor_d
     }
 }
 
+// ---- Gates 9 & 10: teaching from live truth; the Workshop in its own shop --
+//
+//   T1 "what is this?" is answered by the RUNNING PART's own Poke door — the
+//      help line names real fields, and nothing about it is a hard-coded
+//      tutorial. Dismissible (one line of intent), absent until asked.
+//   T2 the OBSERVER is observed through the same ordinary doors: PokeDescribe
+//      names the inspector's real structure; PokeRead reads its live tally.
+//   T3 the observer is REPLACED by the same machinery every toy part uses
+//      (ReloadWeave through the steward), and its memory rides the gate.
+
+void teach_and_selfhost_witness(const std::string& workshop_dir,
+                                const std::string& vendor_dir, const std::string& toy_dir) {
+    loom::Switchboard bus;
+    loom::Kernel kernel(bus);
+    const loom::WeaveId control = loom::mount_control(kernel, bus);
+    const loom::WeaveId manager = loom::mount_manager(control, bus);
+    install_bus_fact_bridge(bus);
+
+    OperatorContext ctx;
+    ctx.project = "lighthouse";
+    ctx.manager = manager;
+    ctx.request_stop = [&bus] { bus.stop(); };
+    ctx.interactive = true;
+    ctx.parts = {PartSpec{"lamp", "lighthouse-lamp", "lighthouse.lamp"}};
+    ctx.alter_part = "lamp";
+    ctx.alter_stem = "lighthouse-lamp";
+    ctx.alter_path = toy_dir + "/lighthouse-lamp.so";
+
+    loom::Grant reach;
+    reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+    reach.allow(loom::ReloadWeave::zen_name, loom::ReloadWeave::zen_version, manager);
+    reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+    reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+    reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    reach.allow_to_role(loom::PokeDescribe::zen_name, loom::PokeDescribe::zen_version,
+                        "lighthouse.lamp");
+    const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+
+    loom::Grant wish;
+    wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+    allow_timed_weave(wish);
+    loom::mount_granted<Governor>(bus, std::move(wish), 2);
+
+    auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+    (void)probe_id;
+
+    const auto boot = [&](const std::string& part, const std::string& load_name,
+                          const std::string& path, const std::string& role) {
+        const std::uint64_t corr = ctx.next_corr++;
+        ctx.pending[corr] = Pending{part, load_name, role};
+        bus.send_as(op, manager,
+                    loom::Message(loom::to_value(loom::LoadWeave{load_name, path, role}), op,
+                                  op, corr));
+    };
+    boot("(workshop) inspector", "workshop-inspector", workshop_dir + "/workshop-inspector.so",
+         kInspectorRole);
+    boot("(service) zengine.timer", "zengine-timer-virtual",
+         vendor_dir + "/zengine-timer-virtual.so", zengine::timer::kTimerRole);
+    boot("lamp", "lighthouse-lamp", toy_dir + "/lighthouse-lamp.so", "lighthouse.lamp");
+    bus.pump();
+
+    // T1 — ask the world "what is this?"
+    bus.publish(loom::Message(
+        loom::to_value(zengine::input::KeyPressed{zengine::input::scan::kH, "h"})));
+    bus.pump();
+    bool help_from_runtime = false;
+    for (const std::string& line : probe->help) {
+        if (line.find("field") != std::string::npos) {
+            help_from_runtime = true;
+        }
+    }
+    CHECK(help_from_runtime,
+          "the help line names the lamp's REAL fields - taught by the running part");
+
+    // T2 — the observer, observed through ordinary doors.
+    loom::Grant look;
+    look.allow_to_role(loom::PokeDescribe::zen_name, loom::PokeDescribe::zen_version,
+                       kInspectorRole);
+    look.allow_to_role(loom::PokeRead::zen_name, loom::PokeRead::zen_version, kInspectorRole);
+    auto [hand_id, hand] = mount_keeping<AlterHand>(bus, std::move(look),
+                                                    [&bus] { bus.stop(); });
+    bus.send_as_to_role(hand_id, kInspectorRole,
+                        loom::Message(loom::to_value(loom::PokeDescribe{}), hand_id, hand_id,
+                                      0));
+    bus.pump();
+    CHECK(hand->results == 1, "the inspector described itself");
+    CHECK(hand->words.find("delivered") != std::string::npos &&
+              hand->words.find("recent_refusals") != std::string::npos,
+          "the description names the inspector's real structure");
+
+    hand->results = 0;
+    bus.send_as_to_role(hand_id, kInspectorRole,
+                        loom::Message(loom::to_value(loom::PokeRead{"delivered"}), hand_id,
+                                      hand_id, 0));
+    bus.pump();
+    CHECK(hand->results == 1, "the inspector's live tally is readable");
+    const long d1 = std::atol(hand->words.c_str());
+    CHECK(d1 > 0, "the tally is a real number from a real run");
+
+    // T3 — replace the observer with the same machinery, memory riding.
+    const std::uint64_t corr = ctx.next_corr++;
+    ctx.pending[corr] = Pending{"reload inspector", "", ""};
+    bus.send_as(op, manager,
+                loom::Message(loom::to_value(loom::ReloadWeave{
+                                  "workshop-inspector",
+                                  workshop_dir + "/workshop-inspector.so"}),
+                              op, op, corr));
+    bus.pump();
+    hand->results = 0;
+    bus.send_as_to_role(hand_id, kInspectorRole,
+                        loom::Message(loom::to_value(loom::PokeRead{"delivered"}), hand_id,
+                                      hand_id, 0));
+    bus.pump();
+    CHECK(hand->results == 1, "the reloaded inspector still answers at its office");
+    const long d2 = std::atol(hand->words.c_str());
+    CHECK(d2 >= d1, "the observer crossed its own reload with its memory intact");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -1141,6 +1269,7 @@ int main(int argc, char** argv) {
         }
         bundle_witness(vendor_dir, toy_dir, workshop_dir + "/../bundle-scratch");
         safety_witness(workshop_dir, vendor_dir, toy_dir, workshop_dir + "/../tests");
+        teach_and_selfhost_witness(workshop_dir, vendor_dir, toy_dir);
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }

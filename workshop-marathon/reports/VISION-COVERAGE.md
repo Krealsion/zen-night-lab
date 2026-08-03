@@ -5,7 +5,7 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 
 | Workshop promise | status | evidence |
 |---|---|---|
-| tools made of same stuff | NOT ATTEMPTED | marathon not started |
+| tools made of same stuff | PARTIAL | registry/inspector/skins are ordinary loadable weaves, swapped/reloaded/poked via the same doors (Gates 3/10); the shell + tap faucet + build runner remain special (SPECIALNESS.md) |
 | wire ideas without code | PARTIAL | describe/knobs/needs in gated project files; no structural wiring from the schematic yet |
 | flowchart is real program | PARTIAL | Gate 4 H2: schematic edit (knob) changes runtime, re-render agrees; edit set = property+implementation only |
 | descend into real code | PARTIAL | Gate 4 H1: source edit → real build → live reload, state crossing; contract-changing edits not yet driven |
@@ -18,7 +18,7 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | messages/moving parts visible | PARTIAL | Gate 2: every delivery/refusal relayed as BusFact with stamped office + life diagnostics; no visual flow view yet |
 | protected vs not protected visible | DEMONSTRATED (unflattering parts included) | Gate 8: safety view + reporter stamps + permissive-authority truth + gremlin witness |
 | intentional path toward safety | PARTIAL / BLOCKED | --deny works and is visible (minus the silent seam, P-011); enforced containment unreachable from exported surface (P-004); no grant narrowing for loaded parts |
-| optional teaching | NOT ATTEMPTED | |
-| beginner/veteran continuity | NOT ATTEMPTED | |
+| optional teaching | DEMONSTRATED (local scope) | Gate 9: h-key structure-from-the-running-part, refusal explainer, canonicalized describe, safety view — all optional and derived from live truth |
+| beginner/veteran continuity | PARTIAL | describe/knobs/sets (beginner) and source/reload (veteran) touch the same running thing (Gate 4); structural schematic editing missing |
 | sharing and modification | DEMONSTRATED (local scope) | Gate 7: export/move/import/run/re-export loop witnessed; artifacts-only (no source) is the recorded ceiling |
 | purposeless play | DEMONSTRATED | the echo detour: feedback creature + substrate-breathing instrument + P-008 sighting |
