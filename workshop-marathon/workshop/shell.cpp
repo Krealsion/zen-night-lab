@@ -58,13 +58,23 @@ std::string source_root() { return WORKSHOP_SOURCE_ROOT; }
 std::string binary_dir() { return WORKSHOP_BINARY_DIR; }
 
 /// Where a stem may resolve to an artifact, in order: the toy's own build
-/// output, the workshop's build output, the vendored Zengine services.
+/// output, EVERY other toy's build output (composition: one toy's parts are
+/// another's material — constellation forced this), the workshop's build
+/// output, the vendored Zengine services.
 std::vector<fs::path> artifact_dirs(const std::string& toy) {
-    return {
-        fs::path(binary_dir()) / "toys" / toy,
-        fs::path(binary_dir()) / "workshop",
-        fs::path(source_root()) / "vendor" / "zengine" / "lib",
-    };
+    std::vector<fs::path> dirs;
+    dirs.push_back(fs::path(binary_dir()) / "toys" / toy);
+    const fs::path toys = fs::path(binary_dir()) / "toys";
+    if (fs::exists(toys)) {
+        for (const auto& entry : fs::directory_iterator(toys)) {
+            if (entry.is_directory() && entry.path().filename() != toy) {
+                dirs.push_back(entry.path());
+            }
+        }
+    }
+    dirs.push_back(fs::path(binary_dir()) / "workshop");
+    dirs.push_back(fs::path(source_root()) / "vendor" / "zengine" / "lib");
+    return dirs;
 }
 
 std::optional<fs::path> resolve_artifact(const std::string& toy, const std::string& stem) {

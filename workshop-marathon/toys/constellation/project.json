@@ -1,0 +1,7 @@
+{"zen":1,"schema":"ProjectSpec","version":3,"fields":{"name":"constellation","description":"A night sky built from other toys: pond stars, a lighthouse beacon.","parts":[
+{"name":"star.a","stem":"pond-firefly","role":"constellation.star.a","set":[{"field":"who","value":"1"},{"field":"phase","value":"0.1"},{"field":"rate","value":"0.008"},{"field":"pull","value":"0"}]},
+{"name":"star.b","stem":"pond-firefly","role":"constellation.star.b","set":[{"field":"who","value":"2"},{"field":"phase","value":"0.5"},{"field":"rate","value":"0.011"},{"field":"pull","value":"0"}]},
+{"name":"star.c","stem":"pond-firefly","role":"constellation.star.c","set":[{"field":"who","value":"3"},{"field":"phase","value":"0.8"},{"field":"rate","value":"0.014"},{"field":"pull","value":"0"}]},
+{"name":"sky","stem":"pond-canvas","role":"constellation.sky","set":[]},
+{"name":"beacon","stem":"lighthouse-lamp","role":"constellation.beacon","set":[]}
+],"needs":["zengine.timer","zengine.skin"],"knobs":[{"name":"beacon width","role":"constellation.beacon","field":"field","values":["21","41"]}]}}

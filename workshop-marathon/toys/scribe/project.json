@@ -1,0 +1,1 @@
+{"zen":1,"schema":"ProjectSpec","version":3,"fields":{"name":"scribe","description":"A writing pad. Not a game; it keeps what you commit.","parts":[{"name":"pad","stem":"scribe-pad","role":"scribe.pad","set":[]}],"needs":["zengine.input","zengine.timer","zengine.skin"],"knobs":[]}}

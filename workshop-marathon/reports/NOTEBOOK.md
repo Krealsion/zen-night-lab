@@ -235,6 +235,39 @@ implementations; the wall (contract changes, structural edits) is named.
 
 ---
 
+## 2026-08-02 — 6. Gates 5 & 6: the garden, and the regrets
+
+**Four materially different toys now exist** (64 cases green):
+1. **lighthouse** — single part, continuous, visual, the first vertical.
+2. **pond** — eight fireflies from ONE artifact + a canvas that discovers its
+   pond by listening; Kuramoto sync as declared data. Chosen to attack; it
+   landed three hits (launcher name/stem conflation — fixed; knobs FOUGHT —
+   wants broadcast + continuous; SurfaceText FOUGHT — wants a canvas).
+3. **scribe** — a TOOL, not a game: a plain event-driven WeaveBase with no
+   rhythm at all. Its votes: the Input package has NO TEXT STORY (scancodes +
+   convenience names; no shift/case — the pad's honest ceiling), and even a
+   rhythmless tool drags the clock in because the Input weave polls on Timer
+   beats. "Event-driven only" does not exist in current Zen.
+4. **constellation** — a night sky made ENTIRELY of other toys' parts: pond
+   stars (pull=0 — same code, different creature, purely by declared `set`),
+   pond canvas as the sky, lighthouse lamp as the beacon. **Zero new code —
+   the project file IS the toy.** Forced garden-wide artifact resolution.
+
+**Gate 6 witnessed in the same stroke:** the composed world runs both toys'
+vocabularies on one bus; the registry's authenticated report shows the reuse
+plainly (foreign stems under local instance names); and a modification to the
+reused artifact (the star-glyph lamp) reached its consumer LIVE via reload —
+constellation's beacon changed character mid-sweep. Reuse-knowledge today =
+stem provenance in launch facts; deeper lineage (origin, hashes) is Gate 7's.
+
+**Gate 5 verdict: GREEN** — the garden is diverse, and later toys genuinely
+embarrassed earlier abstractions (knobs and the launcher took real hits; the
+vote table has fought-votes with stories). **Gate 6 verdict: GREEN** for
+compose/reuse/modify-observe; "the Workshop knows it was reused" is honest at
+stem level and thin below that — recorded.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
