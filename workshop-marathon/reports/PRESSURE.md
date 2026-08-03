@@ -96,6 +96,26 @@ namespace by convention. If a third toy mints `<toy>.<part>.<n>` roles, this
 becomes REPEATED PATTERN and the "minted identity needs a surviving
 namespace" guideline gets a Workshop-shaped sighting. Sightings: 1.
 
+### P-011 — CORE PRESSURE (the silent seam) — reproducer filed
+A loaded weave's emission whose schema nobody registered vanishes with NO
+observable trace: no BusEvent, no journal ticket (structurally absent), no
+recipient, and the sender shim is fire-and-forget. Found when Gate 8 denied
+the timer need: the lamp's EnsureTimer disappeared while a native weave's
+identical reach refused loudly (NoSuchTarget). The observability floor
+differs by tier, and "refusals are never silence" has a seam-shaped hole.
+Narrowest missing truth: a host-side observable event for seam rejections.
+Reproducer: `repros/core/silent-seam-emission/`. Pinned by safety_witness S2.
+Sightings: 1 creation + control arm (every TimedWeave toy would hit it).
+
+### P-004 — UPDATE (Gate 8 confirms): enforced containment unreachable
+Confirmed at Gate 8: with `zen-isolation` absent from the install export, a
+stranger-consumer Workshop has NO road to the enforced-containment tier. The
+safety view says so plainly instead of painting a shield. Classification
+firms up as PACKAGE/EXPORT PRESSURE (the machinery exists; the export
+boundary withholds it — deliberate per the Loom's own comment, priced here:
+the "move anything into safety with a single choice" promise cannot be kept
+from outside).
+
 ### P-005 — VISION AMBIGUITY (pre-registered at Gate 0, to be tested)
 "Wire ideas without writing code" meets a substrate whose visual vocabulary is
 deliberately tiny (`SurfaceText` slots; canvas "a later phase"; SDL window

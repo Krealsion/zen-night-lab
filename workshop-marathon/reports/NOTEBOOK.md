@@ -330,6 +330,42 @@ and provenance labelled at exactly the trust level each field deserves.
 
 ---
 
+## 2026-08-02 — 9. Gate 8: dare safely (82 cases green)
+
+**The power view** (`workshop safety <toy>`): containment in the runtime's
+own words (no shield painted), requested power from the description, the
+Workshop's own minimal grants, and the substrate's unflattering truth said
+plainly — loaded parts hold permissive send authority today.
+
+**The gremlin (S1):** a loaded toy FORGED a launch fact and the lie landed —
+permissive authority is real. But the registry now records the bus-stamped
+reporter beside every fact (RunningReport v2), and the forged entry wears the
+gremlin's own stamp, distinct from the operator's. Not stopped — VISIBLE.
+The unforgeable floor is MSG-02's stamp; the Workshop leans on exactly that.
+
+**Denial (S2) — and the marathon's first core-pressure discovery:** denying
+the timer need produced the intended lesson and a bigger one. The NATIVE
+reach for the missing clock refused loudly (NoSuchTarget, explained). The
+LOADED lamp's identical intent VANISHED — rejected at the library/schema seam
+(the denied service was the only registrar of its vocabulary), producing no
+tap event, no journal entry, nothing. **P-011, reproducer filed**
+(`repros/core/silent-seam-emission/`). "Refusals are never silence" holds on
+the bus and has a seam-shaped hole beside it.
+
+**Move toward safety, truthfully:** `--deny <need>` — decline a declared
+capability; the creation runs with less power. No grant-narrowing API exists
+for loaded weaves (grants fix at registration), and the enforced-containment
+tier is unreachable from the exported surface (P-004 confirmed) — both said
+to the user's face rather than smoothed over.
+
+**Gate 8 verdict: PARTIAL, honestly.** Power is visible and reasoned about
+(requested/granted/stamped/contained, each labelled); one deliberate denial
+is explained end to end; the "single choice into safety" promise is NOT
+keepable from outside the substrate today — that is the finding, not a
+failure of the experiment.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project

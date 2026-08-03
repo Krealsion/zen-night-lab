@@ -19,19 +19,26 @@
 namespace workshop {
 
 struct RegistryState {
-    std::vector<PartUp> up;
-    std::vector<PartFailed> failed;
+    std::vector<ReportedPart> up;
+    std::vector<ReportedPart> failed;
     ZEN_EXPOSE();
-    ZEN_SHAPE(RegistryState, 1, ZEN_FIELD(up), ZEN_FIELD(failed));
+    ZEN_SHAPE(RegistryState, 2, ZEN_FIELD(up), ZEN_FIELD(failed));
 };
 
 class Registry : public loom::WeaveBase<Registry, RegistryState,
                                         loom::Accept<PartUp, PartFailed, QueryRunning>,
                                         loom::Emit<RunningReport>> {
 public:
-    void on(const PartUp& fact, loom::Mail&) { state_.up.push_back(fact); }
+    void on(const PartUp& fact, loom::Mail& mail) {
+        state_.up.push_back(ReportedPart{fact.project, fact.part, fact.stem, fact.role, "",
+                                         static_cast<std::int64_t>(mail.sender().value)});
+    }
 
-    void on(const PartFailed& fact, loom::Mail&) { state_.failed.push_back(fact); }
+    void on(const PartFailed& fact, loom::Mail& mail) {
+        state_.failed.push_back(ReportedPart{fact.project, fact.part, fact.stem, "",
+                                             fact.reason,
+                                             static_cast<std::int64_t>(mail.sender().value)});
+    }
 
     void on(const QueryRunning&, loom::Mail& mail) {
         mail.answer(RunningReport{state_.up, state_.failed});

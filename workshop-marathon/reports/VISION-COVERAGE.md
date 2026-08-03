@@ -16,8 +16,8 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | see provenance honestly | DEMONSTRATED (local scope) | Gate 7: five trust levels labelled and enforced where enforceable; crypto absent by honest omission |
 | inspect running machine | PARTIAL | Gate 2: live tallies + refusal ring + authenticated asks; grants/replacement/timers not yet exposed |
 | messages/moving parts visible | PARTIAL | Gate 2: every delivery/refusal relayed as BusFact with stamped office + life diagnostics; no visual flow view yet |
-| protected vs not protected visible | NOT ATTEMPTED | |
-| intentional path toward safety | NOT ATTEMPTED | |
+| protected vs not protected visible | DEMONSTRATED (unflattering parts included) | Gate 8: safety view + reporter stamps + permissive-authority truth + gremlin witness |
+| intentional path toward safety | PARTIAL / BLOCKED | --deny works and is visible (minus the silent seam, P-011); enforced containment unreachable from exported surface (P-004); no grant narrowing for loaded parts |
 | optional teaching | NOT ATTEMPTED | |
 | beginner/veteran continuity | NOT ATTEMPTED | |
 | sharing and modification | DEMONSTRATED (local scope) | Gate 7: export/move/import/run/re-export loop witnessed; artifacts-only (no source) is the recorded ceiling |

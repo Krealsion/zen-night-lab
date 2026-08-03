@@ -116,13 +116,31 @@ struct QueryRunning {
     ZEN_SHAPE(QueryRunning, 1);
 };
 
+/// One witnessed launch fact WITH its reporter — the bus-stamped sender of
+/// the publish, the one fact a forger cannot fake (MSG-02). Loaded parts hold
+/// permissive send authority today, so anyone can PUBLISH a PartUp; nobody
+/// can publish one wearing someone else's stamp. The registry records the
+/// stamp; the consumer judges the reporter. `reason` is empty for up-facts.
+struct ReportedPart {
+    std::string project;
+    std::string part;
+    std::string stem;
+    std::string role;
+    std::string reason;
+    std::int64_t reporter = 0; ///< FACT: the stamped sender id of the publish
+    ZEN_SHAPE(ReportedPart, 1, ZEN_FIELD(project), ZEN_FIELD(part), ZEN_FIELD(stem),
+              ZEN_FIELD(role), ZEN_FIELD(reason), ZEN_FIELD(reporter));
+};
+
 /// The registry's answer: everything it witnessed come up or fail, in
-/// witness order. The registry counts what it HEARD — a registry loaded late
-/// honestly knows less than the world does (the score-weave stance).
+/// witness order, each fact carrying its reporter's stamp. The registry
+/// counts what it HEARD — a registry loaded late honestly knows less than
+/// the world does (the score-weave stance).
+/// v2: facts carry reporters (the gremlin's vote — see Gate 8).
 struct RunningReport {
-    std::vector<PartUp> up;
-    std::vector<PartFailed> failed;
-    ZEN_SHAPE(RunningReport, 1, ZEN_FIELD(up), ZEN_FIELD(failed));
+    std::vector<ReportedPart> up;
+    std::vector<ReportedPart> failed;
+    ZEN_SHAPE(RunningReport, 2, ZEN_FIELD(up), ZEN_FIELD(failed));
 };
 
 /// A wish that the current run end, spoken as ordinary intent. The operator

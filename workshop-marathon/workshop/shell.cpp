@@ -220,6 +220,42 @@ int cmd_build(const std::string& name) {
     return std::system(cmd.c_str());
 }
 
+/// The power view: what a creation asks for, what it would be given, and what
+/// actually protects anything — with the unflattering parts said plainly.
+int cmd_safety(const std::string& name) {
+    std::string error;
+    auto loaded = read_spec(toy_file(name), error);
+    if (!loaded) {
+        std::printf("%s\n", error.c_str());
+        return 1;
+    }
+    const ProjectSpec& spec = loaded->spec;
+    std::printf("=== safety: %s ===\n", spec.name.c_str());
+    std::printf("containment (the runtime's own words, no shield painted over them):\n");
+    std::printf("   %s\n", loom::Kernel::containment_note());
+    std::printf("requested power (DECLARED by the project file):\n");
+    for (const std::string& need : spec.needs) {
+        std::printf("   need %s   (deny it: run --deny %s)\n", need.c_str(), need.c_str());
+    }
+    std::printf("what the Workshop's own hands hold (host-assigned, minimal):\n");
+    std::printf("   operator: LoadWeave->manager, publishes (facts/intent), per-knob and "
+                "per-set pokes to declared roles only\n");
+    std::printf("   governor: StopWish + the Timer protocol\n");
+    std::printf("what LOADED PARTS hold (the substrate's current truth, said plainly):\n");
+    std::printf("   permissive send authority - a loaded part can send any shape anywhere.\n");
+    std::printf("   Its speech is limited by audience, not license. The unforgeable fact is\n");
+    std::printf("   the bus's sender stamp: the registry records the reporter of every\n");
+    std::printf("   launch fact, so a lying part is VISIBLE even though it is not stopped.\n");
+    std::printf("enforced OS containment (namespaces/cgroups, kernel-confirmed):\n");
+    std::printf("   exists in the substrate; NOT part of Loom's exported surface - this\n");
+    std::printf("   Workshop cannot reach it (recorded as P-004). No enforced path = no\n");
+    std::printf("   enforced badge; nothing here claims otherwise.\n");
+    std::printf("knobs/sets (declared reach-in points): %zu knob(s); pokes are refused by\n",
+                spec.knobs.size());
+    std::printf("   the target's own door unless the field is ZEN_EXPOSEd.\n");
+    return 0;
+}
+
 int cmd_export(const std::string& name, const std::string& dest, const std::string& author) {
     std::string error;
     auto loaded = read_spec(toy_file(name), error);
@@ -314,6 +350,7 @@ struct RunFlags {
     bool watch = false;       ///< also print raw tap lines (host stdout diagnostics)
     bool refuse = false;      ///< deliberately provoke one refusal, then explain it
     bool interactive = false; ///< load the Input service; keys reach inside the live world
+    std::vector<std::string> deny; ///< declared needs the Workshop refuses to supply
 };
 
 int cmd_run(const std::string& name, const RunFlags& flags) {
@@ -345,6 +382,20 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
                          "zengine.input"});
     }
     for (const std::string& need : spec.needs) {
+        bool denied = false;
+        for (const std::string& d : flags.deny) {
+            denied = denied || d == need;
+        }
+        if (denied) {
+            // The truthful move toward safety available today: DECLINE a
+            // declared capability. The creation runs with less power, and the
+            // consequences are visible refusals, never silence.
+            std::printf("workshop - DENYING declared need '%s': the creation runs without "
+                        "it; expect visible refusals where it reaches for the missing "
+                        "service\n",
+                        need.c_str());
+            continue;
+        }
         const Service* s = find_service(need);
         if (s == nullptr) {
             std::printf("cannot supply need '%s' (known: timer/skin/input)\n", need.c_str());
@@ -511,12 +562,14 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     if (running->answers == 1) {
         std::printf("\n-- what launched (registry, authenticated answer: %s) --\n",
                     running->authenticated ? "yes" : "NO");
-        for (const PartUp& p : running->report.up) {
-            std::printf("   up      %-24s %s%s%s\n", p.part.c_str(), p.stem.c_str(),
-                        p.role.empty() ? "" : "  as ", p.role.c_str());
+        for (const ReportedPart& p : running->report.up) {
+            std::printf("   up      %-24s %s%s%s  [reported by weave %lld]\n", p.part.c_str(),
+                        p.stem.c_str(), p.role.empty() ? "" : "  as ", p.role.c_str(),
+                        static_cast<long long>(p.reporter));
         }
-        for (const PartFailed& p : running->report.failed) {
-            std::printf("   FAILED  %-24s %s\n", p.part.c_str(), p.reason.c_str());
+        for (const ReportedPart& p : running->report.failed) {
+            std::printf("   FAILED  %-24s %s  [reported by weave %lld]\n", p.part.c_str(),
+                        p.reason.c_str(), static_cast<long long>(p.reporter));
         }
     } else {
         std::printf("\n-- registry gave no answer (loaded? replaced?) --\n");
@@ -581,9 +634,14 @@ int main(int argc, char** argv) {
                 flags.refuse = true;
             } else if (arg == "--interactive" || arg == "-i") {
                 flags.interactive = true;
+            } else if (arg == "--deny" && i + 1 < argc) {
+                flags.deny.push_back(argv[++i]);
             }
         }
         return workshop::cmd_run(argv[2], flags);
+    }
+    if (cmd == "safety" && argc > 2) {
+        return workshop::cmd_safety(argv[2]);
     }
     std::printf("workshop — the Serious Playground prototype (Night Lab III)\n"
                 "  workshop list\n"
@@ -593,6 +651,8 @@ int main(int argc, char** argv) {
                 "  workshop new <name>          scaffold a creation\n"
                 "  workshop export <toy> <dest> [author]   share (author is UNVERIFIED)\n"
                 "  workshop import <bundle-dir> receive (fingerprints verified)\n"
-                "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n");
+                "  workshop safety <toy>        the power view, unflattering parts included\n"
+                "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n"
+                "                     [--deny <need>]       run with less power, visibly\n");
     return cmd.empty() ? 0 : 1;
 }

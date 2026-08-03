@@ -506,7 +506,7 @@ void alive_witness(const std::string& workshop_dir, const std::string& vendor_di
     CHECK(post->report.up.size() < pre->report.up.size(),
           "the boot-era memory did NOT cross the swap");
     bool only_post_birth = true;
-    for (const PartUp& p : post->report.up) {
+    for (const ReportedPart& p : post->report.up) {
         if (p.part != "swap registry") {
             only_post_birth = false;
         }
@@ -974,6 +974,153 @@ void bundle_witness(const std::string& vendor_dir, const std::string& toy_dir,
           "the refusal names the artifact");
 }
 
+// ---- Gate 8: dare safely ----------------------------------------------------
+//
+//   S1 the liar is visible: a loaded gremlin forges a PartUp. The lie LANDS
+//      (loaded parts hold permissive send authority — the substrate's
+//      current truth, not painted over), but the registry's answer shows the
+//      forged fact wearing the GREMLIN's own stamp, distinct from the
+//      operator's stamp on every honest fact. Metadata lies; the stamp can't.
+//   S2 denial is visible: a world run with its timer DENIED shows the lamp's
+//      reach for the missing service as real NoSuchTarget refusals on the
+//      inspector, and the world ends honestly quiet.
+
+void safety_witness(const std::string& workshop_dir, const std::string& vendor_dir,
+                    const std::string& toy_dir, const std::string& tests_dir) {
+    // ---- S1: the gremlin ----------------------------------------------------
+    {
+        loom::Switchboard bus;
+        loom::Kernel kernel(bus);
+        const loom::WeaveId control = loom::mount_control(kernel, bus);
+        const loom::WeaveId manager = loom::mount_manager(control, bus);
+        OperatorContext ctx;
+        ctx.project = "lighthouse";
+        ctx.manager = manager;
+        ctx.request_stop = [&bus] { bus.stop(); };
+        loom::Grant reach;
+        reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+        reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+        reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+        reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+        const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+        loom::Grant wish;
+        wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+        allow_timed_weave(wish);
+        loom::mount_granted<Governor>(bus, std::move(wish), 3);
+        const auto boot = [&](const std::string& part, const std::string& load_name,
+                              const std::string& path, const std::string& role) {
+            const std::uint64_t corr = ctx.next_corr++;
+            ctx.pending[corr] = Pending{part, load_name, role};
+            bus.send_as(op, manager,
+                        loom::Message(loom::to_value(loom::LoadWeave{load_name, path, role}),
+                                      op, op, corr));
+        };
+        boot("(workshop) registry", "workshop-registry",
+             workshop_dir + "/workshop-registry.so", kRegistryRole);
+        boot("(service) zengine.timer", "zengine-timer-virtual",
+             vendor_dir + "/zengine-timer-virtual.so", zengine::timer::kTimerRole);
+        boot("lamp", "lighthouse-lamp", toy_dir + "/lighthouse-lamp.so", "lighthouse.lamp");
+        boot("gremlin", "gremlin-liar", tests_dir + "/gremlin-liar.so", "");
+        bus.pump();
+
+        auto* report = ask_role_once<QueryRunning, RunningReport>(bus, kRegistryRole,
+                                                                  QueryRunning{});
+        CHECK(report->answers == 1, "gate 8 setup: registry answered");
+        std::int64_t op_stamp = 0;
+        std::int64_t liar_stamp = 0;
+        bool lie_landed = false;
+        for (const ReportedPart& p : report->report.up) {
+            if (p.part == "lamp") {
+                op_stamp = p.reporter;
+            }
+            if (p.part == "innocent-part") {
+                lie_landed = true;
+                liar_stamp = p.reporter;
+            }
+        }
+        CHECK(lie_landed,
+              "the forged fact LANDED - permissive authority is real, and said plainly");
+        CHECK(op_stamp != 0 && liar_stamp != 0 && op_stamp != liar_stamp,
+              "the lie wears the LIAR's stamp - the reporter is unforgeable");
+    }
+
+    // ---- S2: denial, visible ------------------------------------------------
+    {
+        loom::Switchboard bus;
+        loom::Kernel kernel(bus);
+        const loom::WeaveId control = loom::mount_control(kernel, bus);
+        const loom::WeaveId manager = loom::mount_manager(control, bus);
+        install_bus_fact_bridge(bus);
+        OperatorContext ctx;
+        ctx.project = "lighthouse";
+        ctx.manager = manager;
+        ctx.request_stop = [&bus] { bus.stop(); };
+        loom::Grant reach;
+        reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+        reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+        reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+        reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+        const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+        const auto boot = [&](const std::string& part, const std::string& load_name,
+                              const std::string& path, const std::string& role) {
+            const std::uint64_t corr = ctx.next_corr++;
+            ctx.pending[corr] = Pending{part, load_name, role};
+            bus.send_as(op, manager,
+                        loom::Message(loom::to_value(loom::LoadWeave{load_name, path, role}),
+                                      op, op, corr));
+        };
+        boot("(workshop) inspector", "workshop-inspector",
+             workshop_dir + "/workshop-inspector.so", kInspectorRole);
+        // The timer need is DENIED: no clock is loaded, on purpose.
+        boot("lamp", "lighthouse-lamp", toy_dir + "/lighthouse-lamp.so", "lighthouse.lamp");
+
+        // A NATIVE hand reaching for the same missing service — the
+        // visibility control arm.
+        auto [native_id, native_hand] = mount_keeping<Probe>(bus, [] {
+            loom::Grant g;
+            g.allow_to_role(zengine::timer::EnsureTimer::zen_name,
+                            zengine::timer::EnsureTimer::zen_version,
+                            zengine::timer::kTimerRole);
+            return g;
+        }());
+        (void)native_hand;
+        bus.pump(); // let the loads finish (queue order is not load order —
+                    // this lesson now has three notches)
+        bus.send_as_to_role(native_id, zengine::timer::kTimerRole,
+                            loom::Message(loom::to_value(zengine::timer::EnsureTimer{
+                                              "native.reach", 100, true, "", ""}),
+                                          native_id, native_id, 0));
+        bus.pump(); // quiescent: without a clock the world honestly runs dry
+
+        auto* events = ask_role_once<QueryEvents, EventsReport>(bus, kInspectorRole,
+                                                               QueryEvents{});
+        CHECK(events->answers == 1, "the inspector answers on the clockless bus");
+
+        // DISCOVERED, then pinned exactly as found (richer than designed):
+        // denial is only PARTLY visible today. The NATIVE reach for the
+        // missing clock is a real, explained NoSuchTarget. The LOADED lamp's
+        // identical intent VANISHED at the library/schema seam — the denied
+        // service was the only registrar of the EnsureTimer vocabulary, so
+        // the dynamic emission could not even resolve, and no tap event
+        // exists. Reproducer: repros/core/silent-seam-emission.
+        int ensure_refusals = 0;
+        bool native_seen = false;
+        for (const BusFact& f : events->report.recent_refusals) {
+            if (f.schema == "EnsureTimer") {
+                ++ensure_refusals;
+                if (f.reason == "NoSuchTarget" &&
+                    f.sender == static_cast<std::int64_t>(native_id.value)) {
+                    native_seen = true;
+                }
+            }
+        }
+        CHECK(native_seen, "the NATIVE reach for the denied service is visibly refused");
+        CHECK(ensure_refusals == 1,
+              "the LOADED part's identical reach produced NOTHING - the silent seam, "
+              "pinned as current truth (see repros/core/silent-seam-emission)");
+    }
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -993,6 +1140,7 @@ int main(int argc, char** argv) {
             constellation_witness(vendor_dir, toy_dir, pond_dir);
         }
         bundle_witness(vendor_dir, toy_dir, workshop_dir + "/../bundle-scratch");
+        safety_witness(workshop_dir, vendor_dir, toy_dir, workshop_dir + "/../tests");
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }
