@@ -74,8 +74,10 @@ ordinary published `BusFact` intent so the inspector (and any curious toy) is
 an ordinary consumer. Zero substrate friction — the runtime's BusEvent already
 carries everything an honest observer needs (stamped office, life diagnostics,
 expected/actual requester on answer refusals). Classify the tap surface
-DISCOVERED; the bridge LOCAL PATTERN. Sightings: 1 (inspector). Watch for
-toys wanting bus-facts directly (would be sighting 2).
+DISCOVERED; the bridge LOCAL PATTERN. Sightings: 2 — the inspector, and then
+the echo toy's machine-fly (a TOY consuming bus-facts, via the PLAY DETOUR).
+One more materially independent consumer upgrades this to PACKAGE PRESSURE
+(an observation vocabulary may be engine-shaped, not Workshop-shaped).
 
 ### P-009 — DISCOVERED (a named deferred trigger has a live claimant)
 Two honest schema evolutions in one day (ProjectSpec v1→v2→v3; PartSpec v1→v2)

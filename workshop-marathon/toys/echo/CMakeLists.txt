@@ -1,0 +1,5 @@
+add_library(echo-machine-fly SHARED machine_fly.cpp)
+target_link_libraries(echo-machine-fly PRIVATE loom::switchboard loom::core zengine-vocab)
+target_include_directories(echo-machine-fly PRIVATE ${CMAKE_SOURCE_DIR}/toys)
+target_compile_options(echo-machine-fly PRIVATE -fno-gnu-unique)
+set_target_properties(echo-machine-fly PROPERTIES PREFIX "")

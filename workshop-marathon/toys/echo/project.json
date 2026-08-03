@@ -1,0 +1,7 @@
+{"zen":1,"schema":"ProjectSpec","version":3,"fields":{"name":"echo","description":"PLAY DETOUR: the machine's own heartbeat swims with the fireflies.","parts":[
+{"name":"fly.1","stem":"pond-firefly","role":"echo.fly.1","set":[{"field":"who","value":"1"},{"field":"phase","value":"0.1"},{"field":"rate","value":"0.034"}]},
+{"name":"fly.2","stem":"pond-firefly","role":"echo.fly.2","set":[{"field":"who","value":"2"},{"field":"phase","value":"0.5"},{"field":"rate","value":"0.041"}]},
+{"name":"fly.3","stem":"pond-firefly","role":"echo.fly.3","set":[{"field":"who","value":"3"},{"field":"phase","value":"0.8"},{"field":"rate","value":"0.048"}]},
+{"name":"canvas","stem":"pond-canvas","role":"echo.canvas","set":[]},
+{"name":"machine","stem":"echo-machine-fly","role":"echo.machine","set":[]}
+],"needs":["zengine.timer","zengine.skin"],"knobs":[{"name":"machine cadence","role":"echo.machine","field":"every","values":["150","40","400"]}]}}

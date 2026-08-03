@@ -268,6 +268,34 @@ stem level and thin below that — recorded.
 
 ---
 
+## 2026-08-02 — 7. PLAY DETOUR: echo — the machine swims with the fireflies
+
+Built because the question was irresistible, not for coverage: a weave that
+eats the S-3 bridge's BusFact stream and flashes into the pond every N
+delivered facts. The machine's own heartbeat as a creature.
+
+**What purposeless play discovered that the gates did not:**
+- The observation vocabulary consumed by a TOY (not an inspector) worked with
+  zero friction — P-008's predicted second sighting, landed. The vocabulary
+  is starting to smell engine-shaped rather than Workshop-shaped; one more
+  independent consumer makes it a PACKAGE PRESSURE candidate.
+- The machine-fly is nearly a metronome: the beat chain dominates bus
+  traffic, so "every 150 deliveries" beats at the Timer's own pace — the
+  detour accidentally VISUALIZED the substrate's breathing. Nobody planned
+  an instrument; the pond became one.
+- The loop closes: fireflies hear the machine's flashes and get nudged by
+  them; the machine counts the traffic the pond makes. A feedback creature
+  built in 40 lines with no new substrate — composition depth the structured
+  gates never asked for.
+- Its cadence is a declared knob ("machine cadence": 150/40/400) — reach into
+  the feedback loop while it runs.
+
+Verdict on the project's claim that purposelessness is valuable: **supported
+by evidence in this instance** — the detour produced a package-pressure
+sighting and an unplanned instrument in under an hour.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
