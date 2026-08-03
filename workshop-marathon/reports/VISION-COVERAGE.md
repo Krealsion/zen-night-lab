@@ -6,12 +6,12 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | Workshop promise | status | evidence |
 |---|---|---|
 | tools made of same stuff | PARTIAL | registry/inspector/skins are ordinary loadable weaves, swapped/reloaded/poked via the same doors (Gates 3/10); the shell + tap faucet + build runner remain special (SPECIALNESS.md) |
-| wire ideas without code | PARTIAL | describe/knobs/needs in gated project files; no structural wiring from the schematic yet |
+| wire ideas without code | DEMONSTRATED (in-scope), narrow | a stranger built two working creations with zero C++ (`duet`, `widebeam`) from project files alone; `constellation`/`echo` likewise. NARROW: parts must already exist — you wire what others made, you cannot yet author new behavior without code |
 | flowchart is real program | PARTIAL | Gate 4 H2: schematic edit (knob) changes runtime, re-render agrees; edit set = property+implementation only |
 | descend into real code | PARTIAL | Gate 4 H1: source edit → real build → live reload, state crossing; contract-changing edits not yet driven |
 | same thing at two heights | PARTIAL | narrow vertical GREEN; equivalence ends recorded (NOTEBOOK §5) |
 | build/run/test | PARTIAL | Gate 1: describe→launch→see works (`workshop run lighthouse`, 16-case witness suite); build is still CMake-by-hand outside the Workshop |
-| change while alive | PARTIAL | Gate 3: poke/reload/organ-swap witnessed headless (41 cases); verified-successor ceremony at Gate 4; interactive keys at pilot |
+| change while alive | DEMONSTRATED (in-scope), with a named hole | Gate 3: poke/reload/organ-swap witnessed; post-cold-user `--poke SEC:role.field=value` makes it scriptable (beam 21→41 mid-run from a pipe). HOLE: contract-CHANGING code edits would need the prepared-replacement ceremony, never driven here |
 | find/use what others made | PARTIAL | Gate 6 (garden-wide reuse) + Gate 7 (bundles); no discovery story beyond `list` |
 | see provenance honestly | DEMONSTRATED (local scope) | Gate 7: five trust levels labelled and enforced where enforceable; crypto absent by honest omission |
 | inspect running machine | PARTIAL | Gate 2: live tallies + refusal ring + authenticated asks; grants/replacement/timers not yet exposed |

@@ -1,5 +1,9 @@
 # workshop-marathon — the Serious Playground prototype (Night Lab III)
 
+**Result: `reports/FINAL-REPORT.md`.** One line: the *making* Workshop turned
+out to be largely latent in Zen already; the *seeing* Workshop is not there
+yet, and Zen says so itself. Release litmus: **ALMOST** — two named blockers.
+
 A cold-built prototype of Zen's **Workshop**: describe a creation in a
 project file, run it on the real substrate, watch it, reach inside it while
 it lives, share it. Built against pinned **Loom `61b2915` / Zengine `0356f02`

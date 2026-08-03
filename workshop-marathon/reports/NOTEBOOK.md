@@ -398,6 +398,32 @@ and bounded.
 
 ---
 
+## 2026-08-02 — 11. Postmortem: the embargo lifts
+
+Conditions met (all gates attempted, garden built, cold-user recorded, ctest
+2/2 green), so I read Night Two's `FINAL-REPORT.md` for the first time.
+
+The comparison is in `REDISCOVERY.md`. The short of it: I independently
+re-found their **Blocker 2** (send-fate) through a completely different door
+and with a different consequence — their services built clocks, my making-tool
+built an inspector. I did **not** re-find their unanimous 6/6 finding
+(`describe-then-hand-over`), and the reason is structural rather than lucky:
+**a Workshop has no obligations to a caller.** Zero prepared-replacement calls
+here against 178 there. Two portfolios, two nearly disjoint halves of the same
+substrate — which is itself the most useful thing this comparison produced.
+
+The one genuinely new core finding (P-011, the silent seam) is best understood
+as a *sharpening* of their Blocker 2: they wrote "only a host tap can see it";
+I found where the tap sees nothing either.
+
+Their Blocker 1 (role-holding provenance) is **closed** in current Zen, and I
+consumed the fix without ever feeling the original wound — recorded as
+tainted, since `marathon/README.md` had spoiled that finding at Gate 0.
+
+Marathon ends here.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
