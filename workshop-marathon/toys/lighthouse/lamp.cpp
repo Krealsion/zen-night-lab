@@ -28,6 +28,15 @@ namespace ztimer = zengine::timer;
 inline constexpr const char* kSlot = "lighthouse";
 inline constexpr std::int64_t kSweepMs = 100;
 
+/// The beam's glyph — a COMPILE-TIME property on purpose: changing it is the
+/// two-heights experiment's canonical "code-level edit" (edit source, rebuild,
+/// reload in place, watch the same running lamp change character mid-sweep).
+#ifdef LIGHTHOUSE_STAR
+inline constexpr char kGlyph = '*';
+#else
+inline constexpr char kGlyph = '#';
+#endif
+
 struct LampState {
     std::int64_t position = 0;
     std::int64_t direction = 1;
@@ -71,7 +80,7 @@ private:
 
     std::string frame() const {
         std::string beam(static_cast<std::size_t>(state_.field), '.');
-        beam[static_cast<std::size_t>(state_.position)] = '#';
+        beam[static_cast<std::size_t>(state_.position)] = kGlyph;
         return "[" + beam + "]  sweeps: " + std::to_string(state_.sweeps);
     }
 

@@ -168,6 +168,45 @@ int cmd_list() {
     return 0;
 }
 
+int cmd_view(const std::string& name) {
+    std::string error;
+    auto loaded = read_spec(toy_file(name), error);
+    if (!loaded) {
+        std::printf("%s\n", error.c_str());
+        return 1;
+    }
+    OperatorContext ctx;
+    ctx.project = loaded->spec.name;
+    ctx.parts = loaded->spec.parts;
+    ctx.needs = loaded->spec.needs;
+    ctx.knobs = loaded->spec.knobs;
+    ctx.knob_at.assign(ctx.knobs.size(), 0);
+    for (const std::string& line : schematic_lines(ctx, /*live=*/false)) {
+        std::printf("%s\n", line.c_str());
+    }
+    return 0;
+}
+
+int cmd_build(const std::string& name) {
+    std::string error;
+    auto loaded = read_spec(toy_file(name), error);
+    if (!loaded) {
+        std::printf("%s\n", error.c_str());
+        return 1;
+    }
+    std::string targets;
+    for (const PartSpec& part : loaded->spec.parts) {
+        targets += " --target " + part.stem;
+    }
+    if (targets.empty()) {
+        std::printf("'%s' declares no parts to build\n", loaded->spec.name.c_str());
+        return 0;
+    }
+    const std::string cmd = "cmake --build " + binary_dir() + targets;
+    std::printf("workshop - %s\n", cmd.c_str());
+    return std::system(cmd.c_str());
+}
+
 int cmd_describe(const std::string& name) {
     std::string error;
     auto loaded = read_spec(toy_file(name), error);
@@ -317,6 +356,12 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
                 break;
             }
         }
+        ctx.parts = spec.parts;
+        ctx.needs = spec.needs;
+        if (!ctx.alter_stem.empty()) {
+            ctx.update_command =
+                "cmake --build " + binary_dir() + " --target " + ctx.alter_stem;
+        }
     }
 
     loom::Grant reach;
@@ -415,6 +460,12 @@ int main(int argc, char** argv) {
     if (cmd == "describe" && argc > 2) {
         return workshop::cmd_describe(argv[2]);
     }
+    if (cmd == "view" && argc > 2) {
+        return workshop::cmd_view(argv[2]);
+    }
+    if (cmd == "build" && argc > 2) {
+        return workshop::cmd_build(argv[2]);
+    }
     if (cmd == "new" && argc > 2) {
         return workshop::cmd_new(argv[2]);
     }
@@ -436,8 +487,10 @@ int main(int argc, char** argv) {
     }
     std::printf("workshop — the Serious Playground prototype (Night Lab III)\n"
                 "  workshop list\n"
-                "  workshop describe <toy>\n"
-                "  workshop new <name>\n"
+                "  workshop describe <toy>      the spec as the gate admits it\n"
+                "  workshop view <toy>          the schematic (described shape)\n"
+                "  workshop build <toy>         build the toy's parts\n"
+                "  workshop new <name>          scaffold a creation\n"
                 "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n");
     return cmd.empty() ? 0 : 1;
 }

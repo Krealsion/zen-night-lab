@@ -104,11 +104,15 @@ public:
         if (t.slot == "inspector") {
             ++inspector_lines;
         }
+        if (t.slot.rfind("schematic.", 0) == 0) {
+            schematic.push_back(t.text);
+        }
     }
     void on(const PartUp& p, loom::Mail&) { up.push_back(p); }
     void on(const PartFailed& p, loom::Mail&) { failed.push_back(p); }
 
     std::vector<std::string> frames;
+    std::vector<std::string> schematic;
     std::vector<PartUp> up;
     std::vector<PartFailed> failed;
     int inspector_lines = 0;
@@ -498,6 +502,115 @@ void alive_witness(const std::string& workshop_dir, const std::string& vendor_di
     CHECK(probe->frames.size() > n3, "the world never stopped");
 }
 
+// ---- Gate 4: the same thing at two heights ---------------------------------
+//
+//   H1 the code view is real: a source-level edit (the star glyph), built as
+//      a real artifact, reloaded into the RUNNING lamp behind the same id —
+//      the beam changes character mid-sweep and the sweep count survives
+//   H2 the schematic is real: rendered from the admitted description plus
+//      live trackers, published as ordinary Surface intent; a schematic-level
+//      operation (the knob) changes the RUNTIME, and the re-rendered
+//      schematic and the running frames agree on the new truth
+
+void heights_witness(const std::string& workshop_dir, const std::string& vendor_dir,
+                     const std::string& toy_dir) {
+    (void)workshop_dir;
+    loom::Switchboard bus;
+    loom::Kernel kernel(bus);
+    const loom::WeaveId control = loom::mount_control(kernel, bus);
+    const loom::WeaveId manager = loom::mount_manager(control, bus);
+
+    OperatorContext ctx;
+    ctx.project = "lighthouse";
+    ctx.manager = manager;
+    ctx.request_stop = [&bus] { bus.stop(); };
+    ctx.interactive = true;
+    ctx.parts = {PartSpec{"lamp", "lighthouse-lamp", "lighthouse.lamp"}};
+    ctx.needs = {"zengine.timer"};
+    ctx.knobs = {KnobSpec{"beam width", "lighthouse.lamp", "field", {"21", "41"}}};
+    ctx.knob_at = {0};
+    ctx.alter_part = "lamp";
+    ctx.alter_stem = "lighthouse-lamp";
+    ctx.alter_path = toy_dir + "/lighthouse-lamp.so";
+
+    loom::Grant reach;
+    reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+    reach.allow(loom::ReloadWeave::zen_name, loom::ReloadWeave::zen_version, manager);
+    reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+    reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+    reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
+                        "lighthouse.lamp");
+    const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+
+    loom::Grant wish;
+    wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+    allow_timed_weave(wish);
+    loom::mount_granted<Governor>(bus, std::move(wish), /*limit_seconds=*/2);
+
+    auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+    (void)probe_id;
+
+    const auto command = [&](const std::string& label, const auto& cmd) {
+        const std::uint64_t corr = ctx.next_corr++;
+        ctx.pending[corr] = Pending{label, "", ""};
+        bus.send_as(op, manager, loom::Message(loom::to_value(cmd), op, op, corr));
+    };
+    command("(service) zengine.timer",
+            loom::LoadWeave{"zengine-timer-virtual", vendor_dir + "/zengine-timer-virtual.so",
+                            zengine::timer::kTimerRole});
+    command("lamp", loom::LoadWeave{"lighthouse-lamp", toy_dir + "/lighthouse-lamp.so",
+                                    "lighthouse.lamp"});
+    bus.pump();
+
+    CHECK(!probe->frames.empty(), "gate 4 setup: frames flowed");
+    CHECK(probe->frames.back().find('#') != std::string::npos, "the hash beam runs first");
+    const long s1 = frame_sweeps(probe->frames.back());
+
+    // H1 — reload the RUNNING lamp from the star artifact (the code edit,
+    // already through a real compiler, same contract, same stable id).
+    command("code update: reload lamp",
+            loom::ReloadWeave{"lighthouse-lamp", toy_dir + "/lighthouse-lamp-star.so"});
+    bus.pump();
+    CHECK(probe->frames.back().find('*') != std::string::npos,
+          "the code edit is LIVE - the beam glyph changed mid-run");
+    CHECK(probe->frames.back().find('#') == std::string::npos, "the old glyph is gone");
+    CHECK(frame_sweeps(probe->frames.back()) >= s1,
+          "the sweep count crossed the code edit - same running thing, new code");
+
+    // H2 — the schematic height.
+    bus.publish(loom::Message(
+        loom::to_value(zengine::input::KeyPressed{zengine::input::scan::kV, "v"})));
+    bus.pump();
+    bool saw_lamp_node = false;
+    bool saw_knob_21 = false;
+    for (const std::string& line : probe->schematic) {
+        if (line.find("[lamp]") != std::string::npos &&
+            line.find("lighthouse.lamp") != std::string::npos) {
+            saw_lamp_node = true;
+        }
+        if (line.find("beam width' = 21") != std::string::npos) {
+            saw_knob_21 = true;
+        }
+    }
+    CHECK(saw_lamp_node, "the schematic names the lamp node and the role it holds");
+    CHECK(saw_knob_21, "the schematic shows the knob's current value");
+
+    const std::size_t schematic_before = probe->schematic.size();
+    bus.publish(loom::Message(
+        loom::to_value(zengine::input::KeyPressed{zengine::input::scan::kP, "p"})));
+    bus.pump();
+    bool saw_knob_41 = false;
+    for (std::size_t i = schematic_before; i < probe->schematic.size(); ++i) {
+        if (probe->schematic[i].find("beam width' = 41") != std::string::npos) {
+            saw_knob_41 = true;
+        }
+    }
+    CHECK(saw_knob_41, "the schematic RE-RENDERED with the new value after the edit");
+    CHECK(frame_width(probe->frames.back()) == 41,
+          "and the RUNTIME really changed - schematic and world agree");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -510,6 +623,7 @@ int main(int argc, char** argv) {
         run_witness(workshop_dir, vendor_dir, toy_dir);
         inspector_witness(workshop_dir, vendor_dir, toy_dir);
         alive_witness(workshop_dir, vendor_dir, toy_dir);
+        heights_witness(workshop_dir, vendor_dir, toy_dir);
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }

@@ -6,10 +6,10 @@ NOT ATTEMPTED (explain why). No percentages unless the statuses justify one.
 | Workshop promise | status | evidence |
 |---|---|---|
 | tools made of same stuff | NOT ATTEMPTED | marathon not started |
-| wire ideas without code | NOT ATTEMPTED | |
-| flowchart is real program | NOT ATTEMPTED | |
-| descend into real code | NOT ATTEMPTED | |
-| same thing at two heights | NOT ATTEMPTED | |
+| wire ideas without code | PARTIAL | describe/knobs/needs in gated project files; no structural wiring from the schematic yet |
+| flowchart is real program | PARTIAL | Gate 4 H2: schematic edit (knob) changes runtime, re-render agrees; edit set = property+implementation only |
+| descend into real code | PARTIAL | Gate 4 H1: source edit → real build → live reload, state crossing; contract-changing edits not yet driven |
+| same thing at two heights | PARTIAL | narrow vertical GREEN; equivalence ends recorded (NOTEBOOK §5) |
 | build/run/test | PARTIAL | Gate 1: describe→launch→see works (`workshop run lighthouse`, 16-case witness suite); build is still CMake-by-hand outside the Workshop |
 | change while alive | PARTIAL | Gate 3: poke/reload/organ-swap witnessed headless (41 cases); verified-successor ceremony at Gate 4; interactive keys at pilot |
 | find/use what others made | NOT ATTEMPTED | |

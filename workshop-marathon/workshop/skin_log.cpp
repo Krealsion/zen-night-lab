@@ -44,13 +44,20 @@ public:
     void on(const surface::SurfaceText& text, loom::Mail& mail) {
         hello(mail);
         ++state_.lines;
-        if (text.slot == last_slot_) {
+        // Styling is the skin's business: schematic rows print bare, so the
+        // diagram reads as a diagram; everything else is labeled by its slot.
+        const bool bare = text.slot.rfind("schematic.", 0) == 0;
+        if (text.slot == last_slot_ && !bare) {
             std::printf("\r\033[K[%s] %s", text.slot.c_str(), text.text.c_str());
         } else {
             if (!last_slot_.empty()) {
-                std::printf("\n");
+                std::printf("\r\n");
             }
-            std::printf("[%s] %s", text.slot.c_str(), text.text.c_str());
+            if (bare) {
+                std::printf("%s", text.text.c_str());
+            } else {
+                std::printf("[%s] %s", text.slot.c_str(), text.text.c_str());
+            }
             last_slot_ = text.slot;
         }
         std::fflush(stdout);

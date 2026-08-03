@@ -22,11 +22,14 @@
 #include <zen/weave.hpp>
 
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace workshop {
 
@@ -71,7 +74,52 @@ struct OperatorContext {
     std::string alter_part;          ///< first role-holding part: reload target
     std::string alter_stem;
     std::string alter_path;
+
+    // ---- two heights (Gate 4) ----------------------------------------------
+    std::vector<PartSpec> parts;    ///< the described shape, for the schematic
+    std::vector<std::string> needs;
+    /// S-4: the build runner — a real `cmake --build` the operator invokes on
+    /// the `u` key before reloading. Host-tier OS act inside a native weave;
+    /// while it runs, the WHOLE WORLD PAUSES (the pump stalls) — recorded as
+    /// boring friction, not hidden behind a spinner.
+    std::string update_command;
 };
+
+/// The schematic, rendered as plain lines — one function, both heights of
+/// presentation: the operator publishes these as Surface intent (live view),
+/// `workshop view` prints them (described view). The schematic is derived
+/// from the ADMITTED description plus the operator's live trackers, so a
+/// skin swap or knob turn re-renders attached to the same running creation.
+inline std::vector<std::string> schematic_lines(const OperatorContext& ctx, bool live) {
+    std::vector<std::string> out;
+    out.push_back("=== " + ctx.project + (live ? " (live)" : " (described)") + " ===");
+    for (const std::string& need : ctx.needs) {
+        std::string line = "  (service) " + need;
+        if (need == "zengine.skin" && !ctx.skins.empty()) {
+            line += "  -> painted by " + ctx.skins[ctx.skin_idx].label;
+        }
+        out.push_back(line);
+    }
+    for (const PartSpec& part : ctx.parts) {
+        std::string line = "  [" + part.name + "]  artifact " + part.stem;
+        if (!part.role.empty()) {
+            line += "  holds " + part.role;
+        }
+        out.push_back(line);
+    }
+    for (std::size_t i = 0; i < ctx.knobs.size(); ++i) {
+        const KnobSpec& knob = ctx.knobs[i];
+        const std::string value =
+            knob.values.empty() ? "?" : knob.values[i < ctx.knob_at.size() ? ctx.knob_at[i] : 0];
+        out.push_back("  knob '" + knob.name + "' = " + value + "  on " + knob.role + "." +
+                      knob.field + (live ? "  (p cycles)" : ""));
+    }
+    if (live) {
+        out.push_back("  keys: v redraw | 1 skin | p knob | r reload | u rebuild+reload | "
+                      "q quit");
+    }
+    return out;
+}
 
 struct OperatorState {
     std::int64_t answers = 0;
@@ -132,9 +180,26 @@ public:
                 const std::string& value = knob.values[at];
                 const std::uint64_t corr = ctx_->next_corr++;
                 ctx_->pending[corr] =
-                    Pending{"knob '" + knob.name + "' = " + value, knob.field, knob.role};
+                    Pending{"knob '" + knob.name + "' = " + value, knob.field, knob.role, 50};
                 mail.send_to_role(knob.role, loom::PokeWrite{knob.field, value}, corr);
                 status(mail, "knob '" + knob.name + "' -> " + value + " ...");
+            }
+        } else if (k.scancode == scan::kV) {
+            render_schematic(mail);
+        } else if (k.scancode == scan::kU) {
+            if (ctx_->update_command.empty() || ctx_->alter_stem.empty()) {
+                status(mail, "no rebuild target configured");
+            } else {
+                // S-4, in the open: a real build, and the world pauses for it.
+                status(mail, "rebuilding (" + ctx_->alter_stem + ") - the world pauses...");
+                const int rc = std::system(ctx_->update_command.c_str());
+                if (rc == 0) {
+                    command(mail, "code update: reload " + ctx_->alter_part + " after rebuild",
+                            0, loom::ReloadWeave{ctx_->alter_stem, ctx_->alter_path});
+                } else {
+                    status(mail, "build FAILED (exit " + std::to_string(rc) +
+                                     ") - the running world is unchanged");
+                }
             }
         } else if (k.scancode == scan::kO && ctx_->knobs.size() > 1) {
             ctx_->knob_cursor = (ctx_->knob_cursor + 1) % ctx_->knobs.size();
@@ -186,6 +251,9 @@ private:
             ++ctx_->up;
             mail.publish(PartUp{ctx_->project, p.part, p.stem, p.role});
             status(mail, p.part + " " + words);
+            if (p.action == 50 || p.action >= 100) {
+                render_schematic(mail); // an altered world re-renders, attached
+            }
         }
         ctx_->pending.erase(it);
 
@@ -200,10 +268,20 @@ private:
     void status(loom::Mail& mail, const std::string& text) {
         ctx_->last_status = "[workshop] " + text;
         if (ctx_->interactive) {
-            ctx_->last_status += "   (1 skin | p knob | r reload | q quit)";
+            ctx_->last_status += "   (v schematic | 1 skin | p knob | r reload | u update | "
+                                 "q quit)";
         }
         mail.publish(zengine::surface::SurfaceText{zengine::surface::kSlotStatus,
                                                    ctx_->last_status});
+    }
+
+    void render_schematic(loom::Mail& mail) {
+        const std::vector<std::string> lines = schematic_lines(*ctx_, /*live=*/true);
+        for (std::size_t i = 0; i < lines.size(); ++i) {
+            char slot[24];
+            std::snprintf(slot, sizeof slot, "schematic.%02zu", i);
+            mail.publish(zengine::surface::SurfaceText{slot, lines[i]});
+        }
     }
 
     OperatorContext* ctx_;

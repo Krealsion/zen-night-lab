@@ -195,6 +195,46 @@ floor; the floor is messages all the way down.
 
 ---
 
+## 2026-08-02 — 5. Gate 4: the same thing at two heights (narrow vertical)
+
+**The slice (50 cases green):** one creation, two live representations.
+- **Code height (H1):** the lamp's glyph is a source-level property. The
+  "edit" is real compiled code (`lighthouse-lamp-star.so`, same source, one
+  define) and it traveled `ReloadWeave` into the RUNNING lamp behind the same
+  stable id: the beam changed `#`→`*` mid-sweep and the sweep count crossed
+  the edit intact. Interactively, `u` runs the actual `cmake --build` then the
+  same reload — an honest edit-compile-reload loop from inside the run.
+- **Schematic height (H2):** `schematic_lines()` renders the creation from
+  its ADMITTED description + the operator's live trackers, published as
+  ordinary Surface intent (slots `schematic.NN`; the log skin styles them
+  bare — styling is the skin's business). A schematic-level operation (the
+  knob) changed the RUNTIME, and the re-rendered schematic and the running
+  frames agreed on the new truth. `workshop view` prints the same lines for a
+  creation at rest ("described" vs "live" is labelled).
+
+**Where the equivalence honestly ends (recorded, not hidden):**
+1. The schematic edit set is small: select-implementation (skin) and
+   change-property (knob). No add/remove-component from the schematic yet.
+2. Edits are keyboard-mediated against a rendered view — legible, but not
+   direct manipulation of drawn nodes. The SDL direct-manipulation question
+   is also gated by the substrate itself (the SDL window cannot hear in V1).
+3. Only contract-preserving code edits ride `reload_from`. A contract-CHANGING
+   edit needs the prepared-replacement ceremony, which the Workshop has not
+   yet driven — named as the next deepening, not glossed.
+4. The schematic derives from description + operator trackers, not from
+   observed message topology (the runtime-graph-semantics question stays open
+   for the toys to vote on).
+5. In-pump rebuilds STALL THE WORLD (the `u` key freezes the sweep until the
+   compiler returns). BORING FRICTION: a build-watcher weave is the mature
+   shape; v1 says what it does and does it in the open.
+
+**Gate 4 verdict: GREEN for the narrow slice as specified** — one real
+vertical, one meaningful change from each height, ends recorded precisely.
+The "easy way vs real way" felt genuinely continuous for properties and
+implementations; the wall (contract changes, structural edits) is named.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
