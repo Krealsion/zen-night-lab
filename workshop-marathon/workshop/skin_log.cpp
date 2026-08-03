@@ -26,6 +26,7 @@
 
 #include <cstdio>
 #include <string>
+#include <unistd.h>
 
 namespace workshop {
 
@@ -47,6 +48,18 @@ public:
         // Styling is the skin's business: schematic rows print bare, so the
         // diagram reads as a diagram; everything else is labeled by its slot.
         const bool bare = text.slot.rfind("schematic.", 0) == 0;
+        // A medium that is not a terminal gets no terminal tricks: piped or
+        // redirected output is plain lines, capturable without `tr`. Found by
+        // a cold user who had to filter carriage returns out of every command.
+        if (!tty_) {
+            if (bare) {
+                std::printf("%s\n", text.text.c_str());
+            } else {
+                std::printf("[%s] %s\n", text.slot.c_str(), text.text.c_str());
+            }
+            std::fflush(stdout);
+            return;
+        }
         if (text.slot == last_slot_ && !bare) {
             std::printf("\r\033[K[%s] %s", text.slot.c_str(), text.text.c_str());
         } else {
@@ -77,6 +90,7 @@ private:
 
     bool said_hello_ = false;
     std::string last_slot_;
+    const bool tty_ = ::isatty(1) != 0;
 };
 
 } // namespace workshop

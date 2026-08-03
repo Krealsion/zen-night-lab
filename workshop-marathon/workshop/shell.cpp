@@ -285,8 +285,9 @@ int cmd_export(const std::string& name, const std::string& dest, const std::stri
     return 0;
 }
 
-int cmd_import(const std::string& bundle_dir) {
-    BundleOutcome out = import_bundle(bundle_dir, (fs::path(source_root()) / "toys").string());
+int cmd_import(const std::string& bundle_dir, const std::string& into, const std::string& as) {
+    const std::string dest = into.empty() ? (fs::path(source_root()) / "toys").string() : into;
+    BundleOutcome out = import_bundle(bundle_dir, dest, as);
     if (!out.ok) {
         std::printf("import REFUSED: %s\n", out.error.c_str());
         return 1;
@@ -340,8 +341,47 @@ int cmd_new(const std::string& name) {
     std::ofstream out(file);
     out << loom::compat::serialize(loom::to_value(spec)) << "\n";
     std::printf("scaffolded %s\n", file.string().c_str());
-    std::printf("next: add toys/%s/%s-part.cpp and a CMake target named %s-part\n",
-                name.c_str(), name.c_str(), name.c_str());
+    std::printf("\nTWO ways forward — the first needs no C++ at all:\n");
+    std::printf("  1. COMPOSE (no code): edit that file and point `stem` at parts that\n");
+    std::printf("     already exist — e.g. \"pond-firefly\", \"pond-canvas\",\n");
+    std::printf("     \"lighthouse-lamp\". Give each part its own `name` and `role`, and\n");
+    std::printf("     use `set` to configure it at birth. `workshop schema` lists every\n");
+    std::printf("     field; `workshop list` shows what exists to borrow.\n");
+    std::printf("  2. WRITE A PART: add toys/%s/%s-part.cpp and a CMake target named\n",
+                name.c_str(), name.c_str());
+    std::printf("     %s-part (copy toys/lighthouse/ as a model), then rebuild.\n",
+                name.c_str());
+    return 0;
+}
+
+/// The project-file field reference. Exists because a cold user had to
+/// reverse-engineer the vocabulary from example files (finding #2).
+int cmd_schema() {
+    std::printf("project.json — the shape a creation is described in\n");
+    std::printf("  admitted through Zen's one gate as ProjectSpec v3; a malformed file is\n");
+    std::printf("  a refusal naming the field, never a half-read project.\n\n");
+    std::printf("  name          text     the creation's name (matches its directory)\n");
+    std::printf("  description   text     one honest line; shown by `list`\n");
+    std::printf("  needs         [text]   services to supply: \"zengine.timer\",\n");
+    std::printf("                         \"zengine.skin\", \"zengine.input\"\n");
+    std::printf("  parts         [part]   the loadable pieces (below)\n");
+    std::printf("  knobs         [knob]   live reach-in points (below)\n\n");
+    std::printf("  part.name     text     THIS instance's name — one artifact may be\n");
+    std::printf("                         loaded many times under different names\n");
+    std::printf("  part.stem     text     the artifact to load (<stem>.so). Borrow another\n");
+    std::printf("                         toy's stem freely — that is composition\n");
+    std::printf("  part.role     text     the address it holds; needed if you `set` or\n");
+    std::printf("                         `knob` it. Convention: <toy>.<part>\n");
+    std::printf("  part.set      [{field,value}]  pokes applied at birth, through the same\n");
+    std::printf("                         door a live poke uses\n\n");
+    std::printf("  knob.name     text     what to call it in the schematic\n");
+    std::printf("  knob.role     text     whose field to turn\n");
+    std::printf("  knob.field    text     which field\n");
+    std::printf("  knob.values   [text]   the cycle, as text literals\n\n");
+    std::printf("WHICH FIELDS CAN I set/knob? Only those a part opened with ZEN_EXPOSE.\n");
+    std::printf("  Ask the running part itself — `run <toy> -i` then press h — or read its\n");
+    std::printf("  source. A poke at a field that is not open is refused BY THE PART, and\n");
+    std::printf("  the refusal names the field.\n");
     return 0;
 }
 
@@ -351,7 +391,35 @@ struct RunFlags {
     bool refuse = false;      ///< deliberately provoke one refusal, then explain it
     bool interactive = false; ///< load the Input service; keys reach inside the live world
     std::vector<std::string> deny; ///< declared needs the Workshop refuses to supply
+    std::vector<ScheduledPoke> pokes; ///< --poke SEC:role.field=value
 };
+
+/// Parse `SEC:role.field=value`. The role may contain dots (they usually do),
+/// so the FIELD is the last dot-segment before '='.
+bool parse_poke(const std::string& text, ScheduledPoke& out, std::string& why) {
+    const std::size_t colon = text.find(':');
+    const std::size_t equals = text.find('=', colon == std::string::npos ? 0 : colon);
+    if (colon == std::string::npos || equals == std::string::npos || equals < colon) {
+        why = "expected SEC:role.field=value";
+        return false;
+    }
+    const std::string when = text.substr(0, colon);
+    const std::string target = text.substr(colon + 1, equals - colon - 1);
+    const std::size_t dot = target.rfind('.');
+    if (dot == std::string::npos) {
+        why = "expected role.field before '=' (the role usually contains dots too)";
+        return false;
+    }
+    out.second = std::atoll(when.c_str());
+    out.role = target.substr(0, dot);
+    out.field = target.substr(dot + 1);
+    out.value = text.substr(equals + 1);
+    if (out.second <= 0 || out.role.empty() || out.field.empty()) {
+        why = "second must be >= 1 and role/field must be non-empty";
+        return false;
+    }
+    return true;
+}
 
 int cmd_run(const std::string& name, const RunFlags& flags) {
     std::string error;
@@ -433,12 +501,25 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     // S-3: the tap bridge — runtime truth becomes ordinary published intent.
     install_bus_fact_bridge(bus);
     if (flags.watch) {
+        // Says what it will and will not show, because a flag that prints
+        // nothing on a healthy run reads as broken (cold-user finding #3).
+        std::printf("~ tap: watching refusals and lifecycle events. A healthy run prints "
+                    "NOTHING here; that is success, not breakage. (Deliveries are not "
+                    "shown - a beating bus makes thousands per second; the inspector's "
+                    "tallies count them.)\n");
         bus.add_observer([](const loom::BusEvent& e) {
             if (e.kind == loom::EventKind::Refused) {
                 std::printf("~ tap: REFUSED %s (%s) sender=%llu target=%llu\n",
                             e.schema_name.c_str(), loom::name_of(e.refusal.reason),
                             static_cast<unsigned long long>(e.sender.value),
                             static_cast<unsigned long long>(e.target.value));
+            } else if (e.kind == loom::EventKind::Died) {
+                std::printf("~ tap: DIED weave %llu\n",
+                            static_cast<unsigned long long>(e.target.value));
+            } else if (e.kind == loom::EventKind::Revived) {
+                std::printf("~ tap: REVIVED weave %llu%s\n",
+                            static_cast<unsigned long long>(e.target.value),
+                            e.from_last_known_good ? " (from last-known-good)" : "");
             }
         });
     }
@@ -501,6 +582,12 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
             ctx.sets_by_part[part.name] = part.set;
         }
     }
+    ctx.scheduled = flags.pokes;
+    for (const ScheduledPoke& p : ctx.scheduled) {
+        std::printf("workshop - scheduled: at %llds poke %s.%s = %s\n",
+                    static_cast<long long>(p.second), p.role.c_str(), p.field.c_str(),
+                    p.value.c_str());
+    }
 
     loom::Grant reach;
     reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
@@ -512,6 +599,9 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
             reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
                                 part.role);
         }
+    }
+    for (const ScheduledPoke& p : ctx.scheduled) {
+        reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version, p.role);
     }
     if (!ctx.refusal_role.empty()) {
         reach.allow_to_role(QueryRunning::zen_name, QueryRunning::zen_version, ctx.refusal_role);
@@ -535,9 +625,13 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     }
     const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
 
-    if (flags.for_seconds > 0) {
+    // The governor counts world time out loud; scheduled pokes ride its
+    // ClockTick. It is mounted whenever anything needs time named — a bounded
+    // run, or a scheduled reach-in.
+    if (flags.for_seconds > 0 || !ctx.scheduled.empty()) {
         loom::Grant wish;
         wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+        wish.allow_to_any(ClockTick::zen_name, ClockTick::zen_version);
         allow_timed_weave(wish);
         loom::mount_granted<Governor>(bus, std::move(wish), flags.for_seconds);
     }
@@ -623,7 +717,17 @@ int main(int argc, char** argv) {
         return workshop::cmd_export(argv[2], argv[3], author);
     }
     if (cmd == "import" && argc > 2) {
-        return workshop::cmd_import(argv[2]);
+        std::string into;
+        std::string as;
+        for (int i = 3; i < argc; ++i) {
+            const std::string arg = argv[i];
+            if (arg == "--into" && i + 1 < argc) {
+                into = argv[++i];
+            } else if (arg == "--as" && i + 1 < argc) {
+                as = argv[++i];
+            }
+        }
+        return workshop::cmd_import(argv[2], into, as);
     }
     if (cmd == "build" && argc > 2) {
         return workshop::cmd_build(argv[2]);
@@ -645,9 +749,20 @@ int main(int argc, char** argv) {
                 flags.interactive = true;
             } else if (arg == "--deny" && i + 1 < argc) {
                 flags.deny.push_back(argv[++i]);
+            } else if (arg == "--poke" && i + 1 < argc) {
+                workshop::ScheduledPoke p;
+                std::string why;
+                if (!workshop::parse_poke(argv[++i], p, why)) {
+                    std::printf("--poke '%s': %s\n", argv[i], why.c_str());
+                    return 1;
+                }
+                flags.pokes.push_back(p);
             }
         }
         return workshop::cmd_run(argv[2], flags);
+    }
+    if (cmd == "schema") {
+        return workshop::cmd_schema();
     }
     if (cmd == "safety" && argc > 2) {
         return workshop::cmd_safety(argv[2]);
@@ -658,10 +773,16 @@ int main(int argc, char** argv) {
                 "  workshop view <toy>          the schematic (described shape)\n"
                 "  workshop build <toy>         build the toy's parts\n"
                 "  workshop new <name>          scaffold a creation\n"
+                "  workshop schema              the project.json field reference\n"
                 "  workshop export <toy> <dest> [author]   share (author is UNVERIFIED)\n"
-                "  workshop import <bundle-dir> receive (fingerprints verified)\n"
+                "  workshop import <bundle> [--into <dir>] [--as <name>]\n"
                 "  workshop safety <toy>        the power view, unflattering parts included\n"
                 "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n"
-                "                     [--deny <need>]       run with less power, visibly\n");
+                "                     [--deny <need>]              run with less power\n"
+                "                     [--poke SEC:role.field=value]  reach in while it\n"
+                "                        lives, without a terminal (repeatable)\n"
+                "\n"
+                "  -i needs a real TTY. --poke is the scriptable twin: it reaches into a\n"
+                "  running creation from a pipe, a script, or CI.\n");
     return cmd.empty() ? 0 : 1;
 }

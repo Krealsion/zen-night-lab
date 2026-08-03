@@ -126,8 +126,14 @@ inline BundleOutcome export_bundle(const ProjectSpec& spec, const std::string& s
     return out;
 }
 
+/// `as_name` (optional) receives the toy under a different name — the honest
+/// answer to "I already have one of those", found by the cold user. The
+/// RENAME IS RECORDED: the received project's name changes, so `describe`
+/// shows the new name and the bundle's own `project` field (kept verbatim in
+/// BUNDLE.json beside it) still shows what the sender called it.
 inline BundleOutcome import_bundle(const std::string& bundle_dir,
-                                   const std::string& toys_root) {
+                                   const std::string& toys_root,
+                                   const std::string& as_name = "") {
     BundleOutcome out;
     const bundlefs::path bundle(bundle_dir);
 
@@ -155,7 +161,10 @@ inline BundleOutcome import_bundle(const std::string& bundle_dir,
         out.error = "project.json refused at the gate: " + spec_adm.first_error().message();
         return out;
     }
-    const ProjectSpec spec = loom::from_value<ProjectSpec>(spec_adm.value());
+    ProjectSpec spec = loom::from_value<ProjectSpec>(spec_adm.value());
+    if (!as_name.empty()) {
+        spec.name = as_name;
+    }
 
     // Verify every declared fingerprint against the bytes actually shipped.
     for (const ArtifactInfo& a : info.artifacts) {

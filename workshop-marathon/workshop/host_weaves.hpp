@@ -52,6 +52,17 @@ struct SkinChoice {
     std::string label;
 };
 
+/// A reach-in scheduled from the command line: at `second`, poke
+/// `role`.`field` to `value`. The non-interactive twin of the `p` key, added
+/// after the cold user found live alteration was TTY-only.
+struct ScheduledPoke {
+    std::int64_t second = 0;
+    std::string role;
+    std::string field;
+    std::string value;
+    bool fired = false;
+};
+
 struct OperatorContext {
     std::string project;
     std::map<std::uint64_t, Pending> pending;
@@ -71,6 +82,11 @@ struct OperatorContext {
     /// Declared initial configuration, applied through the Poke door when the
     /// part's OWN up-answer arrives (the answer, not the wish). Key: part name.
     std::map<std::string, std::vector<SetSpec>> sets_by_part;
+
+    /// `--poke SEC:role.field=value` — scheduled live reach-ins, fired on the
+    /// governor's ClockTick. The scriptable path to the live-alteration
+    /// promise (cold-user finding #1).
+    std::vector<ScheduledPoke> scheduled;
 
     // ---- interactive alteration (Gate 3) -----------------------------------
     bool interactive = false;
@@ -156,7 +172,7 @@ inline std::string render_structure(const loom::PokeStructure& s) {
 class OperatorWeave
     : public loom::WeaveBase<OperatorWeave, OperatorState,
                              loom::Accept<loom::Result, loom::Ack, loom::Refused,
-                                          loom::PokeStructure, StopWish,
+                                          loom::PokeStructure, StopWish, ClockTick,
                                           zengine::input::KeyPressed,
                                           zengine::surface::SurfaceReady>,
                              loom::Emit<loom::LoadWeave, loom::SwapWeave, loom::ReloadWeave,
@@ -175,6 +191,22 @@ public:
     void on(const StopWish& wish, loom::Mail& mail) {
         status(mail, "stop: " + wish.reason);
         quit();
+    }
+
+    /// Scheduled reach-ins ride world time, not wall time — so a poke lands
+    /// at the same moment on a virtual clock as on the real one.
+    void on(const ClockTick& tick, loom::Mail& mail) {
+        for (ScheduledPoke& p : ctx_->scheduled) {
+            if (!p.fired && tick.second >= p.second) {
+                p.fired = true;
+                const std::uint64_t corr = ctx_->next_corr++;
+                ctx_->pending[corr] = Pending{"poke " + p.role + "." + p.field + " = " +
+                                                  p.value + " (at " +
+                                                  std::to_string(p.second) + "s)",
+                                              p.field, p.role, kActionSet};
+                mail.send_to_role(p.role, loom::PokeWrite{p.field, p.value}, corr);
+            }
+        }
     }
 
     /// A fresh skin said hello: re-offer the status line so it starts complete.
@@ -386,8 +418,10 @@ struct GovernorState {
 /// WISHES the world stopped; the operator honors the wish. Nothing here
 /// touches the host — a toy could publish the same shape.
 class Governor : public zengine::timer::TimedWeave<Governor, GovernorState, loom::Accept<>,
-                                                  loom::Emit<StopWish>> {
+                                                  loom::Emit<StopWish, ClockTick>> {
 public:
+    /// `limit_seconds` 0 means "never stop on my account" — the governor then
+    /// exists only to count time out loud, which is what scheduled pokes ride.
     explicit Governor(std::int64_t limit_seconds)
         : beat_(timers().repeat("workshop.governor", std::chrono::milliseconds(1000),
                                 &Governor::on_beat)) {
@@ -397,7 +431,9 @@ public:
     using TimedWeave::on;
 
     void on_beat(const zengine::timer::TimerFired&, loom::Mail& mail) {
-        if (++state_.seconds >= state_.limit) {
+        ++state_.seconds;
+        mail.publish(ClockTick{state_.seconds});
+        if (state_.limit > 0 && state_.seconds >= state_.limit) {
             mail.publish(StopWish{"governor: " + std::to_string(state_.limit) + "s elapsed"});
         }
     }

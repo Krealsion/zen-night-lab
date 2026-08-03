@@ -151,6 +151,14 @@ struct StopWish {
     ZEN_SHAPE(StopWish, 1, ZEN_FIELD(reason));
 };
 
+/// One second of world time, counted and announced as ordinary intent. Added
+/// in the post-cold-user pass so that reaching into a live creation has a
+/// NON-INTERACTIVE path: scheduled pokes fire on these. Anyone may hear it.
+struct ClockTick {
+    std::int64_t second = 0;
+    ZEN_SHAPE(ClockTick, 1, ZEN_FIELD(second));
+};
+
 // ---- observation tier (FACT: runtime events relayed by the S-3 bridge) -----
 
 /// One observed bus event, republished into the world by the shell's tap

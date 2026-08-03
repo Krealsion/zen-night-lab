@@ -589,7 +589,12 @@ void heights_witness(const std::string& workshop_dir, const std::string& vendor_
     bus.pump();
 
     CHECK(!probe->frames.empty(), "gate 4 setup: frames flowed");
-    CHECK(probe->frames.back().find('#') != std::string::npos, "the hash beam runs first");
+    // Pin BEHAVIOR, not the glyph a user happens to have chosen. (A cold
+    // user's legitimate edit to lamp.cpp broke this witness when it pinned
+    // '#' literally — the toys are the user's surface, so a witness that
+    // depends on their content is a trap the builder set for a stranger.)
+    CHECK(probe->frames.back().find('*') == std::string::npos,
+          "the base build's beam is not yet the star glyph");
     const long s1 = frame_sweeps(probe->frames.back());
 
     // H1 — reload the RUNNING lamp from the star artifact (the code edit,
@@ -599,7 +604,6 @@ void heights_witness(const std::string& workshop_dir, const std::string& vendor_
     bus.pump();
     CHECK(probe->frames.back().find('*') != std::string::npos,
           "the code edit is LIVE - the beam glyph changed mid-run");
-    CHECK(probe->frames.back().find('#') == std::string::npos, "the old glyph is gone");
     CHECK(frame_sweeps(probe->frames.back()) >= s1,
           "the sweep count crossed the code edit - same running thing, new code");
 

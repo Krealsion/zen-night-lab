@@ -51,24 +51,41 @@ A project file declares parts (name/stem/role), needs (timer/skin/input),
 `set` (initial pokes — same artifact, many configured lives) and `knobs`
 (live reach-in points).
 
+### The field reference
+
+`./build/workshop/workshop schema` prints every project-file field. Which
+fields a part will let you `set` or `knob` is the *part's* answer, not the
+Workshop's — only what it opened with `ZEN_EXPOSE`; ask the running part
+(`run <toy> -i`, then `h`) or read its source.
+
 ## Inspect, reach inside, learn
 
 - Post-run reports print automatically (what launched + what the machine did,
   refusals explained).
 - `run <toy> --refuse` provokes one refusal and explains it; `--watch` prints
   raw tap lines; `--deny <need>` runs with less power, visibly.
-- `run <toy> -i` (real terminal): `v` schematic, `h` "what is this?" answered
-  by the running part itself, `p` cycle a knob, `1` swap the skin, `r` reload
-  the part in place (state survives), `u` rebuild + reload (the code height),
-  `q` quit.
+- `run <toy> --poke 3:lighthouse.lamp.field=41` reaches into the live world
+  at second 3 — **no terminal needed**; repeatable; works from a pipe, a
+  script, or CI.
+- `run <toy> -i` **requires a real TTY** (the Input service reads the
+  terminal; piped keys do nothing): `v` schematic, `h` "what is this?"
+  answered by the running part itself, `p` cycle a knob, `1` swap the skin,
+  `r` reload the part in place (state survives), `u` rebuild + reload (the
+  code height), `q` quit.
 - `safety <toy>`: the power view — no shields painted.
 
 ## Share
 
 ```sh
 ./build/workshop/workshop export <toy> <dest-dir> [author]   # author is UNVERIFIED
-./build/workshop/workshop import <bundle-dir>                # fingerprints verified
+./build/workshop/workshop import <bundle-dir> [--as <name>] [--into <dir>]
 ```
+
+`--as` receives a toy you already have under a different name. Note the
+artifact fingerprints are verified; the *manifest* is not, so a bundle's
+`project`/`author`/`exported_from` remain exactly as trustworthy as their
+labels say — which is: not. (On WSL, don't stage bundles in `/tmp`; it is
+tmpfs and evaporates between invocations.)
 
 An imported toy runs from its own artifacts (`toys/<name>/artifacts/`) with
 no reference to your build tree, and confers no grants.

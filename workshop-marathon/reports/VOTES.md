@@ -18,3 +18,16 @@ with a story is worth more than three polite wanteds. Columns grow as toys do.
 | the timer assumption | wanted | wanted | **fought** | wanted | a keyboard tool has no rhythm but drags the clock in anyway (input pumps on beats) |
 | Input text story | irrelevant | irrelevant | **fought** | irrelevant | no text vocabulary: no shift, no case; names are the ceiling (package evidence) |
 | cross-toy artifact resolution | irrelevant | irrelevant | irrelevant | **wanted** | forced the garden-wide search path |
+
+## The cold user's own toys (Gate 11 — built by a stranger, unprompted)
+
+The cold user, given only the README and public Zen docs, independently made
+two creations **with no C++ at all**, reusing existing artifacts:
+
+| toy | what it is | what it votes |
+|---|---|---|
+| `duet` | two pond fireflies + the pond canvas, new roles, new phases/rates | the reuse-by-description pattern is DISCOVERABLE — a stranger found `set`, roles, and cross-toy stems from the README and the example project files alone |
+| `widebeam` | the lighthouse lamp poked to a 41-cell field **at birth**, plus a knob that cycles back to 21 | `set` and `knobs` were understood as the same mechanism at two moments (birth vs live) without being told |
+
+That a stranger's first instinct was to COMPOSE rather than to copy source is
+the strongest single vote the description tier received.
