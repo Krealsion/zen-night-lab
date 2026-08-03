@@ -15,3 +15,8 @@ add_test(NAME workshop
                  ${CMAKE_SOURCE_DIR}/vendor/zengine/lib
                  ${CMAKE_BINARY_DIR}/toys/lighthouse
                  ${CMAKE_BINARY_DIR}/toys/pond)
+
+# The safety view must carry the runtime's own containment words and must
+# NEVER paint an enforced badge this host cannot earn (canary #10's tripwire).
+add_test(NAME safety-honesty
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/safety_honesty.sh $<TARGET_FILE:workshop>)

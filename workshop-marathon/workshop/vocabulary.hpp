@@ -183,13 +183,19 @@ struct QueryEvents {
 /// from relayed FACTs); the embedded facts are the FACTs themselves, ring-
 /// capped. The inspector reports only what it witnessed — loaded late, it
 /// honestly knows less.
+/// v2: + `doors` — steward-door deliveries (zen.LoadWeave / zen.ReloadWeave /
+/// zen.SwapWeave / zen.ListLoaded) kept in their own durable ring, because a
+/// beating bus floods the general ring with Drive beats in a virtual second
+/// and lifecycle commands are exactly what a Workshop's inspector must not
+/// lose. Curation, honestly declared.
 struct EventsReport {
     std::int64_t delivered = 0;
     std::int64_t refused = 0;
     std::vector<BusFact> recent_refusals; ///< up to kRefusalKeep, oldest first
     std::vector<BusFact> recent;          ///< up to kRecentKeep, oldest first
-    ZEN_SHAPE(EventsReport, 1, ZEN_FIELD(delivered), ZEN_FIELD(refused),
-              ZEN_FIELD(recent_refusals), ZEN_FIELD(recent));
+    std::vector<BusFact> doors;           ///< steward-door deliveries, own ring
+    ZEN_SHAPE(EventsReport, 2, ZEN_FIELD(delivered), ZEN_FIELD(refused),
+              ZEN_FIELD(recent_refusals), ZEN_FIELD(recent), ZEN_FIELD(doors));
 };
 
 // ---- sharing tier (Gate 7): the bundle -------------------------------------

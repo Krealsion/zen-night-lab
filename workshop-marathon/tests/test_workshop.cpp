@@ -1247,6 +1247,20 @@ void teach_and_selfhost_witness(const std::string& workshop_dir,
     CHECK(hand->results == 1, "the reloaded inspector still answers at its office");
     const long d2 = std::atol(hand->words.c_str());
     CHECK(d2 >= d1, "the observer crossed its own reload with its memory intact");
+
+    // Route pin (canary #9's tripwire): the recursive operation traveled the
+    // SAME public door as any toy — the ReloadWeave DELIVERY to the steward
+    // is on the record. A privileged kernel-side bypass leaves no such fact.
+    auto* events2 = ask_role_once<QueryEvents, EventsReport>(bus, kInspectorRole,
+                                                            QueryEvents{});
+    bool door_fact = false;
+    for (const BusFact& f : events2->report.doors) {
+        if (f.schema == loom::ReloadWeave::zen_name && f.kind == "Delivered") {
+            door_fact = true;
+        }
+    }
+    CHECK(door_fact, "the self-host reload went THROUGH THE DOOR (fact on record), "
+                     "not a privileged bypass");
 }
 
 } // namespace

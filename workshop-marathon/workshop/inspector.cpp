@@ -37,9 +37,10 @@ struct InspectorState {
     std::int64_t refused = 0;
     std::vector<BusFact> recent_refusals;
     std::vector<BusFact> recent;
+    std::vector<BusFact> doors;
     ZEN_EXPOSE();
-    ZEN_SHAPE(InspectorState, 1, ZEN_FIELD(delivered), ZEN_FIELD(refused),
-              ZEN_FIELD(recent_refusals), ZEN_FIELD(recent));
+    ZEN_SHAPE(InspectorState, 2, ZEN_FIELD(delivered), ZEN_FIELD(refused),
+              ZEN_FIELD(recent_refusals), ZEN_FIELD(recent), ZEN_FIELD(doors));
 };
 
 class Inspector : public loom::WeaveBase<Inspector, InspectorState,
@@ -48,6 +49,11 @@ class Inspector : public loom::WeaveBase<Inspector, InspectorState,
 public:
     void on(const BusFact& fact, loom::Mail& mail) {
         keep(state_.recent, fact, kRecentKeep);
+        if (fact.kind == "Delivered" &&
+            (fact.schema == "zen.LoadWeave" || fact.schema == "zen.ReloadWeave" ||
+             fact.schema == "zen.SwapWeave" || fact.schema == "zen.ListLoaded")) {
+            keep(state_.doors, fact, kRefusalKeep);
+        }
         if (fact.kind == "Refused") {
             ++state_.refused;
             keep(state_.recent_refusals, fact, kRefusalKeep);
@@ -64,7 +70,7 @@ public:
 
     void on(const QueryEvents&, loom::Mail& mail) {
         mail.answer(EventsReport{state_.delivered, state_.refused, state_.recent_refusals,
-                                 state_.recent});
+                                 state_.recent, state_.doors});
     }
 
 private:
