@@ -14,6 +14,7 @@
 // swept N cells" is an exact integer nobody waited for.
 
 #include "bridge.hpp"
+#include "bundle.hpp"
 #include "host_weaves.hpp"
 #include "vocabulary.hpp"
 
@@ -840,6 +841,139 @@ void constellation_witness(const std::string& vendor_dir, const std::string& lig
           "the modification to the reused artifact reached its consumer, live");
 }
 
+// ---- Gate 7: a schematic shared is a toy offered ----------------------------
+//
+//   B1 export: a bundle with a gated BundleInfo, canonicalized spec, and
+//      fingerprinted artifacts
+//   B2 import into a FRESH location: gate + fingerprints verified, toy laid
+//      out with its artifacts beside it
+//   B3 the received toy RUNS with no reference to the original build tree
+//   B4 re-export of the descendant: new author claim (unverified, labelled),
+//      same verified artifact fingerprints
+//   B5 tampered bytes refuse BY NAME — and a grand author claim buys the
+//      forger nothing (declared metadata confers no trust)
+
+void bundle_witness(const std::string& vendor_dir, const std::string& toy_dir,
+                    const std::string& scratch_root) {
+    namespace bfs = std::filesystem;
+    bfs::remove_all(scratch_root);
+    bfs::create_directories(scratch_root);
+    const std::string toys_root = scratch_root + "/toys";
+    bfs::create_directories(toys_root);
+
+    ProjectSpec spec;
+    spec.name = "beacon-gift";
+    spec.description = "a lighthouse, boxed up for a friend";
+    spec.parts.push_back(PartSpec{"lamp", "lighthouse-lamp", "gift.lamp"});
+    spec.needs = {"zengine.timer", "zengine.skin"};
+    spec.knobs.push_back(KnobSpec{"beam width", "gift.lamp", "field", {"21", "41"}});
+
+    const StemResolver resolve = [&](const std::string& stem) -> std::optional<std::string> {
+        return toy_dir + "/" + stem + ".so";
+    };
+
+    // B1 — export.
+    BundleOutcome exported = export_bundle(spec, "test-origin", scratch_root, "josh",
+                                           "61b2915", "0356f02", "v5", resolve);
+    CHECK(exported.ok, "export produced a bundle");
+    CHECK(bfs::exists(bfs::path(exported.dir) / "artifacts" / "lighthouse-lamp.so"),
+          "the artifact shipped");
+    const auto bundle_bytes = slurp(bfs::path(exported.dir) / "BUNDLE.json");
+    CHECK(bundle_bytes.has_value(), "BUNDLE.json exists");
+    if (bundle_bytes) {
+        loom::Admission adm =
+            loom::admit(loom::compat::parse(*bundle_bytes), loom::schema_of<BundleInfo>());
+        CHECK(adm.ok(), "BUNDLE.json admits through the gate");
+    }
+
+    // B2 — import into the fresh location.
+    BundleOutcome imported = import_bundle(exported.dir, toys_root);
+    CHECK(imported.ok, "import verified and accepted the bundle");
+    CHECK(bfs::exists(bfs::path(imported.dir) / "artifacts" / "lighthouse-lamp.so"),
+          "the received toy carries its artifacts beside it");
+
+    // B3 — the received toy runs from ITS OWN artifacts only.
+    {
+        loom::Switchboard bus;
+        loom::Kernel kernel(bus);
+        const loom::WeaveId control = loom::mount_control(kernel, bus);
+        const loom::WeaveId manager = loom::mount_manager(control, bus);
+        OperatorContext ctx;
+        ctx.project = "beacon-gift";
+        ctx.manager = manager;
+        ctx.request_stop = [&bus] { bus.stop(); };
+        loom::Grant reach;
+        reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+        reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+        reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+        reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+        const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+        loom::Grant wish;
+        wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+        allow_timed_weave(wish);
+        loom::mount_granted<Governor>(bus, std::move(wish), 2);
+        auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+        (void)probe_id;
+        const auto boot = [&](const std::string& part, const std::string& load_name,
+                              const std::string& path, const std::string& role) {
+            const std::uint64_t corr = ctx.next_corr++;
+            ctx.pending[corr] = Pending{part, load_name, role};
+            bus.send_as(op, manager,
+                        loom::Message(loom::to_value(loom::LoadWeave{load_name, path, role}),
+                                      op, op, corr));
+        };
+        boot("(service) zengine.timer", "zengine-timer-virtual",
+             vendor_dir + "/zengine-timer-virtual.so", zengine::timer::kTimerRole);
+        boot("lamp", "lamp", imported.dir + "/artifacts/lighthouse-lamp.so", "gift.lamp");
+        bus.pump();
+        CHECK(ctx.failed == 0 && !probe->frames.empty(),
+              "the received toy RUNS without the original build tree");
+    }
+
+    // B4 — the descendant travels on.
+    std::string error;
+    ProjectSpec back;
+    {
+        const auto spec_bytes = slurp(bfs::path(imported.dir) / "project.json");
+        loom::Admission adm =
+            loom::admit(loom::compat::parse(*spec_bytes), loom::schema_of<ProjectSpec>());
+        back = loom::from_value<ProjectSpec>(adm.value());
+    }
+    (void)error;
+    const StemResolver resolve2 = [&](const std::string& stem) -> std::optional<std::string> {
+        return imported.dir + "/artifacts/" + stem + ".so";
+    };
+    BundleOutcome re_exported = export_bundle(back, imported.dir, scratch_root + "/again",
+                                              "second-hand", "61b2915", "0356f02", "v5",
+                                              resolve2);
+    CHECK(re_exported.ok, "the altered/received toy re-exports");
+    CHECK(re_exported.info.author == "second-hand",
+          "the descendant carries its OWN unverified author claim");
+    CHECK(re_exported.info.artifacts.size() == 1 &&
+              re_exported.info.artifacts[0].fnv64 == exported.info.artifacts[0].fnv64,
+          "unchanged bytes keep their fingerprint across generations");
+
+    // B5 — tamper: flip one byte, claim a grand author, watch it refuse.
+    const std::string forged_dir = scratch_root + "/forged-bundle";
+    bfs::create_directories(bfs::path(forged_dir) / "artifacts");
+    bfs::copy(bfs::path(exported.dir) / "project.json", bfs::path(forged_dir) / "project.json");
+    {
+        BundleInfo forged = exported.info;
+        forged.author = "Vision himself, definitely"; // declared metadata...
+        std::ofstream info_out(bfs::path(forged_dir) / "BUNDLE.json");
+        info_out << loom::compat::serialize(loom::to_value(forged)) << "\n";
+        auto bytes = slurp(bfs::path(exported.dir) / "artifacts" / "lighthouse-lamp.so");
+        (*bytes)[bytes->size() / 2] ^= 0x01; // ...cannot bless tampered bytes
+        std::ofstream copy(bfs::path(forged_dir) / "artifacts" / "lighthouse-lamp.so",
+                           std::ios::binary);
+        copy << *bytes;
+    }
+    BundleOutcome forged_in = import_bundle(forged_dir, toys_root);
+    CHECK(!forged_in.ok, "the tampered bundle is REFUSED");
+    CHECK(forged_in.error.find("lighthouse-lamp") != std::string::npos,
+          "the refusal names the artifact");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -858,6 +992,7 @@ int main(int argc, char** argv) {
             pond_witness(workshop_dir, vendor_dir, pond_dir);
             constellation_witness(vendor_dir, toy_dir, pond_dir);
         }
+        bundle_witness(vendor_dir, toy_dir, workshop_dir + "/../bundle-scratch");
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }

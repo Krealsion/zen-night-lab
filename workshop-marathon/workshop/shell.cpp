@@ -21,6 +21,7 @@
 //   workshop run <toy> [--for-seconds N]
 
 #include "bridge.hpp"
+#include "bundle.hpp"
 #include "explain.hpp"
 #include "host_weaves.hpp"
 #include "vocabulary.hpp"
@@ -64,6 +65,8 @@ std::string binary_dir() { return WORKSHOP_BINARY_DIR; }
 std::vector<fs::path> artifact_dirs(const std::string& toy) {
     std::vector<fs::path> dirs;
     dirs.push_back(fs::path(binary_dir()) / "toys" / toy);
+    // An IMPORTED toy carries its artifacts beside its description.
+    dirs.push_back(fs::path(source_root()) / "toys" / toy / "artifacts");
     const fs::path toys = fs::path(binary_dir()) / "toys";
     if (fs::exists(toys)) {
         for (const auto& entry : fs::directory_iterator(toys)) {
@@ -215,6 +218,62 @@ int cmd_build(const std::string& name) {
     const std::string cmd = "cmake --build " + binary_dir() + targets;
     std::printf("workshop - %s\n", cmd.c_str());
     return std::system(cmd.c_str());
+}
+
+int cmd_export(const std::string& name, const std::string& dest, const std::string& author) {
+    std::string error;
+    auto loaded = read_spec(toy_file(name), error);
+    if (!loaded) {
+        std::printf("%s\n", error.c_str());
+        return 1;
+    }
+    const auto resolve = [&](const std::string& stem) -> std::optional<std::string> {
+        auto p = resolve_artifact(loaded->spec.name, stem);
+        return p ? std::optional<std::string>(p->string()) : std::nullopt;
+    };
+    BundleOutcome out = export_bundle(loaded->spec, loaded->dir, dest, author,
+                                      WORKSHOP_LOOM_PIN, WORKSHOP_ZENGINE_PIN, WORKSHOP_ABI,
+                                      resolve);
+    if (!out.ok) {
+        std::printf("export failed: %s\n", out.error.c_str());
+        return 1;
+    }
+    std::printf("exported %s\n", out.dir.c_str());
+    std::printf("  author (UNVERIFIED, user-asserted): %s\n",
+                out.info.author.empty() ? "(none given)" : out.info.author.c_str());
+    for (const ArtifactInfo& a : out.info.artifacts) {
+        std::printf("  artifact %-20s %lld bytes  fingerprint %s (fnv64 - verifiable, "
+                    "not cryptographic)\n",
+                    a.stem.c_str(), static_cast<long long>(a.bytes), a.fnv64.c_str());
+    }
+    return 0;
+}
+
+int cmd_import(const std::string& bundle_dir) {
+    BundleOutcome out = import_bundle(bundle_dir, (fs::path(source_root()) / "toys").string());
+    if (!out.ok) {
+        std::printf("import REFUSED: %s\n", out.error.c_str());
+        return 1;
+    }
+    std::printf("imported into %s\n", out.dir.c_str());
+    std::printf("  project: %s\n", out.info.project.c_str());
+    std::printf("  author claims to be (UNVERIFIED): %s\n",
+                out.info.author.empty() ? "(none)" : out.info.author.c_str());
+    std::printf("  exported from (DECLARED, unverifiable): %s\n",
+                out.info.exported_from.c_str());
+    std::printf("  declared substrate: Loom %s, Zengine %s, ABI %s (the ABI enforces at "
+                "load; these fields do not)\n",
+                out.info.loom_pin.c_str(), out.info.zengine_pin.c_str(),
+                out.info.abi.c_str());
+    std::printf("  %zu artifact(s), fingerprints VERIFIED against shipped bytes\n",
+                out.info.artifacts.size());
+    std::printf("  capability needs (DECLARED): ");
+    for (const std::string& need : out.info.needs) {
+        std::printf("%s ", need.c_str());
+    }
+    std::printf("\n  importing confers NO grants - it runs with whatever the Workshop "
+                "gives any toy\n");
+    return 0;
 }
 
 int cmd_describe(const std::string& name) {
@@ -497,6 +556,13 @@ int main(int argc, char** argv) {
     if (cmd == "view" && argc > 2) {
         return workshop::cmd_view(argv[2]);
     }
+    if (cmd == "export" && argc > 3) {
+        const std::string author = argc > 4 ? argv[4] : "";
+        return workshop::cmd_export(argv[2], argv[3], author);
+    }
+    if (cmd == "import" && argc > 2) {
+        return workshop::cmd_import(argv[2]);
+    }
     if (cmd == "build" && argc > 2) {
         return workshop::cmd_build(argv[2]);
     }
@@ -525,6 +591,8 @@ int main(int argc, char** argv) {
                 "  workshop view <toy>          the schematic (described shape)\n"
                 "  workshop build <toy>         build the toy's parts\n"
                 "  workshop new <name>          scaffold a creation\n"
+                "  workshop export <toy> <dest> [author]   share (author is UNVERIFIED)\n"
+                "  workshop import <bundle-dir> receive (fingerprints verified)\n"
                 "  workshop run <toy> [-i] [--for-seconds N] [--watch] [--refuse]\n");
     return cmd.empty() ? 0 : 1;
 }

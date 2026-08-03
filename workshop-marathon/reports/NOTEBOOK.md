@@ -296,6 +296,40 @@ sighting and an unplanned instrument in under an hour.
 
 ---
 
+## 2026-08-02 — 8. Gate 7: a schematic shared is a toy offered
+
+**The bundle** (76 cases green): a directory — gated `BUNDLE.json`
+(BundleInfo), the CANONICALIZED spec (what the gate admitted, not the
+author's bytes), fingerprinted artifacts. `workshop export/import` CLI.
+
+**Provenance, with the knife out:**
+- `author` — UNVERIFIED, user-asserted, printed as such at import.
+- `exported_from` — DECLARED filesystem origin; unverifiable; printed as such.
+- pins/ABI — DECLARED; the ABI enforces at load, the field does not.
+- artifact `fnv64` — a verifiable CONTENT FINGERPRINT (recomputed at import;
+  mismatch refuses BY NAME). Deliberately called fingerprint, never
+  signature — FNV is forgeable by a determined adversary.
+- host-verified runtime provenance and cryptographic identity: ABSENT, by
+  honest omission. The experiment did not naturally earn a crypto system.
+
+**Witnessed:** export → move → import into a fresh location (gate + all
+fingerprints verified) → the received toy RUNS from its own artifacts with no
+reference to the original build tree → re-export of the descendant with its
+own author claim, unchanged bytes keeping their fingerprint across
+generations → and the forgery arm: one flipped byte + author "Vision himself,
+definitely" = refusal naming the artifact. Declared metadata confers nothing
+(canary #5's ground truth, pre-armed).
+
+**The bundle's honest boundary:** v1 ships artifacts, not source — a consumer
+receives the schematic/knob height but not the code height. Import confers NO
+grants. Both printed to the importer's face.
+
+**Gate 7 verdict: GREEN.** One person can hand another a toy without tribal
+knowledge: the bundle carries its description, its parts, its declared needs,
+and provenance labelled at exactly the trust level each field deserves.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project

@@ -174,6 +174,46 @@ struct EventsReport {
               ZEN_FIELD(recent_refusals), ZEN_FIELD(recent));
 };
 
+// ---- sharing tier (Gate 7): the bundle -------------------------------------
+
+/// One shipped artifact's identity. `fnv64` is a CONTENT FINGERPRINT (FNV-1a
+/// over the bytes, the same family Loom uses for schema content-ids). It is
+/// verifiable (recompute at import; mismatch refuses) and it is NOT
+/// cryptographic — a determined forger can collide it. Say fingerprint,
+/// never signature.
+struct ArtifactInfo {
+    std::string stem;
+    std::int64_t bytes = 0;
+    std::string fnv64; ///< hex fingerprint, recomputed and checked at import
+    ZEN_SHAPE(ArtifactInfo, 1, ZEN_FIELD(stem), ZEN_FIELD(bytes), ZEN_FIELD(fnv64));
+};
+
+/// The bundle's self-description, admitted through the gate on both sides.
+/// Provenance precision, field by field (Gate 7's discipline):
+///   author        — UNVERIFIED: a user-asserted string. Nothing checks it.
+///   exported_from — DECLARED: the filesystem path at export time; the
+///                   importer cannot verify it and must not trust it.
+///   loom_pin / zengine_pin / abi — DECLARED: what the EXPORTING Workshop was
+///                   built against (compiled in). Version compatibility is
+///                   ultimately enforced by the ABI at load, not this field.
+///   artifacts     — DERIVED-at-export, VERIFIABLE-at-import (fingerprints).
+///   needs         — DECLARED capability needs, from the project spec.
+/// There is NO host-verified runtime provenance and NO cryptographic identity
+/// in a v1 bundle — absent by honest omission, not oversight.
+struct BundleInfo {
+    std::string project;
+    std::string author;
+    std::string exported_from;
+    std::string loom_pin;
+    std::string zengine_pin;
+    std::string abi;
+    std::vector<ArtifactInfo> artifacts;
+    std::vector<std::string> needs;
+    ZEN_SHAPE(BundleInfo, 1, ZEN_FIELD(project), ZEN_FIELD(author), ZEN_FIELD(exported_from),
+              ZEN_FIELD(loom_pin), ZEN_FIELD(zengine_pin), ZEN_FIELD(abi),
+              ZEN_FIELD(artifacts), ZEN_FIELD(needs));
+};
+
 // ---- the addresses ---------------------------------------------------------
 
 /// The registry's role: ask the OFFICE what is running, so the question

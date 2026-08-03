@@ -22,4 +22,7 @@ add_executable(workshop shell.cpp)
 target_link_libraries(workshop PRIVATE loom::kernel loom::switchboard loom::core zengine-vocab)
 target_compile_definitions(workshop PRIVATE
     WORKSHOP_SOURCE_ROOT="${CMAKE_SOURCE_DIR}"
-    WORKSHOP_BINARY_DIR="${CMAKE_BINARY_DIR}")
+    WORKSHOP_BINARY_DIR="${CMAKE_BINARY_DIR}"
+    WORKSHOP_LOOM_PIN="61b2915"
+    WORKSHOP_ZENGINE_PIN="0356f02"
+    WORKSHOP_ABI="v5")
