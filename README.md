@@ -33,7 +33,30 @@ paths, so the old one was stale rather than valuable). Everything else is untouc
 Six materially different applications, built to make the substrate justify itself. Start with
 `marathon/README.md`; the running ledgers are `marathon/FRICTION.md` and `marathon/EVIDENCE.md`.
 
-## House rules both experiments hold themselves to
+## workshop-marathon/
+
+Night Three asks a different question from the first two. They asked what the
+substrate does for applications; this one asks whether the **Workshop** — the
+making-tool the vision promises — is already latent in Zen, by having a cold
+builder try to grow one in a single pass.
+
+Five toys, a stranger, and a prototype that describes, runs, inspects, alters
+live, descends into code, composes, and shares. Start with
+`workshop-marathon/README.md` to use it, or
+`workshop-marathon/reports/FINAL-REPORT.md` for the result.
+
+The one-line answer: **the *making* Workshop was largely latent already; the
+*seeing* Workshop is not there yet, and Zen says so itself.** One core
+reproducer came out of it (`repros/core/silent-seam-emission` — a loaded
+weave's emission can vanish with no observable trace anywhere, which sharpens
+Night Two's Blocker 2), and the release litmus is **ALMOST**, with two named
+blockers.
+
+Unlike Night Two, this experiment carries only the **four** Zengine artifacts
+it actually loads rather than everything the package builds; the rest are
+rebuildable from the pin (`vendor/README.md` says which and why).
+
+## House rules all three experiments hold themselves to
 
 - Only existing public Loom and Zengine behaviour. Nothing in this repo writes to `Zen/Loom` or
   `Zen/Zengine`.
