@@ -29,13 +29,28 @@ namespace workshop {
 
 // ---- description tier (DECLARED: admitted from project.json) ---------------
 
-/// One loadable part of a creation. `stem` names the artifact
-/// (`<stem>.so`, resolved by the launcher's search path); `role` may be empty.
+/// One initial-configuration write: applied by the operator through the
+/// ordinary Poke door after the part comes up. Description-tier "wiring
+/// without code": the same artifact becomes eight different fireflies purely
+/// by declared data. The part must hold a role (the poke's address).
+struct SetSpec {
+    std::string field;
+    std::string value; ///< Poke text form, parsed against the field's kind
+    ZEN_SHAPE(SetSpec, 1, ZEN_FIELD(field), ZEN_FIELD(value));
+};
+
+/// One loadable part of a creation. `stem` names the artifact (`<stem>.so`);
+/// `name` is the INSTANCE name the world loads it under — the pond toy is
+/// eight parts, one artifact (the first launcher conflated the two and the
+/// second toy immediately punished it). `role` may be empty, unless `set` is
+/// used (a poke needs an address that survives).
+/// v2: + `set` (GATE-04 — a new version, not a mutation).
 struct PartSpec {
     std::string name;
     std::string stem;
     std::string role;
-    ZEN_SHAPE(PartSpec, 1, ZEN_FIELD(name), ZEN_FIELD(stem), ZEN_FIELD(role));
+    std::vector<SetSpec> set;
+    ZEN_SHAPE(PartSpec, 2, ZEN_FIELD(name), ZEN_FIELD(stem), ZEN_FIELD(role), ZEN_FIELD(set));
 };
 
 /// A declared live-tweak point: "this creation invites you to reach in HERE."
@@ -56,15 +71,16 @@ struct KnobSpec {
 /// roles the creation expects to exist (e.g. "zengine.timer", "zengine.skin");
 /// the Workshop maps each need to a service artifact it trusts. A need the
 /// Workshop cannot supply is an honest launch failure, not a silent shrug.
-/// v2: + `knobs` (GATE-04 — evolving a shape is publishing a new version; v1
-/// files no longer admit and say so at the gate).
+/// v3: PartSpec grew `set`, so this shape's identity changed transitively —
+/// the version says so. (Two evolutions in one day: the migration-layer
+/// trigger named in Loom's known-seams has a live claimant now — P-009.)
 struct ProjectSpec {
     std::string name;
     std::string description;
     std::vector<PartSpec> parts;
     std::vector<std::string> needs;
     std::vector<KnobSpec> knobs;
-    ZEN_SHAPE(ProjectSpec, 2, ZEN_FIELD(name), ZEN_FIELD(description), ZEN_FIELD(parts),
+    ZEN_SHAPE(ProjectSpec, 3, ZEN_FIELD(name), ZEN_FIELD(description), ZEN_FIELD(parts),
               ZEN_FIELD(needs), ZEN_FIELD(knobs));
 };
 

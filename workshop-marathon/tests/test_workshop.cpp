@@ -17,6 +17,7 @@
 #include "host_weaves.hpp"
 #include "vocabulary.hpp"
 
+#include "pond/vocabulary.hpp"
 #include "surface/vocabulary.hpp"
 #include "timer/vocabulary.hpp"
 
@@ -93,13 +94,17 @@ struct ProbeState {
 };
 
 class Probe : public loom::WeaveBase<Probe, ProbeState,
-                                     loom::Accept<surface::SurfaceText, PartUp, PartFailed>,
+                                     loom::Accept<surface::SurfaceText, PartUp, PartFailed,
+                                                  pond::FireflyFlash>,
                                      loom::Emit<>> {
 public:
     void on(const surface::SurfaceText& t, loom::Mail&) {
         ++state_.heard;
         if (t.slot == "lighthouse") {
             frames.push_back(t.text);
+        }
+        if (t.slot == "pond") {
+            pond_rows.push_back(t.text);
         }
         if (t.slot == "inspector") {
             ++inspector_lines;
@@ -110,24 +115,32 @@ public:
     }
     void on(const PartUp& p, loom::Mail&) { up.push_back(p); }
     void on(const PartFailed& p, loom::Mail&) { failed.push_back(p); }
+    void on(const pond::FireflyFlash& f, loom::Mail&) { flashes.push_back(f.who); }
 
     std::vector<std::string> frames;
+    std::vector<std::string> pond_rows;
     std::vector<std::string> schematic;
     std::vector<PartUp> up;
     std::vector<PartFailed> failed;
+    std::vector<std::int64_t> flashes;
     int inspector_lines = 0;
 };
 
 /// A hand that pokes and records the one answer (a successful PokeWrite
 /// answers Ack; a bad one answers Refused with the door's words).
 class AlterHand : public loom::WeaveBase<AlterHand, AskState,
-                                         loom::Accept<loom::Ack, loom::Refused>,
-                                         loom::Emit<loom::PokeWrite>> {
+                                         loom::Accept<loom::Ack, loom::Refused, loom::Result>,
+                                         loom::Emit<loom::PokeWrite, loom::PokeRead>> {
 public:
     explicit AlterHand(std::function<void()> done) : done_(std::move(done)) {}
     void on(const loom::Ack&, loom::Mail& mail) {
         ++acks;
         authenticated = mail.answers_ask();
+        if (done_) done_();
+    }
+    void on(const loom::Result& r, loom::Mail&) {
+        ++results;
+        words = r.value;
         if (done_) done_();
     }
     void on(const loom::Refused& r, loom::Mail& mail) {
@@ -137,6 +150,7 @@ public:
         if (done_) done_();
     }
     int acks = 0;
+    int results = 0;
     int refusals = 0;
     bool authenticated = false;
     std::string words;
@@ -611,12 +625,115 @@ void heights_witness(const std::string& workshop_dir, const std::string& vendor_
           "and the RUNTIME really changed - schematic and world agree");
 }
 
+// ---- Gate 5 (toy #2): the pond votes ---------------------------------------
+//
+//   P1 one artifact, eight lives: the same .so loaded under eight instance
+//      names, each configured purely by DECLARED `set` pokes — the who
+//      identities in the flashes prove the description reached the runtime
+//   P2 the configuration is readable back through the same door (PokeRead)
+//   P3 the pond paints — flashes become rows of light through ordinary
+//      Surface intent (the canvas discovered its fireflies by listening)
+
+void pond_witness(const std::string& workshop_dir, const std::string& vendor_dir,
+                  const std::string& pond_dir) {
+    (void)workshop_dir;
+    loom::Switchboard bus;
+    loom::Kernel kernel(bus);
+    const loom::WeaveId control = loom::mount_control(kernel, bus);
+    const loom::WeaveId manager = loom::mount_manager(control, bus);
+
+    OperatorContext ctx;
+    ctx.project = "pond";
+    ctx.manager = manager;
+    ctx.request_stop = [&bus] { bus.stop(); };
+
+    loom::Grant reach;
+    reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
+    reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
+    reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
+    reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    const double rates[8] = {0.030, 0.034, 0.037, 0.041, 0.044, 0.047, 0.051, 0.054};
+    const double phases[8] = {0.05, 0.62, 0.21, 0.83, 0.35, 0.91, 0.48, 0.74};
+    for (int i = 1; i <= 8; ++i) {
+        const std::string role = "pond.fly." + std::to_string(i);
+        reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version, role);
+        std::vector<SetSpec> set;
+        set.push_back(SetSpec{"who", std::to_string(i)});
+        set.push_back(SetSpec{"phase", std::to_string(phases[i - 1])});
+        set.push_back(SetSpec{"rate", std::to_string(rates[i - 1])});
+        ctx.sets_by_part["fly." + std::to_string(i)] = set;
+    }
+    const loom::WeaveId op = loom::mount_granted<OperatorWeave>(bus, std::move(reach), ctx);
+
+    loom::Grant wish;
+    wish.allow_to_any(StopWish::zen_name, StopWish::zen_version);
+    allow_timed_weave(wish);
+    loom::mount_granted<Governor>(bus, std::move(wish), /*limit_seconds=*/30);
+
+    auto [probe_id, probe] = mount_keeping<Probe>(bus, loom::Grant{});
+    (void)probe_id;
+
+    const auto boot = [&](const std::string& part, const std::string& load_name,
+                          const std::string& path, const std::string& role) {
+        const std::uint64_t corr = ctx.next_corr++;
+        ctx.pending[corr] = Pending{part, load_name, role};
+        bus.send_as(op, manager,
+                    loom::Message(loom::to_value(loom::LoadWeave{load_name, path, role}), op,
+                                  op, corr));
+    };
+    boot("(service) zengine.timer", "zengine-timer-virtual",
+         vendor_dir + "/zengine-timer-virtual.so", zengine::timer::kTimerRole);
+    boot("canvas", "pond-canvas", pond_dir + "/pond-canvas.so", "pond.canvas");
+    for (int i = 1; i <= 8; ++i) {
+        boot("fly." + std::to_string(i), "fly." + std::to_string(i),
+             pond_dir + "/pond-firefly.so", "pond.fly." + std::to_string(i));
+    }
+
+    bus.pump(); // thirty virtual seconds of pond
+
+    CHECK(ctx.up == 10, "ten parts up (timer + canvas + eight flies)");
+    CHECK(ctx.failed == 0, "no launch or set failures");
+
+    // P1 — eight DISTINCT identities flashed: the declared sets reached the
+    // runtime (an unconfigured firefly would flash as who=0).
+    bool seen[9] = {};
+    for (std::int64_t who : probe->flashes) {
+        if (who >= 0 && who <= 8) {
+            seen[who] = true;
+        }
+    }
+    int distinct = 0;
+    for (int i = 1; i <= 8; ++i) {
+        distinct += seen[i] ? 1 : 0;
+    }
+    CHECK(probe->flashes.size() > 100, "the pond is alive (flashes flowed)");
+    CHECK(distinct == 8, "eight distinct declared identities flashed");
+    CHECK(!seen[0], "no unconfigured firefly (who=0) exists");
+
+    // P2 — read a declared value back through the same door.
+    loom::Grant read_reach;
+    read_reach.allow_to_role(loom::PokeRead::zen_name, loom::PokeRead::zen_version,
+                             "pond.fly.3");
+    auto [hand_id, hand] = mount_keeping<AlterHand>(bus, std::move(read_reach),
+                                                    [&bus] { bus.stop(); });
+    bus.send_as_to_role(hand_id, "pond.fly.3",
+                        loom::Message(loom::to_value(loom::PokeRead{"who"}), hand_id, hand_id,
+                                      0));
+    bus.pump();
+    CHECK(hand->results == 1, "PokeRead answered with the field's value");
+    CHECK(hand->words == "3", "the declared identity is readable back");
+
+    // P3 — the pond painted.
+    CHECK(probe->pond_rows.size() > 10, "the canvas painted rows of light");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
     const std::string workshop_dir = argc > 1 ? argv[1] : "";
     const std::string vendor_dir = argc > 2 ? argv[2] : "";
     const std::string toy_dir = argc > 3 ? argv[3] : "";
+    const std::string pond_dir = argc > 4 ? argv[4] : "";
 
     spec_gate();
     if (!workshop_dir.empty() && !vendor_dir.empty() && !toy_dir.empty()) {
@@ -624,6 +741,9 @@ int main(int argc, char** argv) {
         inspector_witness(workshop_dir, vendor_dir, toy_dir);
         alive_witness(workshop_dir, vendor_dir, toy_dir);
         heights_witness(workshop_dir, vendor_dir, toy_dir);
+        if (!pond_dir.empty()) {
+            pond_witness(workshop_dir, vendor_dir, pond_dir);
+        }
     } else {
         std::printf("SKIP run_witness (no artifact dirs given)\n");
     }

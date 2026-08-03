@@ -1,0 +1,11 @@
+{"zen":1,"schema":"ProjectSpec","version":3,"fields":{"name":"pond","description":"Eight fireflies find each other's rhythm. One artifact, eight lives.","parts":[
+{"name":"fly.1","stem":"pond-firefly","role":"pond.fly.1","set":[{"field":"who","value":"1"},{"field":"phase","value":"0.05"},{"field":"rate","value":"0.030"}]},
+{"name":"fly.2","stem":"pond-firefly","role":"pond.fly.2","set":[{"field":"who","value":"2"},{"field":"phase","value":"0.62"},{"field":"rate","value":"0.034"}]},
+{"name":"fly.3","stem":"pond-firefly","role":"pond.fly.3","set":[{"field":"who","value":"3"},{"field":"phase","value":"0.21"},{"field":"rate","value":"0.037"}]},
+{"name":"fly.4","stem":"pond-firefly","role":"pond.fly.4","set":[{"field":"who","value":"4"},{"field":"phase","value":"0.83"},{"field":"rate","value":"0.041"}]},
+{"name":"fly.5","stem":"pond-firefly","role":"pond.fly.5","set":[{"field":"who","value":"5"},{"field":"phase","value":"0.35"},{"field":"rate","value":"0.044"}]},
+{"name":"fly.6","stem":"pond-firefly","role":"pond.fly.6","set":[{"field":"who","value":"6"},{"field":"phase","value":"0.91"},{"field":"rate","value":"0.047"}]},
+{"name":"fly.7","stem":"pond-firefly","role":"pond.fly.7","set":[{"field":"who","value":"7"},{"field":"phase","value":"0.48"},{"field":"rate","value":"0.051"}]},
+{"name":"fly.8","stem":"pond-firefly","role":"pond.fly.8","set":[{"field":"who","value":"8"},{"field":"phase","value":"0.74"},{"field":"rate","value":"0.054"}]},
+{"name":"canvas","stem":"pond-canvas","role":"pond.canvas","set":[]}
+],"needs":["zengine.timer","zengine.skin"],"knobs":[{"name":"fly.1 rate","role":"pond.fly.1","field":"rate","values":["0.030","0.080"]}]}}

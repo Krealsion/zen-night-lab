@@ -37,8 +37,11 @@ struct Pending {
     std::string part; ///< spec part name, or "(service) ...", "(workshop) ..."
     std::string stem;
     std::string role;
-    int action = 0; ///< 0 none; 100+i = skin i swapped in (flip on the ANSWER)
+    int action = 0; ///< 0 none; kActionSet; 50 knob; 100+i = skin i swapped in
 };
+
+inline constexpr int kActionSet = 60; ///< a declared `set` poke — not a part;
+                                      ///< its ok is a status line, never PartUp
 
 /// A skin the interactive operator can put on the surface.
 struct SkinChoice {
@@ -62,6 +65,10 @@ struct OperatorContext {
     /// this role a question it has no door for.
     std::string refusal_role;
     bool refusal_fired = false;
+
+    /// Declared initial configuration, applied through the Poke door when the
+    /// part's OWN up-answer arrives (the answer, not the wish). Key: part name.
+    std::map<std::string, std::vector<SetSpec>> sets_by_part;
 
     // ---- interactive alteration (Gate 3) -----------------------------------
     bool interactive = false;
@@ -240,6 +247,17 @@ private:
             return;
         }
         const Pending& p = it->second;
+        if (p.action == kActionSet) {
+            if (refused) {
+                ++ctx_->failed;
+                mail.publish(PartFailed{ctx_->project, p.part, p.stem, words});
+                status(mail, p.part + " REFUSED: " + words);
+            } else {
+                status(mail, p.part + " ok");
+            }
+            ctx_->pending.erase(it);
+            return;
+        }
         if (refused) {
             ++ctx_->failed;
             mail.publish(PartFailed{ctx_->project, p.part, p.stem, words});
@@ -253,6 +271,17 @@ private:
             status(mail, p.part + " " + words);
             if (p.action == 50 || p.action >= 100) {
                 render_schematic(mail); // an altered world re-renders, attached
+            }
+            const auto sets = ctx_->sets_by_part.find(p.part);
+            if (sets != ctx_->sets_by_part.end() && !p.role.empty()) {
+                for (const SetSpec& s : sets->second) {
+                    const std::uint64_t corr = ctx_->next_corr++;
+                    ctx_->pending[corr] =
+                        Pending{"set " + p.part + "." + s.field + " = " + s.value, s.field,
+                                p.role, kActionSet};
+                    mail.send_to_role(p.role, loom::PokeWrite{s.field, s.value}, corr);
+                }
+                ctx_->sets_by_part.erase(sets);
             }
         }
         ctx_->pending.erase(it);

@@ -77,6 +77,23 @@ expected/actual requester on answer refusals). Classify the tap surface
 DISCOVERED; the bridge LOCAL PATTERN. Sightings: 1 (inspector). Watch for
 toys wanting bus-facts directly (would be sighting 2).
 
+### P-009 — DISCOVERED (a named deferred trigger has a live claimant)
+Two honest schema evolutions in one day (ProjectSpec v1→v2→v3; PartSpec v1→v2)
+each meant hand-rewriting every existing project file — the strict gate
+(MissingField) makes old files refuse loudly, which is correct and also
+exactly the pain the **migration layer** trigger in Loom's known-seams
+("first persisted value that must evolve") predicts. The Workshop is now that
+first claimant. Not proposing the layer — recording that the trigger fired.
+Sightings: 2 (same day).
+
+### P-010 — LOCAL PATTERN, watching (roles as instance namespace)
+The pond addresses instances as roles (`pond.fly.1..8`) because a poke needs
+an address that survives and parts have no other durable address. It works,
+and it also means the ROLE namespace is doing double duty as an instance
+namespace by convention. If a third toy mints `<toy>.<part>.<n>` roles, this
+becomes REPEATED PATTERN and the "minted identity needs a surviving
+namespace" guideline gets a Workshop-shaped sighting. Sightings: 1.
+
 ### P-005 — VISION AMBIGUITY (pre-registered at Gate 0, to be tested)
 "Wire ideas without writing code" meets a substrate whose visual vocabulary is
 deliberately tiny (`SurfaceText` slots; canvas "a later phase"; SDL window

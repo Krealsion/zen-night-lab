@@ -260,15 +260,20 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
     // was searched.
     struct Boot {
         std::string part;
+        std::string load_name; ///< the INSTANCE name (parts: part.name — one
+                               ///< artifact may be loaded many times)
         std::string stem;
         std::string path;
         std::string role;
     };
     std::vector<Boot> boots;
-    boots.push_back({"(workshop) registry", "workshop-registry", "", kRegistryRole});
-    boots.push_back({"(workshop) inspector", "workshop-inspector", "", kInspectorRole});
+    boots.push_back({"(workshop) registry", "workshop-registry", "workshop-registry", "",
+                     kRegistryRole});
+    boots.push_back({"(workshop) inspector", "workshop-inspector", "workshop-inspector", "",
+                     kInspectorRole});
     if (flags.interactive) {
-        boots.push_back({"(service) zengine.input", "zengine-input", "", "zengine.input"});
+        boots.push_back({"(service) zengine.input", "zengine-input", "zengine-input", "",
+                         "zengine.input"});
     }
     for (const std::string& need : spec.needs) {
         const Service* s = find_service(need);
@@ -276,10 +281,15 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
             std::printf("cannot supply need '%s' (known: timer/skin/input)\n", need.c_str());
             return 1;
         }
-        boots.push_back({std::string("(service) ") + s->need, s->stem, "", s->role});
+        boots.push_back({std::string("(service) ") + s->need, s->stem, s->stem, "", s->role});
     }
     for (const PartSpec& part : spec.parts) {
-        boots.push_back({part.name, part.stem, "", part.role});
+        if (!part.set.empty() && part.role.empty()) {
+            std::printf("part '%s' declares `set` but no role - a poke needs an address\n",
+                        part.name.c_str());
+            return 1;
+        }
+        boots.push_back({part.name, part.name, part.stem, "", part.role});
     }
     for (Boot& b : boots) {
         auto path = resolve_artifact(spec.name, b.stem);
@@ -364,11 +374,25 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
         }
     }
 
+    // Declared initial configuration rides the Poke door once each part's
+    // up-answer arrives.
+    for (const PartSpec& part : spec.parts) {
+        if (!part.set.empty()) {
+            ctx.sets_by_part[part.name] = part.set;
+        }
+    }
+
     loom::Grant reach;
     reach.allow(loom::LoadWeave::zen_name, loom::LoadWeave::zen_version, manager);
     reach.allow_to_any(PartUp::zen_name, PartUp::zen_version);
     reach.allow_to_any(PartFailed::zen_name, PartFailed::zen_version);
     reach.allow_to_any(surface::SurfaceText::zen_name, surface::SurfaceText::zen_version);
+    for (const PartSpec& part : spec.parts) {
+        if (!part.set.empty()) {
+            reach.allow_to_role(loom::PokeWrite::zen_name, loom::PokeWrite::zen_version,
+                                part.role);
+        }
+    }
     if (!ctx.refusal_role.empty()) {
         reach.allow_to_role(QueryRunning::zen_name, QueryRunning::zen_version, ctx.refusal_role);
     }
@@ -394,8 +418,8 @@ int cmd_run(const std::string& name, const RunFlags& flags) {
         const std::uint64_t corr = ctx.next_corr++;
         ctx.pending[corr] = Pending{b.part, b.stem, b.role};
         bus.send_as(op, manager,
-                    loom::Message(loom::to_value(loom::LoadWeave{b.stem, b.path, b.role}), op,
-                                  op, corr));
+                    loom::Message(loom::to_value(loom::LoadWeave{b.load_name, b.path, b.role}),
+                                  op, op, corr));
     }
     // The world runs inside pump(); the governor's wish or Ctrl-C ends it. A
     // quiescent bus means nothing will ever speak again — say so and leave.
