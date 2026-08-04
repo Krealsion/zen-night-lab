@@ -8,9 +8,23 @@ Workshop that mostly turned out to be already latent in the substrate.**
 ## 1–6. Provenance and product
 
 1. **Night Lab commits** — start `917bb46`, end: see `git log` (17 commits).
-2. **Loom stayed `61b2915`** — verified clean before and after; blob-level
-   check confirms no content change anywhere in the sibling tree.
-3. **Zengine stayed `0356f02`** — same, verified clean.
+2. **Loom: the experiment neither wrote to it nor read anything but the pin.**
+   `61b2915` was verified clean at every checkpoint during the run. **After
+   the marathon finished, the live tree advanced** to `b406cfd` ("license:
+   adopt MPL-2.0", authored by Joshua, same day) — not my commit, and it does
+   not touch this experiment: `vendor/setup.sh` consumes `git archive 61b2915`,
+   so the vendored substrate is byte-exact regardless. The pin remains an
+   **ancestor** of the new head, so the experiment is still reproducible.
+3. **Zengine: same.** `0356f02` clean throughout; the live tree has since
+   advanced to `318b0d6` (the same MPL-2.0 adoption, authored by Krealsion).
+   Pin still an ancestor; vendored artifacts unaffected.
+
+   *This is the pinning discipline earning its keep for the second time in
+   Night Lab's history — Night Two's `vendor/README.md` records the live Loom
+   gaining in-progress edits mid-experiment, and "the lab neither saw them nor
+   was disturbed." Same here, and the sharper form: the substrate can be
+   relicensed underneath a running experiment without perturbing one byte of
+   its evidence.*
 4. **Old experiments untouched** — `git diff 917bb46..HEAD -- original marathon
    followups` is **empty**. (One ` M` line appeared once from CRLF
    normalization; the blob hash at baseline and HEAD is identical —

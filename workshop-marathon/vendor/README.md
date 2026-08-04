@@ -10,6 +10,19 @@ Same discipline as `marathon/vendor` (Night Two): the experiment consumes a
 | Zengine source | `0356f02` | `git archive` → `zengine-src/` (ignored; vocabulary/binding headers consumed from here) |
 | Zengine artifacts | built from the above against the vendored Loom install | `collect.sh` → `zengine/lib/*.so` (tracked) |
 
+## Licensing note for the tracked binaries
+
+The four `.so` files here are **compiled from Loom `61b2915` and Zengine
+`0356f02`**. On 2026-08-02 both projects adopted **MPL-2.0** (Loom `b406cfd`,
+Zengine `318b0d6`) — a commit *after* these pins, so these exact artifacts
+predate the license file while deriving from that codebase.
+
+Anyone receiving these binaries can rebuild them from source: the pins are
+named above, `setup.sh` fetches and builds them, and the upstream projects
+carry their own `LICENSE`/`LICENSING.md`. If this repository should carry an
+explicit license statement of its own, that is a call for its owner — this
+note exists so the question is visible rather than assumed.
+
 ## The four artifacts, and why four
 
 Zengine builds fifteen `.so` files. This experiment tracks **four** — the ones

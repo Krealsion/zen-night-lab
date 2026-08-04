@@ -424,6 +424,27 @@ Marathon ends here.
 
 ---
 
+## 2026-08-02 — 12. Coda: the substrate moved, and nothing happened
+
+While pushing, the sibling repos showed dirty and then reported new HEADs:
+Loom `61b2915`→`b406cfd`, Zengine `0356f02`→`318b0d6` — **"license: adopt
+MPL-2.0"**, authored by Joshua and Krealsion, dated today. Concurrent with
+this marathon, not by me.
+
+My first reading of `dirty=151` was alarm; the correct reading is a
+demonstration. The experiment consumed `git archive <pin>`, never the live
+tree, so a relicensing of the entire substrate landed underneath a running
+experiment and perturbed **zero bytes** of its evidence. Both pins remain
+ancestors of the new heads, so everything here is still reproducible from
+upstream.
+
+Recorded because the alternative — noticing the drift, quietly saying nothing,
+and leaving a report that claims "verified clean before and after" — is the
+exact shape of the dishonesty this lab exists to refuse. Report points 2 and 3
+corrected to say what is actually true.
+
+---
+
 ## DELIGHT
 
 - **2026-08-02, Gate 1:** `workshop describe` prints your hand-written project
