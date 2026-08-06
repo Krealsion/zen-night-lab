@@ -475,6 +475,121 @@ exercised the deferred door's refusal path.
 
 ---
 
+## `ringing-chamber` opened no new entry, and that is the entry
+
+**Experiment:** `ringing-chamber`
+
+The fourth current-era application found **nothing new to complain about**. It is
+recorded here, in the ledger's own numbering space, because an experiment that
+produces no friction is a result and not a gap — and because a ledger that only
+ever grows would eventually stop meaning anything.
+
+What that is and is not:
+
+- It is **not** that this application asked less of the substrate. It used
+  publications, office authorship on both a publication and a claim, answers with
+  correlation, a Sense read across six offices, a loaded artifact swapped for a
+  second one mid-evening, and a forged host-root send — and every one of them
+  behaved as documented on the first attempt.
+- It is **not** that nothing was refused. Six kinds of thing were refused during
+  the evening. Five of them are the **domain's** refusals: a ringer deciding a
+  voice was not the conductor's, a ringer deciding a line answered no question it
+  asked, a listener deciding a noise was not a bell, the conductor deciding a
+  bell was not up, and the pricker deciding a row had already been rung. In every
+  one of those the substrate delivered the message and the **recipient**
+  discriminated, which is the shape ZNL-00's C-06 and ZNL-01's C-16 both found.
+- It **is** that the only thing Loom itself refused all evening had to be
+  deliberately forged (§ *notable non-friction* below), and that the author wrote
+  no workaround for anything.
+
+**Whose.** Nobody's. **Sightings.** Not applicable. **Blocked the experiment?**
+No.
+
+---
+
+## Sightings, from `ringing-chamber` (ZNL-03)
+
+**F-04 — a native weave that holds an office cannot use `mount()`. FOURTH
+independent consumer.** `ringing-chamber` wrote the same local `mount_office`
+helper the other three each wrote, for the same reason, without consulting any of
+them — the four experiments share no file. **Four independent consumers now,
+twenty-two uses** (7 + 5 + 2 + 8). This one has the most uses of any of them and
+the plainest reason: every participant in a tower is a job rather than a person,
+so *everything* here holds an office — six ropes, the conductor and the pricker.
+The shape of the count is unchanged from ZNL-02's narrowing: the gap is in the
+**native** mount helpers, and `Kernel::load(name, path, role, grant)` — which
+this application also uses, for the method — has had the missing argument all
+along. Still authoring ergonomics, still not missing truth, and still not a
+request. The duplicate was left in place.
+
+**F-01 — a freshly loaded service has claimed nothing. SECOND INDEPENDENT
+CONSUMER OF THE SHAPE, AT NO COST.** The exact reading appears, and the sentence
+it produces is `WE ARE NOT ALL HERE -- 4 (NoClaim)`. Whether a bell is up is a
+standing fact about the bell, so it is a claim; a rope whose ringer has not yet
+said anything reads `NoClaim`, and that is byte-for-byte the reading a rope with
+nobody on it would give.
+
+**What is different from ZNL-00 is that it cost nothing, and the reason is worth
+recording precisely.** `signal-box` was *blocked* by this — its first run
+deadlocked, because "no box" and "a box that has not spoken" needed different
+responses and it could not tell them apart. Here they need the **same** response:
+a conductor who cannot see that a bell is up does not go, and it makes no
+difference whatsoever whether that is because the bell is down or because nobody
+is standing there. The domain has one answer for both, so the ambiguity is not an
+ambiguity.
+
+So this is a second consumer of the *shape* and **not** a second consumer of the
+*pressure*, and the two should not be added together. The honest summary after
+four applications is: one consumer needed the distinction and worked around it in
+one edit; one consumer met the same reading and did not need the distinction; two
+consumers have no Senses at all and cannot see it.
+
+**F-02 — the sender cannot observe send fate. NOT MET, for the first time.**
+Three applications running, this seam had bitten every one. It has no surface
+here, for two reasons that are both the domain's:
+
+- **A bell expects no answer.** Every production message in this application is a
+  publication, and a publication is not a request. There is nothing whose fate a
+  ringer would want to know: it rang, and whoever was listening heard it.
+- **A publication tells its sender how many heard it.** `Office::publish` returns
+  `OfficePublication{authored, recipients}` — a real count, at the call, with
+  "the office was refused" kept distinct from "authorized and nobody was
+  listening". The directed doors return a `Ticket` that only the **host** can
+  resolve (`Switchboard::outcome`), and a weave holds a `Bus`, not a
+  `Switchboard`.
+
+That asymmetry is worth naming because no previous current-era experiment
+published anything and so none could have seen it: **the send-fate seam is not
+uniform across the send verbs.** It is not a new complaint — a fanout count is
+not delivery, and each of those deliveries is still independently gated
+afterwards with nothing reported back. But a domain whose traffic is broadcast
+gets meaningfully more back from Loom than one whose traffic is directed, and the
+seam's own note does not distinguish them. **Recorded as a narrowing of F-02, not
+as a new entry.** No consumer count changes.
+
+**F-05 — `wsl.exe` argument handling. FIFTH sighting, and it CORRECTS the
+workaround this ledger recorded.** ZNL-02 wrote: "invoke `wsl.exe` from
+PowerShell rather than Git Bash". Measured this phase, from PowerShell:
+
+```text
+wsl.exe -d Ubuntu-22.04 -- bash -c 'A=hello; echo "[$A]"'   ->   []
+```
+
+Identical to the Git Bash behaviour. The shell on the Windows side is not the
+variable, and the previously recorded workaround does not work. **The workaround
+that does work is the other half of what ZNL-00 and ZNL-01 adopted**: write every
+multi-step operation to a script *file* with fully absolute paths and no
+variables that the handoff can eat, and run it as
+`wsl.exe -d <distro> -- bash <absolute-path-to-script>`. Not Zen's, and now
+recorded correctly.
+
+**F-06, F-07, F-08, F-09, F-10 — no new evidence.** This application never
+touches prepared replacement, never commits an activation, and never answers a
+root delivery, so none of them has a surface here. **F-10 in particular remains
+at one sighting**; nothing in this experiment tested it either way.
+
+---
+
 ## Second and third sightings of ledger entries earlier experiments opened
 
 **F-02 — the sender cannot observe send fate. THIRD independent consumer, and
@@ -609,3 +724,51 @@ state schema is a fully exported path and it works on a `.so` weave: five of
 them were read back this way as a third independent witness. Recorded here
 because "you cannot see inside a loaded weave" is an easy and wrong thing to
 believe, and nothing in the guides sends a consumer to that path.
+
+### From `ringing-chamber` (ZNL-03)
+
+**The consumer path produced none a fourth time.** Same five lines of CMake, same
+`if(NOT TARGET loom::kernel)` gate, same `loom_weave_build_contract` in a
+`foreach`. Four independent consumers have now found nothing to complain about in
+the installed package, and the fourth one swapped one loaded artifact for a
+different one halfway through a run without that costing a line of anything.
+
+**Publications were wanted, and were the first thing this era's domains have
+wanted them for.** After three applications `EVIDENCE.md` recorded that nothing
+had reached for publish, relay, poke or the bequest letter. A bell is heard by
+everybody in the room and is addressed to nobody, so this domain reached for
+`publish` immediately and for nothing else — and the fanout count it returns is
+directly useful (see the F-02 note above). Recorded because "three applications
+did not want it" was becoming a fact about Loom rather than a fact about those
+three domains, and it was the second.
+
+**Office authorship carried a claim and a publication, not just a send, and both
+were load-bearing.** `as_role(R).claim(...)` is what makes "the 4 is up" a fact
+about the *rope* rather than about a weave, so the conductor can read the ropes
+without knowing who is standing at them. `as_role(R).publish(...)` is what makes
+a hand slapped on the wall not a bell. Neither needed anything the guides do not
+already show, and the two verbs sitting in the same grammar as `send` is what let
+one application use all three without three different mental models. This is the
+fourth application to use office authorship and the first to use its claim and
+publish forms; no new pressure, and worth recording as a surface that held.
+
+**Loom refused exactly one thing all evening, and it had to be forged.** Every
+other refusal in this application belongs to the domain — a ringer deciding a
+voice was not the conductor's, a listener deciding a noise was not a bell. That
+left the grants themselves entirely unexercised, which would have made "the
+pricker may say nothing to anybody" a claim resting on nothing. The pricker
+cannot express the attack (it has no verb that sends), so the host forged it with
+`send_as`, which stamps the pricker as author and authorises against the
+pricker's own empty grant: `CapabilityDenied on Call`, once, on the tap. This is
+`zen-orientation.md`'s "when the honest API can't express an attack, the test
+must forge the hostile wire frame" arriving from a fourth domain and needing no
+special machinery — `send_as` is a public, documented host verb.
+
+**A method that is `unload`ed and replaced by a different artifact left nothing
+behind.** The tower rings Plain Bob Doubles, stands, unloads it, loads Plain Bob
+Minor into the same office, and every ringer learns the new method from scratch.
+Nothing carried over and nothing needed to: the band's own state is reset by the
+domain message that tells them to learn, and the method weave holds no state
+worth keeping. Recorded as a non-finding because `signal-box` used unload/load
+for a *replacement of the same equipment* and this is the other case — a
+different thing entirely, in the same office, with no continuity wanted at all.

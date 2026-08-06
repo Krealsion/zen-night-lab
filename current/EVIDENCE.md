@@ -620,21 +620,262 @@ offered to it.
 
 ---
 
+---
+
+---
+
+# ZNL-03 — `ringing-chamber`
+
+**This experiment ran on a third Loom** — see `ringing-chamber/substrate.lock`.
+Everything from C-25 down is evidence about
+`b084b1c9a62bc94c3abb8dcb4ed2cf6ba2a77b50`, not about the era lock's `c86717b0`
+and not about ZNL-02's `d0d8257`. None of the three sets transfers to the others.
+The toolchain, configuration and measured ABI are identical across all three; the
+commit is not, which is the whole reason the ABI cannot stand in for it.
+
+---
+
+## C-25 — A fourth unrelated application consumes the same installed package unchanged, and swaps one loaded artifact for a different one mid-run at no cost
+
+**WITNESS.** `ringing-chamber`: eight native weaves and **two separately built
+`.so` methods, loaded one after the other into the same office in a single run**,
+across four CTest entries — `4/4 Test ... Passed`. Its entire Zen-facing build
+declaration is `find_package(loom REQUIRED)`, an `if(NOT TARGET loom::kernel)`
+gate, three imported targets, and `loom_weave_build_contract(...)` in a
+`foreach`. It was written without reading any earlier experiment's
+`CMakeLists.txt` and shares no file with them. Zero warnings and zero errors on a
+fresh configure and build.
+
+The second method is loaded after `kernel.unload("method")`, into the same
+`method` office, and the whole band re-learns from it: `Plain Bob Doubles: 5
+bells changing, a lead of 10` becomes `Plain Bob Minor: 6 bells changing, a lead
+of 12`, and the tenor stops covering and gets a line.
+
+**DOES NOT PROVE.** Anything Loom's own suite proves; the verifier was not run.
+Anything about a Loom other than the one in `ringing-chamber/substrate.lock`.
+Nothing about loading two artifacts *at once* — this application never holds two
+methods, because a band cannot ring two methods at once either.
+
+---
+
+## C-26 — The build contract is load-bearing here for the same reason it was in ZNL-02, on a different Loom
+
+**WITNESS.** Artifact-level, with a negative control. Two libraries compile the
+same `tower.hpp` and `method.hpp`:
+
+```text
+with the contract        plain-bob-doubles.so     0
+                         plain-bob-minor.so       0
+without it (hand-built)  no-contract-doubles.so  46
+                         no-contract-minor.so    46
+symbols made STB_GNU_UNIQUE by BOTH                46
+  e.g. guard variable for loom::manifest_schema()::s
+       guard variable for loom::field_desc_schema()::s
+       guard variable for loom::type_token_schema()::s
+```
+
+The intersection is **total**. The `0`s were reproduced on the artifacts rebuilt
+after Loom's source and build trees were deleted.
+
+**DOES NOT PROVE.** Anything C-19 did not already establish about the mechanism —
+this is a second sighting of the same fact on a different Loom, which is worth
+one line and not more. It was not run to failure here either: the hazard needs
+one image's statics destroyed while another still reads them, and although this
+application *does* unload a method mid-run, the second method is loaded only
+after the first is gone.
+
+---
+
+## C-27 — A hundred and twenty rows, no two alike, assembled from nothing but what was struck
+
+**WITNESS.** Six ringers, each holding only its own line, each deciding its own
+place each row and publishing one blow. The pricker assembles rows from those
+blows and from nothing else:
+
+```text
+  rows                  120
+  distinct rows         120
+  blows on the paper    720
+  rows that were a row  120 (clashes 0, short 0)
+  tenor last            120 of 120
+  came round            yes
+  TRUE -- no row was rung twice
+```
+
+A hundred and twenty distinct rows of five changing bells is **every** row of
+five bells, because there are only a hundred and twenty. The last row is rounds.
+
+**No participant could have computed this.** A ringer holds its own place bell
+and its own position and is never told anybody else's; the conductor holds the
+composition but not the paper; the pricker holds the paper but has never heard of
+a method, is not given the composition, cannot accept a `Call`, and has an empty
+grant. The host cannot compute it either, and not as a matter of discipline:
+place notation lives in `method.hpp`, which only the two method libraries
+include, so there is no code in `practice.cpp`'s translation unit that could
+derive a row (`grep -l '^#include "method.hpp"' *.cpp *.hpp` → the two methods,
+and nothing else).
+
+**DOES NOT PROVE.** Anything about Loom. Loom carried publications and answers
+and verified two kinds of authorship; the method, the truth and the extent are
+entirely the application's, and Loom was not asked about any of them. Nor
+anything about **striking** — a real touch is judged on rhythm and this
+application has no time in it at all, only order. Nor that the application would
+detect every way a touch can be bad: it detects a repeated row, a clash, a short
+row and a failure to come round, which is what the domain means by bad.
+
+---
+
+## C-28 — The witness can tell a false touch from a true one when nothing audible is wrong
+
+**WITNESS.** `--false-touch` rings the identical method with a different
+composition — bobs at 4, 5, 6 and 7 rather than 4, 8 and 12. **Every audible
+measure still reports success:**
+
+```text
+  rows that were a row  80 (clashes 0, short 0)
+  tenor last            80 of 80
+  came round            yes                     <- and exactly at the length
+  calls made            4                          the conductor expected
+```
+
+The conductor hears rounds, says "That's all", and is perfectly happy. And:
+
+```text
+  distinct rows         50
+  FALSE -- row 50 (142536) was already rung at row 30
+```
+
+Thirty of the eighty rows were rung twice and thirty were never rung. The repeat
+is visible on the printed paper: rows 31–40, 51–60 and 71–80 are the same three
+lines. The scenario asserts the detection and exits non-zero if the paper fails
+to notice.
+
+**DOES NOT PROVE.** That the application would detect every false composition —
+it detects a repeated row, which is what falseness *is*, but a touch that came
+round early would be caught by the conductor's ear rather than by the paper, and
+that path was not exercised. Nor anything about compositions in general: this is
+one false eighty, found by exhaustive search over call sequences before the
+application was written, not by the application.
+
+---
+
+## C-29 — The witness can tell a bad band from a good one when the composition is identical
+
+**WITNESS.** `--fumble` runs the **same method artifact and the same
+composition** as the good run. One ringer does not hear the first call:
+
+```text
+  ..     "Bob before row 40"
+  !!     "STAND."  -- two bells in 3 at row 40
+  rows 39 | came round no | clashes 1
+  NOT A TOUCH
+```
+
+Taken with C-28 this is the load-bearing pair. C-28 holds the band constant and
+varies the composition; C-29 holds the composition and the method constant and
+varies the band. The verdict moves in both cases. **It therefore cannot be coming
+from the composition, and it cannot be coming from the method** — which is
+exactly the way this application could most plausibly have been wrong while
+looking green.
+
+**DOES NOT PROVE.** That every band error is detectable. This one produces a
+clash, which is loud. A band error that left every row a valid permutation —
+two ringers swapping lines wholesale, say — would change the touch without
+producing a clash, and was not tried. What is established is that the paper is
+reading the ringing and not the plan.
+
+---
+
+## C-30 — Three accounts of the same ringing agree, and the difference between them is the forgery
+
+**WITNESS.** The evening is counted three ways that share no counter:
+
+```text
+  the bells    2160    each blow's own count of who heard it, returned by
+                       Office::publish as it published
+  the paper    1080    blows written down, six to a row (720 + 360)
+  the tap      2162    Struck deliveries the host's own observer saw
+```
+
+The tap is **two** higher than the bells, and those two are the labelled control
+that slapped a hand on the wall claiming to be the third: published by the host
+root, delivered to both listeners, and written down by neither
+(`not a bell, ignored 1 by the paper, 1 by the conductor`).
+
+**DOES NOT PROVE.** That the tap sees everything — it is one observer counting
+one shape. Its value here is that it is a **positive** number: "the paper wrote
+down only bells" is a claim about an absence, and an absence proved by a witness
+that was never wired up would look identical.
+
+---
+
+## C-31 — An empty grant is enforced, and it is the only thing Loom refused all evening
+
+**WITNESS.** A labelled control at row 60. The pricker's grant is
+`loom::Grant{}` — nothing at all — and the pricker has no verb that could
+express an attack, so the host forges the frame with `Switchboard::send_as`,
+which stamps the pricker as the author and then authorises against the pricker's
+own grant at delivery:
+
+```text
+  bus refusals seen         1  [CapabilityDenied on Call]
+```
+
+Exactly one, across a hundred and eighty rows, two methods and seven other
+labelled events.
+
+**DOES NOT PROVE.** That the other seven grants in this application are enforced
+at their edges — only the pricker's was attacked, and it was attacked at its
+simplest possible edge. The six ringers' and the conductor's narrow grants were
+sufficient on the first attempt and were never denied anything, so this
+application has the same gap ZNL-01's C-17 named: a working composed path plus
+source reading, and one measured refusal beside it, is not a demonstration that
+every rule holds.
+
+---
+
+## C-32 — The book is shut while the bells are going
+
+**WITNESS.** Every ringer asks the method for the line of every place bell before
+a note is struck — thirty-seven asks, answered thirty-seven times — and then
+never asks again. Measured on the host's own tap, which counts deliveries to the
+method's `WeaveId` between "she's gone" and the last row:
+
+```text
+  ..     Plain Bob Doubles: 5 bells changing, a lead of 10, 37 lines given out
+  the book, while the bells were going: 0 question(s)
+```
+
+**DOES NOT PROVE.** Anything about Loom, which neither imposes this nor could.
+It is a property of the application, and it is recorded because it is what makes
+"no participant knows the row" survive contact with the fact that every
+participant has *read* the whole method: knowing the line is not the same as
+being able to see the row, and the absence of traffic is what shows nobody was
+looking anything up.
+
+---
+
 ## What this era has NOT established
 
 - Nothing about **Zengine**. No experiment here has consumed it, hand-vendored
   it, or needed it. The five-sighting P-003 boundary from ZNL-R is unchanged and
-  uncounted by this era after two experiments.
-- Nothing about the **four historical areas**, which were not built, not run,
-  and not read during ZNL-00 or ZNL-01.
+  uncounted by this era after four experiments.
+- Nothing about the **four historical areas**, which have not been built, run or
+  read by any current-era experiment.
 - Nothing about **Loom's own verification**. Its official oracle was not run
   here, and package-consumer evidence is not a substitute for it.
 - Nothing about **any platform but Linux/WSL with GCC 11.4**.
 - Nothing about **out-of-process isolation**, which is not part of the exported
   surface and which neither experiment has been able to reach.
 - After ZNL-01, still nothing about **reload**, **revival**, the **bequest
-  letter**, **graceful swap**, **relays**, **pokes**, or **publications**. Three
-  applications have now not wanted any of them.
+  letter**, **graceful swap**, **relays** or **pokes**. Four applications have
+  now not wanted any of them.
+  - **Publications leave this list at ZNL-03.** `ringing-chamber` wanted them
+    immediately and for the plainest possible reason — a bell is heard by
+    everybody in the room and is addressed to nobody — and used
+    `Office::publish` for every production message it sends. Three applications
+    not wanting a mechanism was becoming a fact about Loom rather than a fact
+    about those three domains; it was the second.
 - Nothing about **persistence as a Zen concern**. ZNL-02 needed information to
   survive a process restart and the application wrote a text file. No Loom
   surface was involved, none was missing, and none was invented. That is a
@@ -646,4 +887,21 @@ offered to it.
   that wrote it.
 - Nothing about **peers that must agree**. ZNL-02's participants disagree and
   the application *counts*; no two participants ever had to converge on a shared
-  value, and no consensus machinery was written, needed, or tested.
+  value, and no consensus machinery was written, needed, or tested. ZNL-03's six
+  peers must be in **sequence**, which is a third thing again: they never
+  exchange a value, never vote, and never converge — each one independently
+  arrives at a place, and correctness is a property of the six places together
+  that none of them can see.
+- Nothing about **time**. Every experiment in this era has had a host that owns
+  the clock and a bus that is single-threaded FIFO. `ringing-chamber` in
+  particular models a domain whose real subject matter is *rhythm* — striking is
+  judged in milliseconds — and it contains no time at all: a row is an order, not
+  a set of instants. Nothing here is evidence about scheduling, latency,
+  concurrency, or a real clock.
+- Nothing about **enforcement of a grant that was never attacked**. Across four
+  applications, exactly two runtime grant refusals have been measured: ZNL-01's
+  `CapabilityDenied on BriefTheRelief` (found by accident, on the first run) and
+  ZNL-03's forged `CapabilityDenied on Call` (deliberate, one line). Every other
+  narrow grant in this era rests on a composed path that worked plus the source
+  read beside it. That is ZNL-01's C-17 non-claim, still open, and now the
+  era-level shape of it.

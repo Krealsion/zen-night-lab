@@ -50,6 +50,7 @@ appears, this has become a framework and should be split back apart.
 | `signal-box/` | **ZNL-00** — a miniature railway interlocking |
 | `prompt-corner/` | **ZNL-01** — one act of a play, called live, with the DSM replaced halfway through |
 | `records-committee/` | **ZNL-02** — five assessors who disagree about the same bird, and a county list that outlives them (**own `substrate.lock`**) |
+| `ringing-chamber/` | **ZNL-03** — six ringers who each know only their own line, and a touch whose truth nobody in the tower can see (**own `substrate.lock`**) |
 
 `substrate.lock` is a **record, never an input**. No build file reads it, and
 nothing parses it. It exists because an installed Loom cannot tell you which
@@ -65,13 +66,19 @@ the same toolchain, and measured the same installed ABI — so neither carries a
 lock of its own, and the era lock is not a shorthand for "whatever the first one
 used".
 
-**ZNL-02 resolved a different `main` and therefore carries its own lock.** The
-era lock is not rewritten and must not be: an era lock that quietly absorbed a
-newer pin would make ZNL-00's and ZNL-01's evidence claim a substrate they never
-ran on. The two locks differ in exactly one field — `loom` — and agree on
-toolchain, configuration and measured ABI, which is itself the reason the ABI
-cannot stand in for the commit: two different Looms measured the same
-compatibility class.
+**ZNL-02 and ZNL-03 each resolved a different `main` and therefore each carry
+their own lock.** The era lock is not rewritten and must not be: an era lock that
+quietly absorbed a newer pin would make an earlier experiment's evidence claim a
+substrate it never ran on. The three locks differ in exactly one field — `loom` —
+and agree on toolchain, configuration and measured ABI, which is itself the
+reason the ABI cannot stand in for the commit: three different Looms measured the
+same compatibility class.
+
+```text
+current/substrate.lock                      c86717b0   ZNL-00, ZNL-01
+current/records-committee/substrate.lock    d0d8257    ZNL-02
+current/ringing-chamber/substrate.lock      b084b1c9   ZNL-03
+```
 
 ## Getting a substrate to run against
 
