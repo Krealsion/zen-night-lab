@@ -44,11 +44,12 @@ appears, this has become a framework and should be split back apart.
 
 | path | what it is |
 |---|---|
-| `substrate.lock` | the exact Zen this era's experiments experienced |
+| `substrate.lock` | the exact Zen ZNL-00 and ZNL-01 experienced |
 | `FRICTION.md` | the running friction ledger, in the order things happened |
 | `EVIDENCE.md` | the running claim/witness ledger, with the non-claims |
 | `signal-box/` | **ZNL-00** — a miniature railway interlocking |
 | `prompt-corner/` | **ZNL-01** — one act of a play, called live, with the DSM replaced halfway through |
+| `records-committee/` | **ZNL-02** — five assessors who disagree about the same bird, and a county list that outlives them (**own `substrate.lock`**) |
 
 `substrate.lock` is a **record, never an input**. No build file reads it, and
 nothing parses it. It exists because an installed Loom cannot tell you which
@@ -58,11 +59,19 @@ The ABI version is carried and enforced, but that is a compatibility class, not
 an identity.
 
 An experiment may carry its own `substrate.lock` if it pins differently.
-Absence means the era's lock applies. Both experiments here resolved the same
+Absence means the era's lock applies. ZNL-00 and ZNL-01 both resolved the same
 remote `main` at the start of their own phase, built it with the same flags on
 the same toolchain, and measured the same installed ABI — so neither carries a
 lock of its own, and the era lock is not a shorthand for "whatever the first one
 used".
+
+**ZNL-02 resolved a different `main` and therefore carries its own lock.** The
+era lock is not rewritten and must not be: an era lock that quietly absorbed a
+newer pin would make ZNL-00's and ZNL-01's evidence claim a substrate they never
+ran on. The two locks differ in exactly one field — `loom` — and agree on
+toolchain, configuration and measured ABI, which is itself the reason the ABI
+cannot stand in for the commit: two different Looms measured the same
+compatibility class.
 
 ## Getting a substrate to run against
 

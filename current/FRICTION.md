@@ -398,6 +398,119 @@ documented `continuity is authored` position: what did not cross here was not
 
 ---
 
+## F-10 — An answer refused for want of AUTHORITY is reported as if the grant were wrong, and the deferred door beside it says otherwise
+
+**Experiment:** `records-committee`
+
+**What the application was trying to do.** Nothing, at the point this happened.
+A labelled control had the house circulate a ballot of its own to seat one, to
+show that the tally cannot be reached from outside it. The member read the
+ballot and voted, exactly as it would for a real one.
+
+**What was surprising.** The tap said:
+
+```text
+CapabilityDenied on Vote  (from weave 3)  sender's grant does not permit this shape to this target
+```
+
+Weave 3 is seat one, whose grant is `Grant{}.allow_to_any("Vote", 1)` — and in
+**this same run, under that same grant**, that same weave sent that same shape
+six times and all six were delivered. The grant is not the problem and cannot be.
+
+The real reason is that the ballot came from the host root, so there was no
+requester to answer. The substrate says so itself, at `answer_as` in
+`src/switchboard/switchboard.cpp`:
+
+```text
+// Three ways to have no authority, and each is a refusal of AUTHORITY —
+// categorically distinct from the grant check that still runs afterwards on
+// a legitimate answer:
+//   - nothing is being dispatched, or the caller is not the weave being
+//     dispatched [...]
+//   - the request came from a root, so there is no requester to answer;
+//   - this delivery's one answer is already spent.
+```
+
+and then reports all three as `RefusalReason::CapabilityDenied`.
+
+**Why it is worth recording rather than shrugging at.** The vocabulary already
+contains the right answer, and the enum says so in as many words:
+
+```text
+ForeignAuthority
+  A lifecycle/answer authority [...] that is expired, ALREADY SPENT, or bound to
+  a different conversation or incarnation. DISTINCT FROM CapabilityDenied on
+  purpose (R2B-2): the sender's grant may be perfectly correct while the
+  AUTHORITY DOMAIN is wrong, and reporting that as "you lack the grant" sends an
+  operator looking in exactly the wrong place.
+```
+
+And three functions further down the same file, `spend_deferred_as` — the
+*deferred* answer door — refuses the same category with `ForeignAuthority`, for
+a foreign token, a missing or spent record, the wrong respondent, or the wrong
+incarnation.
+
+So the two doors disagree, and they overlap exactly: **an already-spent answer
+is `ForeignAuthority` through the deferred door and `CapabilityDenied` through
+the immediate one.** This is the hazard the enum's own documentation describes,
+landing on the reason written to prevent it.
+
+**What the caller is told is fine.** `answer()` returns an invalid Ticket, and
+the source explains why that rather than a refusal ticket. The imprecision is on
+the **tap and the journal** — the diagnostic — which is F-09's shape from
+`prompt-corner`: a reason that is true of the mechanism and misleading about the
+situation.
+
+**Workaround.** None needed, and none written. This application never answers a
+root delivery except deliberately, in a labelled control.
+
+**Whose.** **Loom**, diagnostics. Not missing truth, not a defect in behaviour,
+and not blocking — the refusal is correct, only its name is not.
+
+**Sightings.** 1 (this experiment), measured. The `ForeignAuthority` half is
+read from the pinned source rather than provoked: this experiment never
+exercised the deferred door's refusal path.
+
+**Blocked the experiment?** No.
+
+---
+
+## Second and third sightings of ledger entries earlier experiments opened
+
+**F-02 — the sender cannot observe send fate. THIRD independent consumer, and
+this time the domain built its policy around it.** The secretary circulates a
+ballot to each of five seats by role. A ballot to a vacant seat refuses
+`NoSuchTarget` at delivery and the secretary is told nothing at all — measured
+in `control-inquorate`, where two seats are empty and every one of the eight
+ballots to them was refused on the tap while the secretary learned of none of
+them. What is worth recording is what the domain did about it: **a circulation
+closes on a date, not on a headcount**, and quorum is what makes a silent
+vacancy survivable rather than fatal. That is real committee practice and it
+cost the application nothing it would not have wanted anyway — the same shape as
+F-01's `PutInService`. Three independent consumers have now met this seam and
+none of them has been blocked by it; two of the three found the domain already
+had an answer.
+
+**F-04 — a native weave that holds an office cannot use `mount()`. THIRD
+independent consumer.** `records-committee` wrote the same local `mount_office`
+helper `signal-box` and `prompt-corner` each wrote, for the same reason, without
+consulting either — the three experiments share no file. **Three independent
+consumers now, fourteen uses** (7 + 5 + 2). Note the shape of the third: only
+*two* uses here, because the five members of this committee are loaded weaves
+and `Kernel::load(name, path, role, grant)` **does** take a role. So the gap is
+specifically in the *native* mount helpers, and the dynamic door next to them
+has had the missing argument all along. Still authoring ergonomics rather than
+missing truth, and still not a request.
+
+**F-05 — `wsl.exe` argument handling.** Reproduced once more at the start of
+this phase, in a new form: a Git Bash → `wsl.exe` invocation mangled an absolute
+`/mnt/c/...` script path into `C:/Program Files/Git/mnt/c/...`. Fourth sighting
+of this boundary across four phases; the workaround is unchanged (script files,
+absolute paths, and invoke `wsl.exe` from PowerShell rather than Git Bash). Not
+Zen's.
+
+---
+
 ## Second sightings of ledger entries ZNL-00 already opened
 
 **F-04 — a native weave that holds an office cannot use `mount()`.** Second
@@ -456,3 +569,43 @@ candidate's own `CandidateRefused`, the department-level domain refusals, and
 the `CapabilityDenied` behind F-06 all sent the author to the right place
 first time. The exception is F-09, where the reason is true of the mechanism and
 misleading about the situation.
+
+### From `records-committee` (ZNL-02)
+
+**The consumer path produced none a third time.** Same five lines of CMake, same
+one `if(NOT TARGET loom::kernel)` gate, same one `loom_weave_build_contract` —
+applied five times instead of once, which was the only difference and cost
+nothing. Three independent consumers have now found nothing to complain about
+in the installed package.
+
+**Several participants of the same kind needed no group mechanism, and the
+domain is why.** Loom has singleton offices and publications and no concept of a
+peer group. An application with five members might have been expected to want
+one. It did not: a committee has **seats**, a seat is a singleton that outlives
+its occupant, and `send_to_role("seat.3", ...)` is exactly the sentence the
+domain wanted to say. The membership list is the committee's own constitution
+and belongs in the application. Recorded because the absence of friction here is
+the interesting result — the substrate's shape and the domain's shape agreed
+without either bending.
+
+**The `answer_as_role` seam has now been looked at by a consumer that did not
+need it.** `known-seams.md` records that no public door produces a combined
+answer+office fact and that `answer_as_role` "waits for a consumer". A committee
+vote is a plausible one: it is both the answer to a ballot and an act of a seat.
+This application looked and **did not need it** — the secretary mints the ballot
+number, so the ask's correlation already binds the vote to the record, the seat
+and the round, and the documented obligation to "match the correlation against
+your own outstanding ask" is the whole of what was required. The seat name never
+travels in a payload and never needs to. One consumer declining to fire a
+trigger is weaker evidence than one firing it, and it is still evidence.
+
+**`commit(sequence)` was not reached.** This application never replaced
+anything, so F-08 receives nothing from it either way.
+
+**A loaded weave's declared state IS readable from the host, through the
+ordinary gate.** This experiment initially assumed otherwise and was wrong.
+`Switchboard::snapshot_bytes(id)` → `loom::parse` → `loom::admit` against the
+state schema is a fully exported path and it works on a `.so` weave: five of
+them were read back this way as a third independent witness. Recorded here
+because "you cannot see inside a loaded weave" is an easy and wrong thing to
+believe, and nothing in the guides sends a consumer to that path.

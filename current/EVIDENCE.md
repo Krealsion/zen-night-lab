@@ -388,6 +388,238 @@ real, measured, tapped refusal of a coordinator that lacked one rule.
 
 ---
 
+---
+
+# ZNL-02 — `records-committee`
+
+**This experiment ran on a different Loom** — see
+`records-committee/substrate.lock`. Everything from C-18 down is evidence about
+`d0d8257287908991449a7a2906ee29400abf1d5b`, not about the era lock's
+`c86717b0`, and the two sets do not transfer to each other. The toolchain,
+configuration and measured ABI are identical; the commit is not.
+
+---
+
+## C-18 — A third unrelated application consumes the same installed package unchanged, and five loadable weaves cost no more build declaration than one
+
+**WITNESS.** `records-committee`: two native weaves, **five separately built
+`.so` assessors loaded concurrently from five different artifacts**, across
+seven CTest entries — `7/7 Test ... Passed`. Its entire Zen-facing build
+declaration is `find_package(loom REQUIRED)`, an `if(NOT TARGET loom::kernel)`
+gate, three imported targets, and `loom_weave_build_contract(...)` applied in a
+`foreach` over the five. It was written without reading either earlier
+experiment's `CMakeLists.txt` and shares no file with them. Zero warnings and
+zero errors on a fresh configure and build.
+
+**DOES NOT PROVE.** Anything Loom's own suite proves; the verifier was not run.
+Anything about a Loom other than the one in `records-committee/substrate.lock`.
+Nothing about loading many more than five, and nothing about unloading them —
+this application loads its members and never removes one.
+
+---
+
+## C-19 — `loom_weave_build_contract()` is load-bearing here, not prophylactic, and the collision it prevents is exact
+
+**WITNESS.** Artifact-level, with a negative control. C-03 could only measure
+the symbol count because `signal-box` had a single library and said so. This
+application has **five libraries compiling the same `committee.hpp`**, which is
+precisely the hazard `docs/guides/dynamic-weaves.md` describes:
+
+```text
+with the contract        assessor-{aldis,brant,corve,denny,elsdon}.so   0 each
+without it (hand-built)  no-contract-aldis.so                          45
+                         no-contract-brant.so                          45
+symbols defined STB_GNU_UNIQUE by BOTH                                 45
+  e.g. guard variable for loom::manifest_schema()::s
+       guard variable for loom::field_desc_schema()::s
+```
+
+Every one of the 45 is defined by both libraries — the intersection is total,
+not incidental. The `0`s were reproduced on the artifacts rebuilt after Loom's
+source and build trees were deleted.
+
+**DOES NOT PROVE.** That omitting the contract would have produced an observable
+failure in this application. It was not run to failure: the guide's hazard needs
+one image's statics to be *destroyed* while another still reads them, and this
+application never unloads a member. What is established is that the collision
+surface the contract exists to remove is genuinely present here, which is one
+step past where C-03 could get.
+
+---
+
+## C-20 — Durable state written by one process changes what a later, separate process decides — and changes how a member votes, not merely what is minuted
+
+**WITNESS.** `two-sittings`. The 1979 process runs, writes one text file, and
+**exits**. A second process then runs the 1980 sitting with nothing between them
+but that file. Three separate durable facts do work:
+
+```text
+  1979-044  Greenish Warbler        <- came back onto the agenda BY ITSELF, out
+        NOT ACCEPTED in round 2 (1-4)   of the file, submission intact
+
+  1980-006  Little Bunting
+        ACCEPTED in round 1 (5-0)
+        (not a first; the county list already had it)
+
+  1980-012  Pallid Harrier
+        ACCEPTED in round 1 (5-0)
+        *** FIRST COUNTY RECORD ***
+        a resubmission of 1979-011, which this committee recorded NOT ACCEPTED
+
+  1980-022  Rustic Bunting
+        NOT ACCEPTED in round 2 (0-5); round one was 1-4
+```
+
+The species list, the determination history and the held-over agenda are three
+different readings, and the Pallid Harrier needs two of them at once: it *is* a
+first (the 1979 record was not accepted, so it never joined the list) *and* it
+is a resubmission of that record.
+
+**The sharpest part is 1980-022.** Seat three consults the recorder before
+voting and applies a higher standard to a first county record than to a second.
+The county has had a Rustic Bunting since 1979-004, so seat three accepted it in
+round one — a vote that would have been a rejection without the file. The
+durable state is not decorating the minutes; it is inside a member's judgement.
+
+**DOES NOT PROVE.** Anything about Loom. Loom has no persistence, was not asked
+for any, and carried none of this: the recorder writes a text file with
+`std::ofstream` and reads it with `std::ifstream`. What crossed the restart
+crossed because the application wrote it. Nor does it prove anything about
+concurrent writers, partial-write atomicity at the filesystem level (the
+application detects a truncated file; it does not write atomically), or a file
+edited by anything other than this program.
+
+---
+
+## C-21 — The recovery witness can tell a correct reconstruction from a false green, and the false green is reachable
+
+**WITNESS.** Four controls, three refusing and one deliberately succeeding
+wrongly.
+
+```text
+control-no-list          no file                -> CANNOT SIT, exit 2, nothing written
+control-another-county   county field altered   -> CANNOT SIT, exit 2, file unchanged
+control-half-a-list      final line removed     -> CANNOT SIT, exit 2, file unchanged
+control-lost-list        file deleted, refounded-> SITS, exit 0, and is WRONG
+```
+
+The three refusals each assert both halves: the committee did not sit, **and**
+the file it refused to read is byte-identical afterwards (SHA-256 before and
+after, with the county field restored for the comparison in the second case).
+
+`control-lost-list` is the one that gives the others meaning. The 1979 file is
+deleted and a fresh list founded; the 1980 sitting then runs perfectly happily
+and prints:
+
+```text
+  1980-006  Little Bunting
+        ACCEPTED in round 1 (5-0)
+        *** FIRST COUNTY RECORD ***
+```
+
+for a species the county has had since 1979. Every mechanical measure inside
+that sitting still reports success — the votes were genuine, the tally correct,
+the rules correctly applied, the minutes written, exit 0. **The scenario asserts
+that this goes wrong**, so "not a first" in `two-sittings` is a measurement
+rather than a constant: the same binary, the same agenda, the same five members,
+and the answer changes with the file.
+
+**DOES NOT PROVE.** That the application detects every possible corruption. It
+detects four: absent, wrong identity, and two whole-file failures (a missing or
+disagreeing length line). A file that is well formed, Marchfield's, correctly
+counted, and *wrong* would be sat on without complaint — there is no signature
+and no checksum over the body, and the application does not claim one.
+
+---
+
+## C-22 — Several live participants of the same kind genuinely disagree, and the published rule — not the substrate — decides
+
+**WITNESS.** Five assessors, five separate artifacts, five different bodies of
+reasoning, reading identical submissions. Across the two sittings every outcome
+shape occurs:
+
+```text
+5-0 in round one          1979-004  ACCEPTED
+0-5 in round one          1979-011  NOT ACCEPTED
+4-1 -> round two -> 4-1   1979-017  ACCEPTED
+3-2 -> round two -> 3-2   1979-023  NOT ACCEPTED
+1-4 -> round two -> 0-5   1980-022  NOT ACCEPTED  (a member changed its vote)
+```
+
+Disagreement is not simulated by a threshold: seat two rejected 1979-023 naming
+`Sykes's Warbler is not eliminated` while seat one accepted it on the recording,
+and the two are different programs. 1980-022 proves the second round is not
+ceremony — seat three accepted in round one and changed to reject in round two,
+having read a colleague's comment naming a confusion species the description
+never addressed.
+
+**Loom decided none of it.** What Loom decided is narrower and is the part worth
+naming: that a `Vote` arriving at the secretary is the authorized answer to a
+ballot the secretary issued (`answers_ask`), and which ballot (the correlation
+the secretary minted). The rules, the quorum, the recirculation and the tie are
+all application policy.
+
+**DOES NOT PROVE.** That the rules are good rules, or that five is the right
+number. Nor anything about peers that must *agree* — this domain resolves
+disagreement by counting, and never needed two participants to reach a common
+value.
+
+---
+
+## C-23 — A vote is only a vote if it answers a ballot, and the tally cannot be reached from outside the committee
+
+**WITNESS.** Three labelled host-root controls inside the founding sitting.
+
+```text
+the house casts a vote of its own       answers_ask() false  -> unsolicited 1, not counted
+the house circulates a ballot to seat 1 the member votes; the vote answers the
+                                        HOUSE, so votes counted did not move
+the house minutes a determination       not authored from the secretary office
+                                        -> unauthored 1, and Marmora's Warbler
+                                           is absent from the county list
+```
+
+The forged ballot is the interesting one: it is **self-defeating without any
+rule in the application**. A member answers whoever asked it, and the house is
+not the secretary, so a ballot injected from outside can never produce a vote
+the secretary will count — and a root delivery grants no answer authority at
+all, so the answer is refused outright.
+
+**DOES NOT PROVE.** That any of the three was unsendable. All three were sent,
+deliberately, by the host root, which is the only place in this application that
+can express them. What is established is that the recipient can tell in each
+case, and that two of the three needed no application rule to be safe.
+
+---
+
+## C-24 — Three independent accounts of the same sitting agree, and one of them is read out of five shared libraries through the ordinary gate
+
+**WITNESS.** The founding sitting is checked against three sources that do not
+share a counter:
+
+```text
+  ballots issued   30      the secretary's ballot book
+  votes counted    30
+  votes on the tap 31      every Vote delivery an observer saw
+  the members say  31 ballots read, 31 votes cast (5 seats' own snapshots)
+```
+
+The difference of one, in both directions, is the house's own vote: it crossed
+the bus and it answered no ballot. The third account is obtained by asking the
+bus for each seat's `snapshot_bytes` and putting them through the **ordinary
+gate** — `loom::parse` to an `Unverified`, which by construction exposes only
+what it *claims* to be, then `loom::admit` against the `AssessorState` schema
+this side compiled. Five separately built artifacts' own accounts of what they
+did, admitted the way a message would be.
+
+**DOES NOT PROVE.** That the members' state is trustworthy — it is the members'
+own account of themselves, which is exactly why it is one of three and not the
+only one. Nor that the gate refused anything here: every snapshot was admitted,
+so this exercised the accepting path only. No malformed or foreign snapshot was
+offered to it.
+
+---
+
 ## What this era has NOT established
 
 - Nothing about **Zengine**. No experiment here has consumed it, hand-vendored
@@ -401,5 +633,17 @@ real, measured, tapped refusal of a coordinator that lacked one rule.
 - Nothing about **out-of-process isolation**, which is not part of the exported
   surface and which neither experiment has been able to reach.
 - After ZNL-01, still nothing about **reload**, **revival**, the **bequest
-  letter**, **graceful swap**, **relays**, **pokes**, or **publications**. Two
+  letter**, **graceful swap**, **relays**, **pokes**, or **publications**. Three
   applications have now not wanted any of them.
+- Nothing about **persistence as a Zen concern**. ZNL-02 needed information to
+  survive a process restart and the application wrote a text file. No Loom
+  surface was involved, none was missing, and none was invented. That is a
+  result, not a gap — but it is emphatically *not* evidence that a Zen
+  persistence layer is unnecessary in general, only that this domain did not
+  reach for one.
+- Nothing about **concurrent or interleaved writers** of a durable file, about
+  **atomic** writing, or about a durable file edited by anything but the program
+  that wrote it.
+- Nothing about **peers that must agree**. ZNL-02's participants disagree and
+  the application *counts*; no two participants ever had to converge on a shared
+  value, and no consensus machinery was written, needed, or tested.

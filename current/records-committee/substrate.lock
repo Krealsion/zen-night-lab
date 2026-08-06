@@ -1,0 +1,33 @@
+# substrate.lock — what Zen this experiment experienced.
+#
+# A record, never an input. Nothing parses this file and no build reads it.
+# It exists because an installed Loom cannot say which Loom it is.
+#
+# This experiment carries its own lock because ONE FIELD DIFFERS from the era
+# lock in ../substrate.lock: Loom's main has moved since ZNL-00 and ZNL-01.
+# Everything else — toolchain, configuration, measured ABI — is identical, and
+# the era lock is not rewritten. An era lock that quietly absorbed a new pin
+# would make ZNL-00's and ZNL-01's evidence claim a substrate they never ran on.
+
+loom          d0d8257287908991449a7a2906ee29400abf1d5b
+zengine       none
+abi           6
+toolchain     gcc 11.4.0 / cmake 3.22.1 / Ubuntu 22.04.5 LTS (WSL2, kernel 6.6.87.2) on Windows 11
+loom-config   -DCMAKE_BUILD_TYPE=Debug -DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLES=OFF -DZEN_SDL=OFF
+created       2026-08-05
+
+# loom     resolved once from remote refs/heads/main at the start of this phase,
+#          by two independent paths that agreed (Windows git over ssh, and WSL
+#          git over https), and then held. A fresh clone was detached at this
+#          exact SHA in scratch outside the workspace; the live Loom checkout
+#          was never a build input. Re-checked after the independence controls:
+#          remote main had not moved during the phase.
+#
+#          The era lock records c86717b0fcf6bbaf4144e3ab91c215824a2b6eae, which
+#          is what ZNL-00 and ZNL-01 ran on. This experiment's evidence is about
+#          d0d8257 and nothing else.
+#
+# zengine  none, and deliberately. Nothing in this application reached for it.
+# abi      read from the installed include/zen/kernel/abi.h. Unchanged from the
+#          era lock at 6 — which is exactly why the ABI cannot stand in for the
+#          commit: two different Looms measured the same compatibility class.
