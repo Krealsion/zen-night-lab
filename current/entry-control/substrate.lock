@@ -1,0 +1,32 @@
+# substrate.lock — what Zen this experiment experienced.
+#
+# A record, never an input. Nothing parses this file and no build reads it.
+# It exists because an installed Loom cannot say which Loom it is.
+
+loom          55fbb15fda5f8994137dc2d6e3b1c914753f3ec7
+zengine       none
+abi           6
+toolchain     gcc 11.4.0 / cmake 3.22.1 / Ubuntu 22.04.5 LTS (WSL2, kernel 6.6.87.2) on Windows 11
+loom-config   -DCMAKE_BUILD_TYPE=Debug -DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLES=OFF -DZEN_SDL=OFF
+created       2026-08-06
+
+# loom     resolved once from remote refs/heads/main at the start of ZNL-06 by
+#          two independent paths that agreed — Windows git over HTTPS and WSL
+#          git over SSH — and then held. A fresh clone was detached at this
+#          exact SHA in scratch outside the workspace; the live Loom checkout
+#          was never a build input, never built, never reset, never switched.
+#
+#          This is the SAME pin ZNL-04 (`shutter-line`) and ZNL-05 (`saleroom`)
+#          recorded, and this experiment still writes its own lock rather than
+#          leaning on either of theirs. `../substrate.lock` — the era lock —
+#          records c86717b0, the Loom that ZNL-00 and ZNL-01 ran on, and by the
+#          era README's own rule an experiment with no lock inherits that one.
+#          A lock records what an experiment ran on; it is never a pointer to
+#          somebody else's.
+#
+# zengine  none, and deliberately. Nothing here wanted it, reached for it, or
+#          missed it. Seventh current-era experiment; seventh time.
+# abi      read from the installed include/zen/kernel/abi.h (ZEN_ABI_VERSION 6).
+#          It is a compatibility class, not an identity — which is why `loom` is
+#          above it, and why four different Looms across this era have all
+#          measured 6.

@@ -1555,3 +1555,372 @@ true after five applications. This section says only what the sixth changes:
   application says so and depends on it.
 - **Nothing about Zengine**, for the sixth time. Not used, not vendored, not
   read, not reached for, not missed.
+
+---
+
+# ZNL-06 — `entry-control`
+
+Everything below was measured against **Loom
+`55fbb15fda5f8994137dc2d6e3b1c914753f3ec7`**, ABI 6, built Debug with
+`-DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLES=OFF -DZEN_SDL=OFF`, gcc 11.4.0 /
+cmake 3.22.1 on Ubuntu 22.04.5 (WSL2). That is the same pin `shutter-line` and
+`saleroom` recorded; this experiment resolved it independently, by two paths
+that agreed, and wrote its own `substrate.lock`.
+
+Scope everything here to that Loom and that toolchain. Nothing below is a claim
+about any other pin, and nothing below is a claim about Loom's own test suite,
+which was not run.
+
+## C-48 — A seventh unrelated application consumes the same installed package unchanged, with six separately built artifacts loaded at once and none unloaded
+
+**CLAIM.** A seventh independent consumer, in a domain unrelated to the other
+six, builds and runs against the installed Loom package with the same five lines
+of CMake — `find_package(loom REQUIRED)`, a `loom::kernel` presence gate,
+`loom::core`/`loom::switchboard`/`loom::kernel`, and one
+`loom_weave_build_contract()` per artifact in a `foreach`. Six shared libraries
+compiled against one shared header are loaded into one process at once and all
+six run.
+
+**WITNESS.** `current/entry-control/CMakeLists.txt`; a fresh configure reporting
+`entry-control: Loom from <prefix>/lib/cmake/loom`; `ctest` green on all three
+scenarios; the six artifacts named in the run's own roll.
+
+**SCOPE.** This pin, this toolchain, this prefix, in-process hosting only.
+
+**DOES NOT PROVE.** Nothing about other platforms, other compilers, a
+`find_package` version range, or an install produced by anything but the six
+commands in `current/README.md`.
+
+## C-49 — The build contract is load-bearing here for the seventh time, and the collision it prevents is exactly as large as the shared header
+
+**CLAIM.** Building the six wearer artifacts **without**
+`loom_weave_build_contract()` leaves **65** `STB_GNU_UNIQUE` symbols in every one
+of them; building them with it leaves **0**, in all six.
+
+**WITNESS.** Two complete builds of copies of this experiment outside the
+repository, differing only in one commented-out line of `CMakeLists.txt` (the
+edit verified before either build ran), and `nm -C --defined-only <artifact> |
+grep -c ' u '`:
+
+```text
+artifact             with    without
+aish.so                 0         65
+ndlovu.so               0         65
+farrow.so               0         65
+teague.so               0         65
+okonkwo.so              0         65
+braddock.so             0         65
+```
+
+The flag the contract applies is `-fno-gnu-unique`, probed by
+`<prefix>/lib/cmake/loom/loom-weave.cmake:114`.
+
+**SCOPE.** This pin, GCC 11.4.0, these six artifacts. The number 65 is a
+property of how much of `fireground.hpp` and `<zen/weave.hpp>` each artifact
+instantiates, not a constant of Loom.
+
+**DOES NOT PROVE.** That anything went wrong without the contract in *this*
+application — nothing here unloads, so the failure mode the contract exists for
+is not reachable. It proves the contract does the thing it claims, on six
+artifacts that genuinely share a header. It also does not re-open ZNL-05's
+runtime-consequence investigation, which was not re-run.
+
+## C-50 — A board that can only project catches a wearer breathing half again the nominal rate, and it takes two pressure checks to do it
+
+**CLAIM.** The entry control board holds an entry pressure, a nominal rate of 8
+bar/min printed on it, and the last measured gauge reading. From those it
+reprojects a wearer's turn-around minute at every minute. A wearer whose real
+rate rises from 8 to 12 bar/min once they are working is invisible at the first
+check and caught at the second, and the crew is brought out **seventeen minutes
+before the board's original time due out**, with air in hand.
+
+**WITNESS.** The default run:
+
+```text
+    0   ALPHA    tally RED-2 on the board: in at 300 bar, turn round at 177 bar, due out minute 30
+    6   ALPHA    RED-2 260 bar (board expected 252 bar)
+   12   ALPHA    RED-2 188 bar (board expected 204 bar)
+   13   ALPHA    the board makes RED-2 turn-around at minute 13 -- RED crew out now
+   17   ALPHA    RED-2 reports out of the building, 131 bar
+```
+
+and the debrief's own arithmetic, taken from Ndlovu's account rather than the
+board's: `17 min, 169 bar used, 9 bar/min (the board planned on 8)`.
+
+**SCOPE.** This application's arithmetic, which is its own arrangement in the
+spirit of real entry control rather than any service's policy.
+
+**DOES NOT PROVE.** Anything about Loom. This is domain arithmetic and Loom has
+no opinion about it. What it does establish for this laboratory is that the
+consumption rate lives only in the six wearer artifacts (`grep -l 'state_.rate'`
+returns the six wearers and nothing else), so the board's inability to see it is
+a property of the build rather than a promise about restraint.
+
+## C-51 — A participant that stops answering is escalated on a clock, and the escalation was correct even though nothing was wrong
+
+**CLAIM.** A wearer whose radio does not get out receives its pressure checks
+and cannot answer them. The entry control officer cannot distinguish "the radio
+failed" from "the wearer is working" from "the wearer is in difficulty", does
+not try, and after two unanswered checks declares the wearer unaccounted for and
+the emergency crew is committed. The wearer was in fact fine and came out on
+their own turn-around figure.
+
+**WITNESS.** The default run:
+
+```text
+   12   BRAVO    !! BLUE-2 has missed 2 checks -- I cannot say whether that is the radio or the wearer
+   12   COMMAND  bravo cannot account for BLUE-2 -- committing the emergency crew
+   12   BA MAIN  GREEN crew committed -- THERE IS NO EMERGENCY CREW
+   19   BRAVO    BLUE-2 reports out of the building, 129 bar
+```
+
+and Teague's own account, `checks_unanswered = 2`, incremented **inside the
+handler that received each check** — so the application can prove the sends
+arrived.
+
+**SCOPE.** One wearer, one incident, single-threaded FIFO dispatch.
+
+**DOES NOT PROVE.** That any Loom lifecycle mechanism was exercised. Nothing
+here died, was killed, was revived, was reloaded or was replaced. The
+participant was alive and receiving throughout. Specifically it is **not**
+evidence about `Switchboard::kill`, `reload`, `swap_state`,
+`Kernel::reload_from`, prepared replacement, the letter, or graceful swap, all of
+which were read at this pin and none of which this domain wanted. It is also
+**not** a sighting of F-02: the fate of the send was never in question.
+
+## C-52 — "The board reads zero" is not "everybody is out", and the board's own arithmetic catches the difference
+
+**CLAIM.** An entry control officer that closes an entry on the radio report
+rather than on the returned tally produces a board that reads zero committed
+while two tallies are still in the officer's hand. Every other measure of the
+incident is green: both wearers were booked in correctly, every line of the
+arithmetic is right, they came out above the safety margin, and the incident's
+own closing condition (both boards read zero) is satisfied.
+
+**WITNESS.** `control-out-on-the-radio`:
+
+```text
+  WRONG alpha: 2 opened, 2 closed, 0 still in, 2 tallies in hand -- the paperwork and the tallies disagree
+        tally RED-1 is still on this board
+        tally RED-2 is still on this board
+```
+
+against the same run's `Aish ... booked in, TALLY NOT BACK` and
+`Ndlovu ... booked in, TALLY NOT BACK`. The scenario asserts that this goes
+wrong, and asserts that the other two accounts stayed silent — so "every entry
+closed against a tally that came back" in the default run is a measurement
+rather than a constant.
+
+**SCOPE.** This application.
+
+**DOES NOT PROVE.** Anything about Loom. The distinction between a piece of
+paperwork and a person is the application's, and the substrate was not asked for
+an opinion.
+
+## C-53 — Two failure modes with the same symptom are caught by two different checks, and each control asserts the other check stayed silent
+
+**CLAIM.** This domain hands over a genuine pair. A board closed on a voice and
+a wearer who went in unbooked both end with a clean incident and a clear board,
+and they are caught by two checks that are **structurally** blind to each other:
+
+```text
+the board's own arithmetic    entries opened = closed + still in
+                              tallies taken  = returned + in hand
+                              and  still in  = in hand
+                              blind to somebody it was never told about
+
+the roll                      everybody who went into the building is on
+                              somebody's board
+                              blind to a board closed on a voice: those
+                              wearers were booked in perfectly
+```
+
+**WITNESS.** In `control-straight-in` Bravo's board is **perfectly balanced** —
+5 tallies taken, 5 returned, 0 in hand across both points — and
+`WRONG Braddock (GREEN-2) entered the building and is on nobody's board`. In
+`control-out-on-the-radio` the roll is silent and the arithmetic fires. Each
+scenario asserts both halves.
+
+**SCOPE.** This application. The pair was not manufactured: both are named
+failures of real entry control procedure, and the second happens in exactly the
+circumstance that produces it in the world — an emergency committal, at a run.
+
+**DOES NOT PROVE.** That either check is complete, or that a third failure would
+be caught by either. There is no reason to think it would be.
+
+## C-54 — Observation authority is enforced, is distinguishable from absence, and the attack is expressible through a participant's own honest API
+
+**CLAIM.** `Grant::allow_observe` refuses a read. An entry control officer whose
+grant permits observing `EmergencyCrew` and not `Board` reads the other entry
+control point's board and receives `SenseRefusal::NotAuthorized` — not
+`NoClaim`, and provably not, because BA main control reads the same office's
+`Board` claim in the same minute under a grant that permits it.
+
+**WITNESS.** The default run:
+
+```text
+   12   BRAVO    tried to read the entry-control.alpha board: NotAuthorized -- asking BA main control instead
+```
+
+Bravo's own account carries `board_reads_refused = 1` and
+`board_read_refusal = "NotAuthorized"`; BA main control's carries
+`board_reads = 64`. The scenario asserts both, in all three runs.
+
+The call is `mail.latest_from_office<Board>("entry-control.alpha")` — an
+ordinary verb the weave already has. **Nothing was forged.** This is the first
+Zen authority edge in this era attacked entirely from inside a participant's own
+vocabulary, with no host door and no deliberately-malicious participant.
+
+**MUTATION.** Adding `.allow_observe("Board", 1)` to the entry control points'
+grant, in a copy outside the repository with the edit verified before the build,
+makes the read succeed and turns the control red.
+
+**SCOPE.** One reader, one shape, one office key, this pin. `observe_office_as`
+only; `observe_as` (the personal-claim door) was not attacked.
+
+**DOES NOT PROVE.** That the grant's observe dimension is enforced for any other
+shape or any other reader, nor anything about `ObserveRule`'s deliberately
+absent author/office selector, which this application did not need. It also does
+not prove `allow_observe` is enforced on the *personal* claim key space, which
+was not exercised.
+
+## C-55 — Three different kinds of Zen authority are enforced in one application, all three mutation-tested, and making only the office valid changes which refusal fires
+
+**CLAIM.** Three sentences this incident depends on are attacked at the edge,
+each with a valid participant, a plausible payload, the correct shape and the
+correct surrounding domain state, and exactly one authority fact wrong:
+
+```text
+who you may reach     a wearer speaks to their own entry control point
+                      -> grant             -> CapabilityDenied on Gauge
+who you may speak as  only command orders a withdrawal
+                      -> office authorship -> RoleAuthorshipDenied on Evacuate,
+                                              nothing queued
+who may read what     only BA main control sees a board
+                      -> observe rule      -> SenseRefusal::NotAuthorized,
+                                              returned to the caller
+```
+
+**WITNESS.** `bus refusals seen 2 [CapabilityDenied on Gauge,
+RoleAuthorshipDenied on Evacuate]` on the tap in every scenario, plus the
+off-tap Sense refusal in C-54. Alpha's `not_on_my_board` counter stays at **0**,
+which is the interesting half of the first: Alpha's handler writes down a
+reading from anybody not on its board and says so more loudly than it says
+anything else, so **there is no domain rule behind that edge at all** — the
+grant is the only thing keeping the two boards independent.
+
+**MUTATIONS.** Three, each in a copy outside the repository, each verifying its
+own edit before building, each turning its control red:
+
+```text
+widen a wearer's grant with allow_to_role("Gauge", 1, "entry-control.alpha")
+    -> delivered; "!! BLUE-2 is not on my board and has just passed me 150 bar";
+       not_on_my_board becomes 1; CapabilityDenied on Gauge disappears
+
+remove the wearer's own authored_from_role("command") check
+    -> the unauthored shout is obeyed
+
+add allow_observe("Board", 1)
+    -> the other point's board becomes readable
+```
+
+**ISOLATION CONTROL** (not a mutation). Forging the same withdrawal as
+`entry-control.bravo` — an office Bravo **genuinely holds** — makes authorship
+succeed, and the tap reads
+`[CapabilityDenied on Gauge, CapabilityDenied on Evacuate]`. The refusal changes
+kind. That is how one knows the original `RoleAuthorshipDenied` was about the
+office and not about the grant standing behind it, and that both defences exist
+in sequence with authorship first.
+
+**SCOPE.** Three edges, one application, this pin. Two of the three had to be
+forged with the public host doors (`office_send_to_role_as`), because a wearer's
+own code addresses only the point it reported to and an officer has no verb for
+speaking as command.
+
+**DOES NOT PROVE.** That any *other* narrow grant in this era is enforced. A
+fourth edge was available here — only an entry control officer may put a figure
+on its own board, which is an office **claim** — and was deliberately not
+attacked, because `saleroom` already measured `OfficeNotHeld` and a repeated
+denial is worth less than a new kind. The claim door in this application is
+therefore unchallenged and rests on source reading plus a composed path that
+worked.
+
+## C-56 — Three accounts of the same incident close exactly, and one of them is read out of six shared libraries and four native weaves through the ordinary gate
+
+**CLAIM.** The incident's arithmetic closes across three counters with no shared
+owner:
+
+```text
+the boards    6 tallies taken, 6 returned, 0 in hand
+the watch     6 rigged, 6 went into the building, by their own account
+the tap       9 Gauge deliveries, 15 checks, 6 tallies taken
+the checks    15 asked by the boards = 9 answered + 6 unanswered
+```
+
+and the incident asserts, rather than prints, that the boards' `checks_asked`
+equals the wearers' `answered + unanswered`, that the tap saw exactly that many
+`PressureCheck` deliveries, and that the tap's `Gauge` count equals both the
+wearers' answered count and the boards' answered count.
+
+**WITNESS.** The default run's own assertions, all `ok`. Every participant's
+account is obtained the same way — `Switchboard::snapshot_bytes(id)` →
+`loom::parse` → `loom::admit` against the schema *this side* compiled — for all
+ten participants, six of which live in shared libraries the host holds no typed
+pointer into.
+
+**SCOPE.** Single-threaded FIFO dispatch, which this application depends on
+precisely and says so.
+
+**DOES NOT PROVE.** Anything about concurrency, and nothing about a queue or a
+race. The equation closes because dispatch is deterministic.
+
+## What this era has NOT established — after ZNL-06
+
+Every item in *What this era has NOT established* (written after ZNL-04) and its
+ZNL-05 supplement still stands unchanged, except where this section says
+otherwise. Both were left as written, because each is a record of what was true
+at the time. This section says only what the seventh changes:
+
+- **Participant failure and revival remain untouched, for the seventh time —
+  and this phase learned why rather than merely noting it again.** ZNL-05 named
+  the tension: the domains that want a participant to die are overwhelmingly
+  safety-critical operations domains, and the search kept declining those for
+  portfolio variety. ZNL-06 removed the filter and took the strongest such
+  domain in the pool, and the honest result is that **it still does not want
+  Loom's lifecycle mechanisms.** A fireground's failing participant is alive,
+  still receiving, and has stopped answering — and the whole apparatus exists
+  because nobody can tell which of three things that means. There is no
+  successor, no new incarnation and nothing to transplant. `kill`, `reload`,
+  `swap_state`, `reload_from`, prepared replacement, the letter and graceful
+  swap were all read at the pin before this was concluded.
+- **Persistence remains at one consumer.** An incident is a night; the debrief
+  is somebody else's morning. `records-committee` is still the only current-era
+  application that needed anything to survive a process, so whether "the
+  application writes it" generalises is **still unknown after seven**.
+- **Unload is now at three consumers and was not exercised here.** Nobody leaves
+  this incident early, so there is no post-unload residency observation and one
+  was not manufactured. ZNL-05's unexplained contracted-residency shape is
+  neither confirmed nor contradicted by this phase.
+- **The era's denial count moves from seven to ten**, and for the first time one
+  of them is an **observation** refusal. Six on the bus, two returned to their
+  callers. Roughly fifty-odd narrow declarations now exist across the era held
+  by about the same number of participants; **seven** of those participants have
+  ever been refused anything. `allow_observe` has now been denied once, on one
+  shape, to one reader. A grant's *version* dimension has still never been
+  attacked. `SealedSpeech`, `SenderLifeEnded`, `AnswerTargetChanged`,
+  `AdmissionRevoked` and `Exhausted` remain unprovoked by any current-era
+  application.
+- **Ask/answer and correlation remain at one consumer.** This application has a
+  question-and-answer relationship — a pressure check and a gauge reading — and
+  deliberately did not use Loom's ask/answer machinery for it, because a
+  fireground radio check carries a call sign rather than a correlation token and
+  the domain already supplies the identity the answer needs. `records-committee`
+  is still the only consumer of deferred answers, and correlation is now at one
+  consumer across seven applications.
+- **Nothing about a resource that runs out.** This is the first current-era
+  application whose central constraint is a finite, private, depleting supply,
+  and the substrate had nothing to do with it. That is correct — it is domain
+  arithmetic — but it is worth recording that the application most likely to ask
+  Loom for a resource notion did not.
+- **Nothing about Zengine**, for the seventh time. Not used, not vendored, not
+  read, not reached for, not missed.

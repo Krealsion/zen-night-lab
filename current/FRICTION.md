@@ -1167,3 +1167,177 @@ is what makes "the bids of one beat" a **set** the auctioneer can take the
 highest of, rather than a race — and the application counts the ones that lost
 that race (`beaten on the same breath`) so that the morning's arithmetic closes
 against the tap.
+
+---
+
+## `entry-control` opened no new entry either — four in a row now
+
+**Experiment:** `entry-control`
+
+The seventh current-era application found nothing new to complain about. Four
+consecutive experiments with an empty new-friction column is worth being precise
+about, because at four it starts saying something about the instrument as well
+as about the substrate.
+
+- It is **not** that this application asked less. It used directed
+  role-addressed sends, direct sends to a `WeaveId` learned from a delivery,
+  office authorship on sends, an office **claim** read by two different readers
+  under two different grants, six separately built artifacts loaded at once,
+  `snapshot_bytes` → `parse` → `admit` on ten participants as its principal
+  witness, a tap, and two forged frames.
+- It is **not** that nothing was refused. Six kinds of thing are refused across
+  the three scenarios. Three are the domain's — a pressure reading from a
+  previous wear, a committal with no emergency crew standing by, and a "get out"
+  nobody authored as command. Three are Loom's, and two of the three had to be
+  forged.
+- It **is** that the author wrote no workaround for anything, and that the one
+  thing this phase might have put in this ledger — a Sense refusal it had never
+  provoked before — turned out to work exactly as its own documentation says it
+  should, which is a measurement rather than a complaint. It is in `EVIDENCE.md`.
+
+**Whose.** Nobody's. **Sightings.** Not applicable. **Blocked the experiment?**
+No.
+
+---
+
+## Sightings, from `entry-control` (ZNL-06)
+
+**F-04 — a native weave that holds an office cannot use `mount()`. SEVENTH
+independent consumer.** `entry-control` wrote the same local `mount_office`
+helper the other six each wrote, for the same reason, without consulting any of
+them — the seven experiments share no file. **Seven independent consumers now,
+thirty-seven uses** (7 + 5 + 2 + 8 + 8 + 3 + 4). Four uses here: the two entry
+control officers, BA main control and command. The six wearers do **not** need
+it, because they are loaded and `Kernel::load(name, path, role, grant)` has
+taken the role all along — the same split `saleroom` reported from the other
+direction, and it holds from a seventh angle.
+
+Per the ZNL-04/05/06 briefs this sighting is recorded and **does not raise
+urgency**. The helper was left local and was not hoisted. Nothing about the cost
+or the scope changed.
+
+**F-01 — a freshly loaded service has claimed nothing. NOT MET.** This entry has
+always been about one shape: *absence reads like a fact*. Five current-era Sense
+consumers have now met it in five ways (blocked once, cost-free once, closed by
+a domain roll-call once, no Sense surface at all twice) and `saleroom` met its
+mirror image — a claim that is present, valid and about a different question.
+
+`entry-control` met **neither**, and the reason is worth one line because it is
+the answer ZNL-05 asked for. The hazard `saleroom` named is *what is this claim
+about?*, and the honest fix it named is *put the identity in the value*. This
+domain supplies that identity for free and in two places at once: a `Board`
+carries the name of the point it belongs to, and a `Gauge` carries the wear
+number it was read during. A reading from a previous cylinder is refused by the
+board's own `if (g.wear != e->wear)` and never reaches the arithmetic. Nothing
+was worked around and nothing was missing.
+
+**F-02 — the sender cannot observe send fate. NOT MET, for the fourth time in
+seven, and for a fourth distinct reason.** `ringing-chamber` did not meet it
+because a publication returns a fanout count; `shutter-line` because the thing
+it wanted to know was end-to-end; `saleroom` because the acknowledgement is a
+broadcast the whole room hears. Here the reason is different again and sharper:
+**the application can prove the send arrived and still not know anything
+useful.**
+
+A pressure check that goes unanswered was delivered — Teague's own account
+records `checks_unanswered`, incremented inside the handler that received it.
+The officer's problem is not the fate of the send. It is that "delivered, and no
+reply" has three explanations (the radio failed, the wearer is working, the
+wearer is in difficulty) and no substrate could distinguish them, because the
+difference is in a building. The domain's answer is a clock and an emergency
+crew, and that is the procedure rather than a workaround for a missing seam.
+
+Four consumers, four different reasons, none of them the seam being fixed. No
+consumer count changes.
+
+**F-05 — `wsl.exe` argument handling. NOT MET, and deliberately so.** The known
+workaround was applied from the first command of the phase: every `wsl.exe`
+invocation was driven from PowerShell rather than Git Bash, and every multi-step
+operation lived in a script file with absolute paths. Recorded as an avoided
+hazard rather than an eighth sighting — a ledger entry that counted successful
+workarounds as evidence could only ever go up.
+
+**F-06, F-07, F-08, F-09, F-10 — no new evidence.** This application never
+touches prepared replacement, never commits an activation, and never answers a
+root delivery. **F-10 in particular remains at one sighting after seven
+applications.**
+
+---
+
+## Not friction, from `entry-control` (ZNL-06)
+
+**The consumer path produced none a seventh time.** The same five lines of
+CMake, the same `if(NOT TARGET loom::kernel)` gate, the same
+`loom_weave_build_contract` in a `foreach`. Seven independent consumers, seven
+unrelated domains, seven authors who did not read each other's build files.
+Still the most-replicated result the current-era laboratory has, and it has now
+stopped being interesting, which is the best thing that can be said about a
+package.
+
+**`allow_observe` denial, provoked for the first time in this era, and it
+behaves exactly as its own header says it should.** `Grant::allow_observe` has
+existed throughout and no current-era application had ever been refused by it:
+forty-odd narrow declarations, and the observe dimension entirely untouched.
+This application has a domain sentence that wants it — *the two entry control
+boards are the incident's two independent accounts, and neither officer can see
+the other's* — so an officer with a missing wearer reads the other board and is
+refused.
+
+Three things about it are worth recording as non-friction:
+
+```text
+the honest weave API can express the attack
+    mail.latest_from_office<Board>("entry-control.alpha") is an ordinary verb a
+    weave already has. No forging, no host door, no deliberately-malicious
+    participant. This is the first Zen edge in this era attacked entirely from
+    inside a participant's own vocabulary.
+
+NotAuthorized is distinguishable from NoClaim, and it mattered
+    Alpha's board is live and current at that instant -- BA main control reads
+    it in the same minute under a grant that permits it. So the refusal is
+    provably not "nobody has claimed anything". sense.hpp says the two are kept
+    apart precisely so a misconfigured grant cannot masquerade as absence, and
+    "the two send an operator to opposite places" is its own words. Measured.
+
+the refusal sent the officer to the right place
+    the handler's next line asks BA main control, which is where the question
+    actually belongs on a real fireground. The refusal was not an obstacle to
+    work around; it was information.
+```
+
+Recorded as non-friction because everything needed was public, nothing was
+awkward, and the mechanism did the thing it was documented to do.
+
+**A grant's observe rules are shape-scoped, and this application wanted exactly
+that.** `ObserveRule` carries no author or office selector, which is a
+deliberate narrowing `grant.hpp` names and defers. It cost nothing here and the
+reason is worth a line for whoever meets the other case: an entry control
+officer needs no observe rule for its **own** board — it is the claimant and
+holds the board in its own state — so "may observe `EmergencyCrew`, may not
+observe `Board`" is expressible without ever needing "may observe *this*
+claimant's `Board`". A domain that wanted one participant to read one of several
+claimants' claims of the same shape would need the narrowing; this one did not,
+and it did not have to work around its absence.
+
+**A consumable is the first thing in this era that runs out.** Six applications
+had clocks that counted. This one has air, and the entire application is
+arranged around the fact that a participant's supply of it is private, finite,
+and spent at a rate nobody outside can measure. Nothing in Loom had anything to
+say about that, which is correct — it is domain arithmetic — but it is worth
+recording that seven applications in, the substrate has still never been asked
+for a resource notion by a current-era consumer, and this was the one most
+likely to ask.
+
+**Single-threaded FIFO is load-bearing here in a way worth naming.** An
+officer's minute is delivered, its pressure checks reach the wearers, and every
+`Gauge` those cause is back before the incident says anything else. That is what
+makes "what the board knew at minute twelve" a fact rather than a race — and it
+is also why the board's own projection can be tested at all, since the
+projection is evaluated against a state that is never half-updated.
+
+**The board reading zero and everybody being out are two different facts, and
+that is the application rather than a substrate observation.** Recorded here
+only so a future reader does not mistake the primary control for a Loom finding.
+Loom carried the messages, attested who spoke as which office, and refused three
+things. It has no opinion about whether a tally is a person, and was not asked
+for one.

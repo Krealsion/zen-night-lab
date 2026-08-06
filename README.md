@@ -77,8 +77,9 @@ package. It stands beside the frozen areas and never touches them.
 
 See `current/README.md` for the house rules and `current/substrate.lock` for the Zen the first two
 experiments experienced — `current/records-committee/`, `current/ringing-chamber/`,
-`current/shutter-line/` and `current/saleroom/` each resolved a later Loom and carry their own
-locks. The running ledgers are `current/FRICTION.md` and `current/EVIDENCE.md`.
+`current/shutter-line/`, `current/saleroom/` and `current/entry-control/` each resolved a later
+Loom and carry their own locks. The running ledgers are `current/FRICTION.md` and
+`current/EVIDENCE.md`.
 
 | path | what it is |
 |---|---|
@@ -88,6 +89,7 @@ locks. The running ledgers are `current/FRICTION.md` and `current/EVIDENCE.md`.
 | `current/ringing-chamber/` | a practice night in a bell tower — six ringers who each know only their own line, and a touch whose truth nobody in the tower is in a position to see |
 | `current/shutter-line/` | the Admiralty shutter telegraph — six hilltops carrying a message none of them can read, and the two quite different ways a perfectly good order arrives wrong |
 | `current/saleroom/` | a country auction — four people whose figures nobody may see, a reserve and a commission bid left by two people who are not in the room, and two clean sales that are wrong |
+| `current/entry-control/` | a fireground breathing-apparatus board — six sets of lungs the board cannot inspect, a participant who stops answering, and two ways for a clean incident to leave somebody in a building |
 
 ## House rules every experiment holds itself to
 

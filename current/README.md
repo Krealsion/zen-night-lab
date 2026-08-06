@@ -53,6 +53,7 @@ appears, this has become a framework and should be split back apart.
 | `ringing-chamber/` | **ZNL-03** — six ringers who each know only their own line, and a touch whose truth nobody in the tower can see (**own `substrate.lock`**) |
 | `shutter-line/` | **ZNL-04** — the Admiralty telegraph over six hilltops, and a message nobody in between can read (**own `substrate.lock`**) |
 | `saleroom/` | **ZNL-05** — a country auction; four private figures nobody may see, and two clean sales that are wrong (**own `substrate.lock`**) |
+| `entry-control/` | **ZNL-06** — a fireground BA board; six sets of lungs it cannot inspect, somebody who stops answering, and two ways a clean incident leaves a person inside (**own `substrate.lock`**) |
 
 `substrate.lock` is a **record, never an input**. No build file reads it, and
 nothing parses it. It exists because an installed Loom cannot tell you which
@@ -68,10 +69,10 @@ the same toolchain, and measured the same installed ABI — so neither carries a
 lock of its own, and the era lock is not a shorthand for "whatever the first one
 used".
 
-**ZNL-02, ZNL-03, ZNL-04 and ZNL-05 each carry their own lock.** The era lock is
-not rewritten and must not be: an era lock that quietly absorbed a newer pin
-would make an earlier experiment's evidence claim a substrate it never ran on.
-The locks differ in exactly one field — `loom` — and agree on toolchain,
+**ZNL-02 through ZNL-06 each carry their own lock.** The era lock is not
+rewritten and must not be: an era lock that quietly absorbed a newer pin would
+make an earlier experiment's evidence claim a substrate it never ran on. The
+locks differ in exactly one field — `loom` — and agree on toolchain,
 configuration and measured ABI, which is itself the reason the ABI cannot stand
 in for the commit: four different Looms measured the same compatibility class.
 
@@ -81,13 +82,14 @@ current/records-committee/substrate.lock    d0d8257    ZNL-02
 current/ringing-chamber/substrate.lock      b084b1c9   ZNL-03
 current/shutter-line/substrate.lock         55fbb15f   ZNL-04
 current/saleroom/substrate.lock             55fbb15f   ZNL-05
+current/entry-control/substrate.lock        55fbb15f   ZNL-06
 ```
 
-The last two are the same pin, and ZNL-05 still writes its own lock rather than
-leaning on ZNL-04's. Absence means *the era lock applies*, and the era lock is
-`c86717b0` — so a `saleroom` with no lock would inherit the wrong Loom by this
-page's own rule. A lock records what an experiment ran on; it is not a pointer
-to somebody else's.
+The last three are the same pin, and each of the three still writes its own lock
+rather than leaning on the one before it. Absence means *the era lock applies*,
+and the era lock is `c86717b0` — so any of them with no lock would inherit the
+wrong Loom by this page's own rule. A lock records what an experiment ran on; it
+is not a pointer to somebody else's.
 
 ## Getting a substrate to run against
 
