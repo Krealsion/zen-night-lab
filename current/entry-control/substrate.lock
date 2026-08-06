@@ -11,10 +11,18 @@ loom-config   -DCMAKE_BUILD_TYPE=Debug -DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLE
 created       2026-08-06
 
 # loom     resolved once from remote refs/heads/main at the start of ZNL-06 by
-#          two independent paths that agreed — Windows git over HTTPS and WSL
-#          git over SSH — and then held. A fresh clone was detached at this
-#          exact SHA in scratch outside the workspace; the live Loom checkout
-#          was never a build input, never built, never reset, never switched.
+#          two independent paths that agreed — Windows git and WSL git, two
+#          different binaries on two different operating systems, both over
+#          HTTPS — and then held. A fresh clone was detached at this exact SHA
+#          in scratch outside the workspace; the live Loom checkout was never a
+#          build input, never built, never reset, never switched.
+#
+#          REMOTE main MOVED DURING THIS PHASE, to
+#          efc3f0ed3e66bdc54dc2389cc92846cd463d7ad8, and the live local Loom
+#          checkout moved with it. That is legitimate concurrent work and it
+#          changes nothing here: the pin above is the Loom this experiment
+#          actually ran on, and following main after resolving it would make
+#          every measurement below a claim about a substrate nobody built.
 #
 #          This is the SAME pin ZNL-04 (`shutter-line`) and ZNL-05 (`saleroom`)
 #          recorded, and this experiment still writes its own lock rather than
