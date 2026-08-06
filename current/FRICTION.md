@@ -488,16 +488,19 @@ What that is and is not:
 
 - It is **not** that this application asked less of the substrate. It used
   publications, office authorship on both a publication and a claim, answers with
-  correlation, a Sense read across six offices, a loaded artifact swapped for a
-  second one mid-evening, and a forged host-root send — and every one of them
-  behaved as documented on the first attempt.
-- It is **not** that nothing was refused. Six kinds of thing were refused during
-  the evening. Five of them are the **domain's** refusals: a ringer deciding a
+  correlation, a Sense read across six offices, a loaded artifact unloaded and
+  replaced by a different one mid-evening, host-root publications, and
+  `send_as` — and every one of them behaved as documented on the first attempt.
+- It is **not** that nothing was refused. Six kinds of thing are refused across
+  the four scenarios, and five of them are the **domain's**: a ringer deciding a
   voice was not the conductor's, a ringer deciding a line answered no question it
   asked, a listener deciding a noise was not a bell, the conductor deciding a
-  bell was not up, and the pricker deciding a row had already been rung. In every
-  one of those the substrate delivered the message and the **recipient**
-  discriminated, which is the shape ZNL-00's C-06 and ZNL-01's C-16 both found.
+  bell was not up, and the conductor deciding that two bells in the same place
+  was not a row. In every one of those the substrate delivered the message and
+  the **recipient** discriminated, which is the shape ZNL-00's C-06 and ZNL-01's
+  C-16 both found. (A sixth domain refusal — "I cannot get there from here", a
+  bell asked to move more than one place in a blow — is written and never fires,
+  because neither method asks anybody to.)
 - It **is** that the only thing Loom itself refused all evening had to be
   deliberately forged (§ *notable non-friction* below), and that the author wrote
   no workaround for anything.
