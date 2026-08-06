@@ -48,6 +48,7 @@ appears, this has become a framework and should be split back apart.
 | `FRICTION.md` | the running friction ledger, in the order things happened |
 | `EVIDENCE.md` | the running claim/witness ledger, with the non-claims |
 | `signal-box/` | **ZNL-00** — a miniature railway interlocking |
+| `prompt-corner/` | **ZNL-01** — one act of a play, called live, with the DSM replaced halfway through |
 
 `substrate.lock` is a **record, never an input**. No build file reads it, and
 nothing parses it. It exists because an installed Loom cannot tell you which
@@ -57,7 +58,11 @@ The ABI version is carried and enforced, but that is a compatibility class, not
 an identity.
 
 An experiment may carry its own `substrate.lock` if it pins differently.
-Absence means the era's lock applies.
+Absence means the era's lock applies. Both experiments here resolved the same
+remote `main` at the start of their own phase, built it with the same flags on
+the same toolchain, and measured the same installed ABI — so neither carries a
+lock of its own, and the era lock is not a shorthand for "whatever the first one
+used".
 
 ## Getting a substrate to run against
 

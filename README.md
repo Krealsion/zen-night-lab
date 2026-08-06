@@ -81,6 +81,7 @@ current era experienced. The running ledgers are `current/FRICTION.md` and `curr
 | path | what it is |
 |---|---|
 | `current/signal-box/` | a miniature railway interlocking — routes, occupancy, an independent safety monitor, and equipment that can be taken out of service |
+| `current/prompt-corner/` | one act of a play, called live from the prompt book, with the Deputy Stage Manager replaced halfway through while the act keeps running |
 
 ## House rules every experiment holds itself to
 
