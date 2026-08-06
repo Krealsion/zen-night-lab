@@ -775,3 +775,169 @@ domain message that tells them to learn, and the method weave holds no state
 worth keeping. Recorded as a non-finding because `signal-box` used unload/load
 for a *replacement of the same equipment* and this is the other case — a
 different thing entirely, in the same office, with no continuity wanted at all.
+
+---
+
+## `shutter-line` opened no new entry either — twice in a row now
+
+**Experiment:** `shutter-line`
+
+The fifth current-era application found nothing new to complain about. Two
+consecutive experiments with an empty new-friction column is a different fact
+from one, so it is worth saying what it is and is not.
+
+- It is **not** that this application asked less of the substrate. It used
+  role-addressed directed sends, office authorship on sends and on claims, a
+  Sense read across six offices, answers with correlation across the dynamic
+  seam, **the same artifact loaded twice concurrently into two different
+  offices**, both of those unloaded and replaced mid-run, `snapshot_bytes` →
+  `parse` → `admit` as its principal witness, a tap, and two forged host frames.
+- It is **not** that nothing was refused. Six kinds of thing are refused across
+  the four scenarios and four of them are the **domain's**: a station deciding a
+  frame was not its neighbour's, a station deciding it could not see, a book
+  deciding a word is not in it, and an office deciding a message was written
+  with a different edition. Two are Loom's, and both had to be forged.
+- It **is** that the author wrote no workaround for anything, and that the one
+  thing this phase nearly put in this ledger turned out to be false when the
+  pinned source was read (see the non-friction note below).
+
+**Whose.** Nobody's. **Sightings.** Not applicable. **Blocked the experiment?**
+No.
+
+---
+
+## Sightings, from `shutter-line` (ZNL-04)
+
+**F-04 — a native weave that holds an office cannot use `mount()`. FIFTH
+independent consumer.** `shutter-line` wrote the same local `mount_office`
+helper the other four each wrote, for the same reason, without consulting any of
+them — the five experiments share no file. **Five independent consumers now,
+thirty uses** (7 + 5 + 2 + 8 + 8). The reason is the same one `ringing-chamber`
+gave: everything on a telegraph line is a job rather than a person, so every
+native participant here holds an office — six hills and two signal offices.
+ZNL-02's narrowing holds from a fifth angle: this application *also* uses
+`Kernel::load(name, path, role, grant)`, twice, and that door has taken the role
+all along. The gap is the **native** mount helpers and only those.
+
+Per ZNL-04's brief this fifth sighting is recorded and **does not raise
+urgency**. It is a four-line ergonomic gap that is now very well characterised;
+the helper was left local and was not hoisted.
+
+**F-02 — the sender cannot observe send fate. NOT MET, for the second time in
+five.** A hoist is *shown*, and either the next hill repeats it or it does not.
+Nothing on this line expects an answer from the direction it sent, so there is
+no fate a participant would want a ticket for. What the domain wants instead is
+end-to-end: Portsmouth repeats the whole message back up the line and London
+compares it against its own file — which is a domain procedure that exists in
+real signalling for its own reasons, not a workaround for a seam.
+
+Worth one precise line, because it sharpens ZNL-03's narrowing rather than
+repeating it: `ringing-chamber` did not meet F-02 because **publication returns
+a fanout count**. This application does not meet it for a completely different
+reason — it uses directed `send_to_role` throughout, gets back a `Ticket` only
+the host can resolve, and *never looks at one*, because the thing it wants to
+know is not "did this hop arrive" but "did the whole message arrive intact",
+and no per-send fact could answer that. **Two consumers, two different reasons,
+neither of them the seam being fixed.** No consumer count changes.
+
+**F-01 — a freshly claimed office. NO SIGHTING, and the reason is worth one
+line.** This is the third current-era application with a Sense surface, and the
+`NoClaim` window structurally exists here: the Admiralty reads all six hills'
+`Visibility` claims before it sends, and a hill that had not yet reported would
+read `NoClaim` exactly as `signal-box`'s panel did. It never happens, because
+the domain already had a commissioning step for its own reasons — *the line
+opens at daybreak and every station reports what it can see* — and that is one
+of the first things that happens in every scenario. The branch that would print
+`the line is not proved at <hill> (NoClaim)` is written and never fires.
+
+That is a **third distinct shape** for this entry, and it should not be added to
+the other two: one consumer needed the distinction and worked around it in one
+edit; one met the same reading and did not need it; one has a Sense surface
+where the window exists and the domain's own opening procedure closes it before
+anybody reads. Two consumers have no Senses at all.
+
+**F-05 — `wsl.exe` argument handling. SIXTH sighting, in a new form.** A
+`for flag in ...; do ... "$flag"` loop written inside a
+`wsl.exe -d Ubuntu-22.04 -- bash -c "..."` invocation ran three times with the
+loop variable expanded to **nothing**, so three different scenarios silently ran
+the default one and all three printed identical output. This is the same hazard
+ZNL-00 first recorded and ZNL-03 corrected the workaround for, and it is worth
+recording again only because of the failure mode: it did not error, it produced
+plausible, green, wrong output. The workaround is unchanged and it works —
+write every multi-step operation to a script *file* with absolute paths and run
+it as `wsl.exe -d <distro> -- bash <absolute-path>`. Not Zen's.
+
+**F-06, F-07, F-08, F-09, F-10 — no new evidence.** This application never
+touches prepared replacement, never commits an activation, and never answers a
+root delivery. **F-10 in particular remains at one sighting** after five
+applications.
+
+---
+
+## Not friction, from `shutter-line` (ZNL-04)
+
+**The consumer path produced none a fifth time.** The same five lines of CMake,
+the same `if(NOT TARGET loom::kernel)` gate, the same `loom_weave_build_contract`
+in a `foreach`. Five independent consumers, five unrelated domains, five authors
+who did not read each other's build files. This remains the most-replicated
+result the current-era laboratory has.
+
+**The host-side forging surface is complete, and that is what makes the standing
+hostile-frame habit cheap.** A near-miss is recorded here on purpose. This phase
+drafted a friction entry saying *"a host can forge a sender with `send_as`, but
+there is no public host verb that forges office authorship, so a forged frame
+can attack a grant and cannot attack an `authored_from_role` check."* Reading
+the pinned header before writing it down showed it is **false**:
+`office_send_as`, `office_send_to_role_as` and `office_publish_as` are all
+public host verbs, and they are the *verified* doors — the sender is stamped
+from the caller's own authority and the office membership is checked at the
+authorship moment.
+
+Which is better than the draft claim in every direction. It meant this
+application could forge the *strongest* available version of the attack on the
+boundary it cares about — Coombe Warren speaking as `station.3`, an office it
+genuinely holds, so the receiving domain rule would have been satisfied and the
+grant was the only thing left — and, with one more line, the other edge:
+claiming to be `station.5`, which is refused at authorship with nothing queued.
+
+```text
+CapabilityDenied on Frame        the grant: you may not reach past your neighbours
+RoleAuthorshipDenied on Frame    the office: you may not be a different hill
+```
+
+Recorded as non-friction because nothing was missing and nothing was awkward;
+recorded at all because the shape of what a forged frame can reach is exactly
+what the new standing habit needs to know, and because the ledger's own rule —
+*do not promote unchecked assumptions; verify first* — was what caught it.
+
+**The same artifact loaded twice, concurrently, into two different offices.**
+`records-committee` loaded five different artifacts at once and never unloaded
+one; `ringing-chamber` loaded two different artifacts one after the other into
+one office. This application loads **one** artifact twice under two names into
+`book.admiralty` and `book.portsmouth` at the same time, then unloads both and
+loads a different artifact into the same two offices, and in one scenario
+replaces only one of the two. Nothing needed saying about any of it: the two
+instances are two weaves with two states and two narrow grants, and the fact
+that they came out of the same `.so` is not a fact anything in the application
+had to know. Recorded because "two copies of the same published book on two
+different desks" is the whole domain, and the substrate expressed it without
+being asked to.
+
+**`snapshot_bytes` → `parse` → `admit` was the principal witness this time, not
+a third opinion.** `records-committee` used it as its third account and recorded
+that "you cannot see inside a loaded weave" is an easy and wrong thing to
+believe. Here it is the **only** way the day's central question gets answered:
+where a number changed hands is a fact that lives in six journals and in no
+office, and the tower reads all six back through the ordinary gate rather than
+keeping pointers. Second independent consumer of that path, and the first to
+depend on it.
+
+**Single-threaded FIFO is load-bearing here in a specific new way.** The
+message crawls one hill per minute because the day publishes `Minute` to
+everyone and every one of those deliveries is ahead in the queue of any `Frame`
+it causes — so each hill forwards what it held at the *start* of the minute, and
+the wave advances exactly one hop. The application asserts that no hill was ever
+asked to show two frames at once (`hands clashed 0`), which is the domain's own
+statement of the same thing: a line carries one message at a time. Recorded
+because it is an application depending on the ordering guarantee deliberately
+and saying so, rather than inheriting it by accident.

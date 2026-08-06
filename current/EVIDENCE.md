@@ -855,11 +855,280 @@ looking anything up.
 
 ---
 
+---
+
+---
+
+# ZNL-04 — `shutter-line`
+
+**This experiment ran on a fourth Loom** — see `shutter-line/substrate.lock`.
+Everything from C-33 down is evidence about
+`55fbb15fda5f8994137dc2d6e3b1c914753f3ec7`, not about the era lock's
+`c86717b0`, not about ZNL-02's `d0d8257`, and not about ZNL-03's `b084b1c9`.
+None of the four sets transfers to the others. The toolchain, configuration and
+measured ABI are identical across all four; the commit is not, which is the
+standing reason the ABI cannot stand in for it.
+
+---
+
+## C-33 — A fifth unrelated application consumes the same installed package unchanged, and loads the same artifact twice, concurrently, into two different offices
+
+**WITNESS.** `shutter-line`: eight native weaves and **one `.so` loaded twice
+under two names into `book.admiralty` and `book.portsmouth` at the same time**,
+then both unloaded and a different artifact loaded into the same two offices
+mid-run — across four CTest entries, `4/4 Test ... Passed`. Its entire
+Zen-facing build declaration is `find_package(loom REQUIRED)`, an
+`if(NOT TARGET loom::kernel)` gate, three imported targets, and
+`loom_weave_build_contract(...)` in a `foreach`. It was written without reading
+any earlier experiment's `CMakeLists.txt` and shares no file with them. Zero
+warnings and zero errors on a fresh configure and build.
+
+In `control-half-the-line` **only one of the two is replaced**, and the two
+instances then hold different editions — which is the whole subject of that
+scenario.
+
+**DOES NOT PROVE.** Anything Loom's own suite proves; the verifier was not run.
+Anything about a Loom other than the one in `shutter-line/substrate.lock`.
+Nothing about a third simultaneous instance of the same artifact, and nothing
+about unloading one instance while the other is mid-conversation — the day
+always changes a book between messages, because that is when a real office
+would.
+
+---
+
+## C-34 — The build contract is load-bearing here for the same reason again, on a fourth Loom
+
+**WITNESS.** Artifact-level, with a negative control. Both editions compile the
+same `line.hpp` and `codebook.hpp`:
+
+```text
+with the contract        vocabulary-1805.so       0
+                         vocabulary-1806.so       0
+without it (hand-built)  no-contract-1805.so     51
+                         no-contract-1806.so     51
+symbols made STB_GNU_UNIQUE by BOTH               51   <- the intersection is TOTAL
+  e.g. guard variable for loom::manifest_schema()::s
+       guard variable for loom::field_desc_schema()::s
+       guard variable for loom::type_token_schema()::s
+```
+
+The `0`s were reproduced on the artifacts rebuilt after Loom's source and build
+trees were deleted.
+
+**DOES NOT PROVE.** Anything C-19 and C-26 did not already establish about the
+mechanism — this is a third sighting of the same fact on a third different Loom,
+worth one line and not more. It was not run to failure here either: the hazard
+needs one image's statics destroyed while another still reads them, and although
+this application *does* unload both books mid-run, it unloads them together and
+loads the replacements after.
+
+---
+
+## C-35 — A message crossed fourteen pairs of hands and arrived as it was sent, and the end-to-end repeat is what makes that a measurement
+
+**WITNESS.** `the-line-is-open`. Message 1 is coded into eight hoists at
+Whitehall; each hoist crosses seven hops down the line, is repeated back over
+seven hops, and only then is written out. A squall crosses Netley Heath for one
+minute and one shutter is read wrong. The repeat comes back different, London
+names the hoist, and the message goes again:
+
+```text
+    13  NETLEY   read .#.#.# (21) through the squall; it was .#.### (23)
+    31  ADM      the repeat DOES NOT agree at hoist 7: sent .#.###, back .#.#.#
+    60  ADM      the repeat agrees -- CORRECT
+    67  PMH      delivered to the Port Admiral: "FRENCH FLEET AT SEA SAIL"
+
+    repeats called for       1
+```
+
+The `1` is the load-bearing number. "The message arrived as sent" with **zero**
+repeats called for would be the reading of a line that never made a mistake and
+of a check that never worked, and those are not the same thing.
+
+**DOES NOT PROVE.** That the repeat catches every corruption. It catches a
+difference between the numbers London sent and the numbers Portsmouth reports
+receiving; a station that corrupted the message *and* corrupted the repeat back
+in the matching way would pass, and was not tried. C-37 is the case it
+structurally cannot catch at all.
+
+---
+
+## C-36 — The same day, the same squall, one operational decision different, and the wrong order is delivered with every mechanical measure green
+
+**WITNESS.** `control-in-a-hurry` changes exactly one thing: the message is
+marked *no repeat required*, which is a real operational choice carried on the
+line as its own signal and visible in every journal. Everything else — the
+weather, the hill, the minute, the artifacts — is the same.
+
+```text
+  could not read           0
+  not my neighbour         0 (hills) + 0 (Portsmouth)
+  repeats called for       0        <- none was asked for
+  bus refusals seen        0
+  no hill was ever asked to show two frames at once
+
+  sent      FRENCH FLEET AT SEA SAIL
+  delivered FRENCH FLEET AT SEA ANCHOR
+```
+
+The message is complete, it passed through every hand, nothing anywhere refused
+anything, and the fleet has been told to do the opposite of what London ordered.
+The scenario **asserts that this goes wrong** and exits non-zero if the run
+fails to notice, which is what makes "both messages reached the Port Admiral
+exactly as sent" in `the-line-is-open` a measurement rather than a constant.
+
+**DOES NOT PROVE.** That the application detects every corruption. It detects
+one shutter read wrong on one hill, which is what the domain means by a misread.
+A hill that dropped a hoist entirely would shorten the message and be caught by
+the length; a hill that invented one was not tried.
+
+---
+
+## C-37 — Two offices holding different editions produce a message whose numbers agree perfectly end to end and whose words are different, and the repeat structurally cannot see it
+
+**WITNESS.** `control-half-the-line`. Portsmouth alone takes the 1806
+vocabulary. The same five words go down the line twice.
+
+```text
+  with the vocabulary signal
+      NOT WRITTEN OUT -- written with vocabulary 1; this office holds vocabulary 2
+
+  in the old form, without it
+      sent      FRENCH FLEET AT SEA SAIL
+      delivered SPANISH SQUADRON OFF USHANT RETURN
+
+  and
+      the repeat AGREED -- every number was right from end to end
+      every journal on the line holds the same numbers -- there is nothing to find
+      bus refusals seen 0 | could not read 0 | not my neighbour 0
+```
+
+Those two English sentences are the same five numbers. This is the sharpest
+thing in the application: C-35's check is real and works, and **it is structurally
+blind here** — it compares numbers, and no number is wrong. The only thing
+standing between the two readings is one hoist near the front of the message
+saying which book it was written with, and the scenario proves both halves: that
+the signal refuses, and that without it a well-formed, correctly-spelled,
+completely different order is written out and delivered.
+
+**DOES NOT PROVE.** That the vocabulary signal is sufficient in general. It
+protects a message that carries one; a message written with an edition the
+sending office itself has wrong would announce the wrong number and be accepted.
+Nor anything about Loom: Loom carried the same numbers correctly in every case,
+was not asked about editions, and has no opinion about them. The two books are
+two ordinary weaves with two ordinary states.
+
+---
+
+## C-38 — Six independent journals locate the hill where a number changed hands, which neither office could compute
+
+**WITNESS.** Each hill writes down what it *read*, not what it was shown. At the
+end of the day the tower asks the bus for each hill's `snapshot_bytes` and puts
+them through the **ordinary gate** — `loom::parse` to an `Unverified`, then
+`loom::admit` against the `StationState` schema this side compiled — and lays
+the six side by side:
+
+```text
+    message 1, down the line
+      CHELSEA     1 9 17 18 20 22 23 4 ...
+      PUTNEY      1 9 17 18 20 22 23 4 ...
+      COOMBE      1 9 17 18 20 22 23 4 ...
+      NETLEY      1 9 17 18 20 22 21 4 ...
+      HASCOMBE    1 9 17 18 20 22 21 4 ...
+      BLACKDOWN   1 9 17 18 20 22 21 4 ...
+```
+
+The change is between Coombe Warren and Netley Heath. **No participant holds
+this fact.** The Admiralty knows only what it sent; Portsmouth knows only what
+it received; each hill knows only its own line of it. Three accounts that share
+no counter agree on the traffic that produced it: 344 frames on the host's tap,
+294 lines across the six journals (the difference is the eight hops into the two
+offices per hoist-run, which are not hills and keep no journal), and the two
+offices' own files.
+
+**DOES NOT PROVE.** That a journal is trustworthy — it is the hill's own account
+of itself, which is exactly why there are six of them and why the tap counts
+independently. A hill that wrote down something other than what it repeated
+would be invisible to this method, and was not tried. Nor does it prove anything
+about Loom beyond what C-24 already established: `snapshot_bytes` → `parse` →
+`admit` is a fully exported path and it works on native weaves as well as loaded
+ones.
+
+---
+
+## C-39 — A narrow per-participant grant is enforced at exactly the edge the application depends on, attacked with a *verified office-authored* frame
+
+**WITNESS.** Two labelled controls, forged with public host verbs, in the
+default run.
+
+```text
+Coombe Warren, speaking as station.3 -- an office it GENUINELY HOLDS -- hands
+its frame straight to portsmouth, over the heads of the other four hills:
+    bus.office_send_to_role_as(coombe, "station.3", "portsmouth", Frame{...})
+        -> CapabilityDenied on Frame
+        -> Portsmouth's own "not my neighbour" counter stays at 0
+
+Coombe Warren shows Netley Heath a frame claiming to be station.5 -- a
+destination its grant DOES permit:
+    bus.office_send_to_role_as(coombe, "station.5", "station.4", Frame{...})
+        -> RoleAuthorshipDenied on Frame, nothing queued
+```
+
+The first is the strong form. Because the authorship succeeds, the receiving
+office's own rule (`authored_from_role("station.6")`) would have been reached
+and satisfied by an ordinary-looking frame; the grant is the **only** thing that
+refused, and Portsmouth's counter proves it never saw the delivery. Every hill's
+grant is different (its own two neighbours) and the permitted path is exercised
+344 times in the same run.
+
+A third control, a stranger on Putney Heath setting up a frame of their own
+(host root, personal speech), is refused by the **domain** instead — Coombe
+Warren counts it and does not repeat it.
+
+**DOES NOT PROVE.** That the other nine grants in this application are enforced
+at their edges. Two edges of one participant's grant were attacked. The five
+other hills, the two offices and the two books were never denied anything, so
+their narrowness still rests on a composed path that worked plus the source read
+beside it — ZNL-01's C-17 gap, now with four measured denials behind it instead
+of two. Nor does it prove that a *hostile weave* could not reach further: these
+frames were forged by the host, which holds root authority by construction.
+
+---
+
+## C-40 — An office names the break in the line before it sends, from the hills' own claims, without asking anybody anything
+
+**WITNESS.** `control-fog-on-the-down`. Hascombe cannot see Netley Heath. At the
+moment the message is handed to the Admiralty — before a single hoist goes up —
+it reads all six hills' `Visibility` claims with
+`latest_from_office<Visibility>(role)` and prints:
+
+```text
+     3  ADM      the line is interrupted at HASCOMBE
+```
+
+Nothing was sent to obtain that, nothing was queued, and no hill cooperated. The
+message goes up anyway, reaches Netley Heath, and stops:
+
+```text
+   could not read 8            (Hascombe, once per hoist)
+   journals: CHELSEA..NETLEY hold the eight hoists; HASCOMBE and BLACKDOWN hold none
+   nothing reached Portsmouth
+    32  ADM      no repeat from Portsmouth -- the line is interrupted
+```
+
+**DOES NOT PROVE.** That a Sense detects a station which still claims clear
+weather and has stopped working — it cannot, and this is not a defect: a claim
+is a latest observation, never a heartbeat. Nor anything about the `NoClaim`
+window: the domain opens the line by having every hill report before anybody
+reads, so the reading is never absent in any scenario here.
+
+---
+
 ## What this era has NOT established
 
 - Nothing about **Zengine**. No experiment here has consumed it, hand-vendored
   it, or needed it. The five-sighting P-003 boundary from ZNL-R is unchanged and
-  uncounted by this era after four experiments.
+  uncounted by this era after **five** experiments.
 - Nothing about the **four historical areas**, which have not been built, run or
   read by any current-era experiment.
 - Nothing about **Loom's own verification**. Its official oracle was not run
@@ -868,8 +1137,20 @@ looking anything up.
 - Nothing about **out-of-process isolation**, which is not part of the exported
   surface and which neither experiment has been able to reach.
 - After ZNL-01, still nothing about **reload**, **revival**, the **bequest
-  letter**, **graceful swap**, **relays** or **pokes**. Four applications have
-  now not wanted any of them.
+  letter**, **graceful swap**, **relays** or **pokes**. **Five** applications
+  have now not wanted any of them.
+  - **And nothing about a participant that FAILS.** All five current-era
+    applications have run to completion with every important participant alive
+    throughout. Nobody has died, nobody has become unexpectedly unavailable, no
+    replacement has followed an actual failure rather than a planned handover,
+    and `revive`, `reload_from` and the lifecycle policy have never been touched
+    by this era at all. ZNL-04 looked for a domain that might want it and did not
+    find one it wanted for its own sake: `shutter-line`'s nearest thing is a
+    station that cannot see through fog, and a station that cannot see is not a
+    station that has died — the line's answer is to wait for the weather. This
+    is recorded as an unexplored half of the substrate, **not** as a coverage
+    target: four of the five domains were chosen before any Loom mechanism was
+    considered, and none of them reached for it.
   - **Publications leave this list at ZNL-03.** `ringing-chamber` wanted them
     immediately and for the plainest possible reason — a bell is heard by
     everybody in the room and is addressed to nobody — and used
@@ -898,10 +1179,19 @@ looking anything up.
   judged in milliseconds — and it contains no time at all: a row is an order, not
   a set of instants. Nothing here is evidence about scheduling, latency,
   concurrency, or a real clock.
-- Nothing about **enforcement of a grant that was never attacked**. Across four
-  applications, exactly two runtime grant refusals have been measured: ZNL-01's
-  `CapabilityDenied on BriefTheRelief` (found by accident, on the first run) and
-  ZNL-03's forged `CapabilityDenied on Call` (deliberate, one line). Every other
-  narrow grant in this era rests on a composed path that worked plus the source
-  read beside it. That is ZNL-01's C-17 non-claim, still open, and now the
-  era-level shape of it.
+- Nothing about **enforcement of a grant that was never attacked**. Across five
+  applications, exactly **four** runtime authority refusals have been measured:
+  ZNL-01's `CapabilityDenied on BriefTheRelief` (found by accident, on the first
+  run), ZNL-03's forged `CapabilityDenied on Call`, and ZNL-04's forged
+  `CapabilityDenied on Frame` and `RoleAuthorshipDenied on Frame`. Every other
+  narrow grant in this era — roughly forty declarations now — rests on a composed
+  path that worked plus the source read beside it. That is ZNL-01's C-17
+  non-claim, still open, and now the era-level shape of it.
+  - What has changed since ZNL-03 is only the **cost**: the host-side forging
+    surface is complete (`send_as`, `send_as_to_role`, `publish_as`,
+    `office_send_as`, `office_send_to_role_as`, `office_publish_as`, `claim_as`,
+    `office_claim_as`), so an experiment can put on the wire any frame a
+    participant could have produced, including a verified office-authored one.
+    ZNL-04 spent two lines and got two different refusal reasons at two
+    different edges. That is a fact about how cheap the habit is, and not
+    evidence that any grant not attacked is enforced.
