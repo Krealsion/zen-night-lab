@@ -414,8 +414,8 @@ int main(int argc, char** argv) {
         if (at == kForgeAt) {
             // A LABELLED CONTROL, and the sharpest one available: LX 5 is
             // genuinely standing by and its GO is genuinely coming. The only
-            // thing between this message and a lighting state landing four
-            // pages early is that the house is not the person calling the show.
+            // thing between this message and a lighting state landing three
+            // beats early is that the house is not the person calling the show.
             line("CONTROL", "a Go for LX 5, spoken by the house and not the corner", at);
             bus.send(lx_id, loom::Message(loom::to_value(Go{"LX 5", "the salt house", at})));
         }

@@ -347,7 +347,7 @@ different person is calling.
 
 **WITNESS.** A labelled control at beat 13 sends `LX 5 GO` to the lighting board
 **from the house**, personally, not authored as the `caller` office. LX 5 is
-genuinely standing by at that moment and its real GO is four beats away, so the
+genuinely standing by at that moment and its real GO is three beats away, so the
 department's own standby rule would have let it through and the lighting state
 would have landed early. The only thing between the message and the stage is
 `mail.authored_from_role("caller")`:
