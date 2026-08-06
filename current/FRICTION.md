@@ -941,3 +941,229 @@ asked to show two frames at once (`hands clashed 0`), which is the domain's own
 statement of the same thing: a line carries one message at a time. Recorded
 because it is an application depending on the ordering guarantee deliberately
 and saying so, rather than inheriting it by accident.
+
+---
+
+## `saleroom` opened no new entry either — three in a row now
+
+**Experiment:** `saleroom`
+
+The sixth current-era application found nothing new to complain about. Three
+consecutive experiments with an empty new-friction column is a different fact
+again from two, so it is worth saying what it is and is not.
+
+- It is **not** that this application asked less of the substrate. It used
+  directed role-addressed sends, office authorship on sends and on
+  publications, an office **claim** read across the lot list, four separately
+  built artifacts loaded at once from four different sources, one of them
+  unloaded mid-sale while the other three kept working, `snapshot_bytes` →
+  `parse` → `admit` on six participants as its principal witness, a tap, two
+  forged frames and one forged claim.
+- It is **not** that nothing was refused. Six kinds of thing are refused across
+  the three scenarios and three of them are the **rostrum's**: a bid for a lot
+  that has gone, a bid from somebody with no paddle, and a lot with no
+  instructions it can trust. Three are Loom's, and all three had to be forged.
+- It **is** that the author wrote no workaround for anything, and that the two
+  things this phase nearly put in this ledger were both resolved by measurement
+  instead (see the non-friction notes below).
+
+**Whose.** Nobody's. **Sightings.** Not applicable. **Blocked the experiment?**
+No.
+
+---
+
+## Sightings, from `saleroom` (ZNL-05)
+
+**F-04 — a native weave that holds an office cannot use `mount()`. SIXTH
+independent consumer.** `saleroom` wrote the same local `mount_office` helper the
+other five each wrote, for the same reason, without consulting any of them — the
+six experiments share no file. **Six independent consumers now, thirty-three
+uses** (7 + 5 + 2 + 8 + 8 + 3). Only three uses here, and that is itself the
+smallest count of the six: most of the participants in this application are
+*people* rather than jobs, so the four bidders go in through
+`Kernel::load(name, path, role, grant)` — the door that has taken the role all
+along — and only the rostrum, the clerk and the front office are native
+office-holders. ZNL-02's narrowing therefore holds from a sixth angle and from
+the *other* direction: this is the first experiment where the majority of
+role-holders did **not** need the helper.
+
+Per ZNL-04's and ZNL-05's briefs this sighting is recorded and **does not raise
+urgency**. The helper was left local and was not hoisted.
+
+**F-01 — a freshly loaded service has claimed nothing. NOT MET, and the mirror
+image was met instead.** This entry has always been about one shape: *absence
+reads like a fact*. A `NoClaim` a reader cannot tell from a real answer. Four
+current-era Sense consumers have now met it in four different ways (blocked
+once, cost-free once, closed by a domain roll-call once, and no Sense surface at
+all twice).
+
+`saleroom` met **the opposite**, and it is worth recording precisely because it
+is not a sighting of this entry and should not be counted as one.
+
+The front office claims `Reserve{lot, amount, unreserved}` under its own office
+as each lot comes up. When it is asked for a sheet it has not got it says so and
+**leaves the board as it stands**, which is honest and is what a real office
+would do. So nothing here is ever absent: the branch that would read
+`nothing on the board (NoClaim)` is written and never taken in any scenario.
+What the rostrum meets instead is a claim that is **present, valid, honestly
+stamped, and about a different question** — the previous lot's sheet.
+
+That is strictly harder to notice than absence, because every guard the reading
+carries says it is fine, and it *is* fine:
+
+```text
+refusal                        None
+by.office                      "front-office"
+by.office_holder_is_current    true
+by.author_life_is_current      true
+by.revision                    monotonic, and it did advance for the last lot
+value                          a perfectly well-formed Reserve
+```
+
+**Whose. Nobody's, and this is deliberately not a nomination.** A Sense is
+documented as one latest observation under a key, the key is (office, shape),
+and putting the lot number *in the value* and checking it is exactly the right
+answer — which this application does, in one line, and which is where the
+default run's `lot 15 is not offered` comes from. Nothing is missing from
+`SenseReading`. `by.revision` would even have caught this particular case, but
+only by accident: it answers "has this changed", not "what is this about", and
+two consecutive lots carrying the same reserve would still advance it.
+
+Recorded here as **the second shape this ledger has seen a Sense reading fail
+in, and the first that is not about absence** — and as the reason this
+application's primary false green exists at all.
+
+**F-02 — the sender cannot observe send fate. NOT MET, for the third time in
+six, and for a third distinct reason.** `ringing-chamber` did not meet it
+because a publication returns a fanout count. `shutter-line` did not meet it
+because the thing it wanted to know was end-to-end rather than per-hop. Here the
+reason is different again and simpler: **the acknowledgement is a broadcast the
+whole room hears.** A bidder puts a hand up and the answer is the auctioneer
+saying "ninety-five, paddle three" out loud, to everybody, one beat later. The
+domain's own confirmation channel is louder and more useful than any per-send
+fact could be — it tells every *other* bidder as well, which is the thing the
+sender actually needs.
+
+Three consumers, three different reasons, none of them the seam being fixed. No
+consumer count changes.
+
+**F-05 — `wsl.exe` argument handling. SEVENTH sighting, in a new form, and this
+one is Git Bash rather than `wsl.exe`.** Invoking
+`wsl.exe -d Ubuntu-22.04 -- bash /mnt/c/Users/.../script.sh` from a Git Bash
+shell fails with
+
+```text
+bash: C:/Program Files/Git/mnt/c/Users/.../script.sh: No such file or directory
+```
+
+because MSYS path translation rewrites the Linux-looking `/mnt/c/...` argument
+into a Windows path before `wsl.exe` ever sees it. The same command from
+PowerShell works unchanged. This is the same *territory* as F-05 and the
+opposite *direction*: ZNL-00 through ZNL-04 lost shell expansions crossing into
+WSL, and this loses a literal path crossing out of Git Bash. The failure mode is
+loud this time, which is a mercy. Workaround: drive `wsl.exe` from PowerShell,
+and keep every multi-step operation in a script *file* with absolute paths. Not
+Zen's.
+
+**F-06, F-07, F-08, F-09, F-10 — no new evidence.** This application never
+touches prepared replacement, never commits an activation, and never answers a
+root delivery. **F-10 in particular remains at one sighting** after six
+applications.
+
+---
+
+## Not friction, from `saleroom` (ZNL-05)
+
+**The consumer path produced none a sixth time.** The same five lines of CMake,
+the same `if(NOT TARGET loom::kernel)` gate, the same `loom_weave_build_contract`
+in a `foreach`. Six independent consumers, six unrelated domains, six authors
+who did not read each other's build files. Still the most-replicated result the
+current-era laboratory has.
+
+**Three different kinds of Zen authority composed in one application, and the
+domain asked for all three.** ZNL-04 attacked two edges of one boundary. This
+application has three boundaries of three different kinds, and none of them was
+arranged for the purpose:
+
+```text
+who you may reach       a bidder speaks to the rostrum and to nobody else
+                        -> Grant             -> CapabilityDenied on KnockOut
+who you may speak as    only the rostrum brings a hammer down
+                        -> office authorship -> RoleAuthorshipDenied on Determination
+who may put a figure
+  on a board            instructions go through the office, and stay there
+                        -> office CLAIM      -> OfficeNotHeld, nothing stored
+```
+
+They do not merely coexist; they are refused at three different moments — the
+grant at delivery, authorship at the authorship moment before anything is
+queued, and the claim at the claim moment. Recorded as non-friction because
+everything needed was public and nothing was awkward.
+
+**A claim refusal is not on the tap, and a delivery refusal is.** Both halves are
+right and the asymmetry is worth one line for a future reader. `office_send_*_as`
+refusals produce a `BusEvent` carrying a `RefusalReason`, so a host observer sees
+them without cooperation. `office_claim_as` returns a
+`SenseClaimResult{accepted, why}` to its caller and emits nothing, so a host that
+wanted "somebody tried to claim an office they do not hold" in a journal would
+have to put it there itself. This application prints it at the point of the
+attempt and asserts on the returned `SenseRefusal`; it needed nothing more, and
+nothing is missing. Not a nomination — a claim has a caller to answer and a
+delivery may not.
+
+**What `loom_weave_build_contract()` actually buys, measured for the first time
+in this era.** The artifact-level count is a fourth sighting of what ZNL-02,
+ZNL-03 and ZNL-04 each measured — 51 `STB_GNU_UNIQUE` symbols per artifact
+without the contract, 0 with it, and the intersection across all four bidders is
+the total 51. What is new is the *consequence*, measured in a thirty-line scratch
+host outside the repository:
+
+```text
+with the contract     kernel.load -> kernel.unload    the .so is GONE
+                      (one artifact, two, or four; before or after the weave
+                       has run and sent a real message)
+without it            the same sequence               the .so is STILL RESIDENT
+                      and the ledger says libraries_closed +1,
+                      instances_destroyed +1 either way
+```
+
+That is glibc refusing to unmap an object that defines unique symbols. So the
+one-line answer to "what does the contract prevent" is no longer only "a shared
+static": **without it the artifact cannot be unloaded at all**, and a host that
+believed it had unloaded one would be wrong in a way nothing reports. Three
+phases have written "it was not run to failure"; this is what the failure looks
+like when you go and look for it.
+
+**And one measurement this phase could not explain, recorded rather than
+dropped.** Inside the full `saleroom` run — *with* the contract — the same
+`RTLD_NOLOAD` probe reports `paddle-3.so` **still resident** after
+`kernel.unload("paddle-3")`, even though the kernel's own lifetime ledger shows
+the correct `instances_destroyed +1 / libraries_closed +1` and `unload()`
+returned true. Four reduced hosts were built to reproduce it — one artifact,
+two, four, and one where the weave was made to run and to send a real message —
+and every one of them reports `gone`. The cause was **not established**.
+
+Nothing in this application depends on the artifact going away: Mrs Ledbury
+surrenders her paddle and the sale carries on, and every scenario is green in
+both builds. It is recorded here because it is a reproducible difference between
+a full application and a reduced one, because the ledger and the link map
+disagree about it, and because this ledger's own rule is to write down what was
+measured rather than what was assumed. **It is not a nomination and not a
+complaint** — a phase that could not explain something should say so rather than
+guess or stay quiet.
+
+**Four artifacts from four different sources, and one of them unloaded mid-run.**
+`records-committee` loaded five different artifacts and never unloaded one;
+`ringing-chamber` loaded two, one after the other, into one office;
+`shutter-line` loaded one artifact twice into two offices at once. This one loads
+four genuinely different artifacts at once and unloads one of them while the
+other three are still working, which is the closest this era has come to the
+shared-static hazard's own shape. Nothing needed saying about any of it.
+
+**Single-threaded FIFO is load-bearing here in a way worth naming.** A beat is
+delivered to the rostrum; the rostrum's `Asking` reaches all four bidders; every
+`Bid` those cause is back at the rostrum before the day says anything else. That
+is what makes "the bids of one beat" a **set** the auctioneer can take the
+highest of, rather than a race — and the application counts the ones that lost
+that race (`beaten on the same breath`) so that the morning's arithmetic closes
+against the tap.

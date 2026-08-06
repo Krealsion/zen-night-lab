@@ -76,9 +76,9 @@ directory at all, which is why it is also the proof that a Loom-only Night Lab e
 package. It stands beside the frozen areas and never touches them.
 
 See `current/README.md` for the house rules and `current/substrate.lock` for the Zen the first two
-experiments experienced — `current/records-committee/`, `current/ringing-chamber/` and
-`current/shutter-line/` each resolved a later Loom and carry their own locks. The running ledgers
-are `current/FRICTION.md` and `current/EVIDENCE.md`.
+experiments experienced — `current/records-committee/`, `current/ringing-chamber/`,
+`current/shutter-line/` and `current/saleroom/` each resolved a later Loom and carry their own
+locks. The running ledgers are `current/FRICTION.md` and `current/EVIDENCE.md`.
 
 | path | what it is |
 |---|---|
@@ -87,6 +87,7 @@ are `current/FRICTION.md` and `current/EVIDENCE.md`.
 | `current/records-committee/` | a county rarities committee — five separately built assessors who disagree about the same bird, and a county list that survives the process exiting |
 | `current/ringing-chamber/` | a practice night in a bell tower — six ringers who each know only their own line, and a touch whose truth nobody in the tower is in a position to see |
 | `current/shutter-line/` | the Admiralty shutter telegraph — six hilltops carrying a message none of them can read, and the two quite different ways a perfectly good order arrives wrong |
+| `current/saleroom/` | a country auction — four people whose figures nobody may see, a reserve and a commission bid left by two people who are not in the room, and two clean sales that are wrong |
 
 ## House rules every experiment holds itself to
 

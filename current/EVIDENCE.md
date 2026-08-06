@@ -1198,3 +1198,355 @@ reads, so the reading is never absent in any scenario here.
     ZNL-04 spent two lines and got two different refusal reasons at two
     different edges. That is a fact about how cheap the habit is, and not
     evidence that any grant not attacked is enforced.
+
+---
+
+# ZNL-05 — `saleroom`
+
+**This experiment ran on the same Loom ZNL-04 did** — see
+`saleroom/substrate.lock`, which duplicates `shutter-line/substrate.lock` in
+every field but `created` and says so. Everything from C-41 down is evidence
+about `55fbb15fda5f8994137dc2d6e3b1c914753f3ec7`, not about the era lock's
+`c86717b0`, not about ZNL-02's `d0d8257`, and not about ZNL-03's `b084b1c9`.
+Remote `main` was resolved twice by two independent paths at the start of the
+phase and re-checked by both at the end; it did not move.
+
+This is the first time two current-era experiments share a pin, and the two sets
+of claims are still separate: `shutter-line` and `saleroom` share a substrate,
+not a witness.
+
+---
+
+## C-41 — A sixth unrelated application consumes the same installed package unchanged, with four separately built artifacts loaded at once and one unloaded while the other three keep working
+
+**WITNESS.** `saleroom`: three native weaves and **four different `.so`s loaded
+concurrently into four offices**, one of which is unloaded mid-sale while the
+other three continue bidding — across three CTest entries, `3/3 Test ...
+Passed`, zero compiler warnings on a fresh configure and build. Its entire
+Zen-facing build declaration is `find_package(loom REQUIRED)`, an
+`if(NOT TARGET loom::kernel)` gate, three imported targets, and
+`loom_weave_build_contract(...)` in a `foreach`. It was written without reading
+any earlier experiment's `CMakeLists.txt` and shares no file with them.
+
+Six independent consumers now, six unrelated domains, six authors. This remains
+the most-replicated positive result the current-era laboratory has.
+
+**DOES NOT PROVE.** Anything Loom's own suite proves; the verifier was not run.
+Anything about a Loom other than the one in `saleroom/substrate.lock`. Nothing
+about unloading an artifact that is mid-conversation — Mrs Ledbury surrenders
+her paddle between lots, because that is when a buyer leaves.
+
+---
+
+## C-42 — Without the build contract the artifact cannot be unloaded at all, and the kernel's own ledger says it was
+
+**WITNESS.** Two measurements, both in scratch, outside the repository.
+
+The artifact-level count is the fourth sighting of what C-19, C-26 and C-34
+each established, on the same header compiled into four artifacts:
+
+```text
+with the contract      paddle-3.so  paddle-7.so  paddle-11.so  paddle-14.so   0 each
+without it             the same four                                         51 each
+symbols made STB_GNU_UNIQUE in ALL FOUR                                       51
+  e.g. guard variable for loom::manifest_schema()::s
+       guard variable for loom::field_desc_schema()::s
+       guard variable for loom::type_token_schema()::s
+```
+
+What is new is the **consequence**, measured in a thirty-line scratch host that
+loads an artifact through `Kernel::load`, unloads it through `Kernel::unload`,
+and then asks the dynamic linker whether it is still there:
+
+```text
+with the contract      after unload:  gone
+                       (one artifact loaded, two, or four; and both before and
+                        after the weave has been made to run and to send a real
+                        message through the bus)
+without the contract   after unload:  STILL RESIDENT
+
+and in BOTH cases the kernel's own lifetime ledger reports the same thing:
+    instances_destroyed  +1
+    libraries_closed     +1
+    Kernel::unload()     true
+```
+
+glibc will not unmap an object that defines `STB_GNU_UNIQUE` symbols. So the
+contract's purpose is not only "two artifacts must not share a static": **an
+artifact built without it cannot be unloaded, and nothing in the host reports
+that.** A host holding `libraries_closed` as its proof of the exactly-once
+ownership law would be satisfied in a process where the library never left.
+
+**DOES NOT PROVE.** That any application in this era has been harmed by it —
+none has, and `saleroom` passes all three scenarios with the contract omitted.
+Nor that the ledger is wrong: `dlclose` genuinely was called once, and the
+ledger counts calls, which is what it documents itself as counting. Nor
+anything about Windows, where `FreeLibrary` and this glibc behaviour have
+nothing to do with each other.
+
+**AND ONE THING THIS PHASE COULD NOT EXPLAIN.** In the *full* `saleroom` run,
+with the contract, the same probe reports `paddle-3.so` still resident after
+`kernel.unload("paddle-3")` — with the same correct ledger delta. None of the
+four reduced hosts reproduces it. The cause was not established, nothing in the
+application depends on it, and it is recorded in `FRICTION.md` as a measurement
+rather than as a nomination.
+
+---
+
+## C-43 — A price nobody in the room chose is checked afterwards against figures nobody in the room could see
+
+**WITNESS.** `sale-day`. Four bidders, each a separately built artifact carrying
+its own private limits, which appear in no other translation unit:
+
+```sh
+grep -l 'kBook' *.cpp *.hpp
+#   bidder_hallam.cpp  bidder_kestrel.cpp  bidder_ledbury.cpp  bidder_selwood.cpp
+```
+
+`sale.cpp` includes `saleroom.hpp` and nothing else, so the house cannot compute
+what the hammer ought to be while the sale is running. After the last lot it
+reads every bidder's own account back through the ordinary gate
+(`snapshot_bytes` → `parse` → `admit` against `BidderState`) and checks the
+English auction's own arithmetic on every lot that sold:
+
+```text
+  ok  lot 11: it went to the one who was good for the most (paddle 3 at £190)
+  ok  lot 11: the buyer did not pay more than the £190 he was good for
+  ok  lot 11: the underbidder would not have gone one more (£160 good for, £180 asked)
+  ok  lot 12: the underbidder would not have gone one more (£520 good for, £550 asked)
+  ok  lot 13: bought in, and nobody here could reach £220 (best was £210)
+  ok  lot 14: the underbidder would not have gone one more (£45 good for, £55 asked)
+  ok  lot 16: the room would not have gone one more (£200 good for, £220 asked)
+```
+
+The general law that holds across all of them is `hammer <= winner's limit` and
+`next_rung(hammer) > underbidder's limit` — *the price stops at the first rung
+the underbidder will not pay* — and it holds even where the increment band
+changes underneath the crossover (lot 12 goes at £500 with an underbidder good
+for £520, because the rung above £500 is £550).
+
+Mrs Ledbury's account is taken as she surrenders paddle 3 and before her
+artifact is unloaded, which is when a saleroom settles up with a departing
+buyer.
+
+**DOES NOT PROVE.** That the ladder terminates at the same place under any other
+set of manners; a jump bidder makes the exact form (`hammer == next_rung(L2)`)
+false, which is why the law asserted is the inequality and not the equality.
+Nothing about a room larger than four, and nothing about ties in the limits
+themselves — no two bidders here are good for the same figure on the same lot.
+
+---
+
+## C-44 — A perfectly valid Sense claim about a different question sells a £300 picture for £110, and the witness catches it
+
+**WITNESS.** `control-take-the-board-as-read`. The vendor of lot 15 rang her
+reserve in the evening before and the sheet was never made up, so the front
+office is asked for it, says so out loud, and **leaves the board as it stands**.
+What is standing there is lot 14's sheet, and lot 14 was unreserved:
+
+```text
+   15   OFFICE    there is no sheet for lot 15 -- the board is left as it stands
+   15   ROSTRUM   (the board says lot 14; he takes it as read)
+   15   ROSTRUM   lot 15, a watercolour, the Norfolk coast. £90 anywhere?
+   15   ROSTRUM   **  £110 -- paddle 3  **
+```
+
+Every measure inside the room is green in that run, and they are the same
+measures that are green in the default run:
+
+```text
+  ok    lot 15: it went to the one who was good for the most (paddle 3 at £130)
+  ok    lot 15: the buyer did not pay more than the £130 he was good for
+  ok    lot 15: the underbidder would not have gone one more (£110 good for, £120 asked)
+  ok    every buyer in the record heard the hammer and says the lot is theirs
+  ok    the tap is exactly 2 higher than the room's own count
+  WRONG lot 15: sold at £110, against a reserve of £300
+```
+
+The scenario **asserts that this goes wrong**, and asserts that the audit found
+*exactly one* thing wrong, so the default run's silence is a measurement.
+
+The reading the rostrum acted on carried `refusal == None`,
+`office == "front-office"`, `office_holder_is_current == true`,
+`author_life_is_current == true`, an advanced `revision`, and a well-formed
+value. It was a true statement. It was about lot 14.
+
+**DOES NOT PROVE.** Anything about `NoClaim`: the branch that would report an
+empty board is written and never taken in any scenario here, because the office
+puts a sheet up for the first lot before the first lot is offered. Nor that any
+Loom surface is missing — the lot number is in the value and the default run's
+one-line check on it is what withdraws the lot. This is a claim about what an
+application must do, not about what the substrate failed to do.
+
+---
+
+## C-45 — Two failure modes with the same symptom are caught by two different checks, and each control asserts that the other check stayed silent
+
+**WITNESS.** The two controls, side by side. Both end with a clean sale in a
+balanced record; both wrong somebody who was not in a position to notice.
+
+```text
+control-take-the-board-as-read     lot 15 sold at £110 under a £300 reserve
+    the reserve audit              WRONG
+    the competitive-execution audit  silent  (asserted)
+    wronged: the vendor            remedy: the sale is void
+
+control-run-the-book-up            lot 16 sold to the book at £340
+    the reserve audit              silent  (asserted -- £340 clears £180)
+    the competitive-execution audit  WRONG:
+        £340 on the book over £95 in the room
+    wronged: the absentee buyer    remedy: refund the difference
+```
+
+The competitive-execution rule is that every rung the rostrum takes on an
+absentee's behalf must be exactly one rung above a bid the *room* had just made.
+In the default run all five book steps satisfy it (`£100` over `£95`, `£130`
+over `£120`, `£160` over `£150`, `£180` over `£170`, `£200` over `£190`) and the
+lot goes at £200 against a commission of £340 — the absentee keeps £140 that
+nothing in the room would have made him spend.
+
+Each control asserts `g_wrong == 1` and asserts the *other* counter is zero.
+That is the claim worth having: **neither check is complete, and the pair
+demonstrates it rather than asserting it.**
+
+**DOES NOT PROVE.** That a third failure mode would be caught by either. It
+would not: both checks are written against a specific duty, and an audit is only
+ever as wide as the duties somebody thought to write down.
+
+---
+
+## C-46 — Three different kinds of Zen authority are enforced at three different moments in one application, each attacked at an edge the application actually depends on
+
+**WITNESS.** Three labelled controls in the default run, all forged with public
+host doors because the honest API cannot express any of them — a bidder's only
+verb is one shape to one office, and a bidder claims nothing at all.
+
+```text
+EDGE A -- THE GRANT, and the strong form.
+    Hallam & Rooke, speaking AS THEMSELVES (paddle.14 is an office they
+    genuinely hold, so authorship succeeds), offer Kestrel a knock-out:
+        bus.office_send_to_role_as(hallam, "paddle.14", "paddle.7", KnockOut{...})
+            -> CapabilityDenied on KnockOut
+    NO OTHER CHECK WOULD HAVE REFUSED IT. The shape is one Kestrel accepts, the
+    sender is who it says it is, the content is what a ring approach looks like,
+    and Kestrel's handler WOULD HAVE HONOURED IT -- it stands the lot off and
+    records it. Kestrel's own approaches_received stays at 0.
+
+EDGE B -- OFFICE AUTHORSHIP, at fair warning on a lot about to be bought in.
+        bus.office_send_to_role_as(selwood, "rostrum", "clerk", Determination{13, 190, 11, ...})
+            -> RoleAuthorshipDenied on Determination, nothing queued
+    The destination is where a real determination goes, the shape is what the
+    clerk writes, the lot is in hand at that money with that paddle standing.
+    Only the office is false.
+
+EDGE C -- THE CLAIM SIDE, which is a different door again.
+        bus.office_claim_as(selwood, "front-office", Reserve{12, 700, false})
+            -> SenseRefusal::OfficeNotHeld, and nothing is stored
+    Refused at the CLAIM moment, never downgraded to a personal claim, and NOT
+    on the tap -- a Sense refusal is returned to its caller.
+```
+
+Five mutations, each on a scratch copy outside the repository, establish that
+all three are load-bearing:
+
+```text
+M-A   widen the bidders' grant with KnockOut -> paddle.7
+      -> the approach lands, Kestrel stands off lot 12, and the bureau is
+         BOUGHT IN at £260 against a £400 reserve with the room good for £620.
+         Exit 1. The vendor loses the sale entirely.
+
+M-B1  remove the CLERK's authored_from_role("rostrum") rule, same forged frame
+      -> STILL RoleAuthorshipDenied, record still clean, exit 0.
+         The Loom boundary alone held the line; the domain rule behind it was
+         never what the control was testing.
+
+M-B2  remove that rule AND widen paddle.11's grant AND forge the same
+      Determination as his own personal speech (send_as_to_role)
+      -> the clerk writes "lot 13  £190  to paddle 11" above the real
+         "did not reach the reserve". Exit 1.
+
+M-C1  give Selwood the Claims<Reserve> declaration he lacks
+      -> STILL OfficeNotHeld. The office is what refused, not the declaration.
+
+M-C2  make the IDENTICAL claim from the office that does hold it
+      -> accepted; the board shows £700; the bureau is bought in against a
+         catalogue reserve of £400 -- at the same £500 the room reached in
+         the default run -- with the room good for £620. Exit 1.
+```
+
+**DOES NOT PROVE.** That the other four grants in this application are enforced
+at their edges — the three native weaves and the three un-attacked bidders were
+never denied anything, so their narrowness still rests on a composed path that
+worked plus the source read beside it. That is ZNL-01's C-17 gap, now with seven
+measured denials behind it across the era instead of four. Nor that a *hostile
+weave* could reach further: all three frames were forged by the host, which
+holds root authority by construction. Nor, for EDGE B, that the grant is what
+refuses a false office — authorship is decided first and nothing is queued, so
+paddle.11's grant (which would also have refused it) was never consulted.
+
+---
+
+## C-47 — Four accounts of the same morning agree, and the difference between them is the day's own two forgeries
+
+**WITNESS.** `sale-day`, counted four ways that share no counter:
+
+```text
+the bidders   48  hands up, by their own accounts, read back through the gate
+the clerk     42  rungs to the room + 5 on the book
+the tap       50  Bid deliveries the host's own observer saw
+the day        1  bid forged (the late one for the spaniels)
+               1  from the back of the room with no paddle
+```
+
+The tap is **two** higher than the room's own count, and those two are the day's
+own frames. Separately, every `Bid` the tap saw is accounted for exactly once:
+
+```text
+42 rungs + 2 disregarded + 5 beaten on the same breath + 1 paddleless = 50
+```
+
+`beaten on the same breath` is the count of bids that were real, were the
+highest at the moment they arrived, and were then beaten within the same beat —
+the auctioneer takes the higher hand and the other is simply behind. Without it
+the arithmetic does not close, which is how it was found.
+
+The fourth account is the cheapest and the one an auctioneer would actually
+take: **every buyer named in the record heard the hammer and agrees the lot is
+theirs**, checked from the buyers' own accounts and not from the clerk's.
+
+**DOES NOT PROVE.** That the clerk's record is complete in any sense beyond
+these four counts agreeing. A determination the rostrum never sent and nobody
+counted would be invisible to all four.
+
+---
+
+## What this era has NOT established — after ZNL-05
+
+Every item in *What this era has NOT established* (above, written after ZNL-04)
+still stands unchanged. It was not edited, because it is a record of what was
+true after five applications. This section says only what the sixth changes:
+
+- **Participant failure and revival remain untouched, for the sixth time.**
+  `revive`, `reload_from` and the lifecycle policy have never been reached by
+  this era. `saleroom`'s nearest thing is a buyer who has bought what she came
+  for and goes home — an ordinary departure, planned by the domain, with no
+  successor and nothing crossing. The `unload` is real and it is not a failure.
+- **Persistence remains at one consumer.** A sale is a day; the account of sale
+  is somebody else's Thursday. `records-committee` is still the only current-era
+  application that needed anything to survive a process, so whether "the
+  application writes it" generalises is still unknown.
+- **Prepared replacement, reload, revival, the letter, graceful swap, relays,
+  pokes and deferred answers** are now six applications without a consumer, and
+  deferred answers specifically are at one (`records-committee`'s seat three).
+- **Enforcement of a grant that was never attacked** is unchanged as a
+  non-claim, but the era's denial count moves from four to **seven**, and for
+  the first time the three refusals in one application are of three *different
+  kinds* at three *different moments* (grant at delivery, authorship before
+  anything is queued, office-holding at the claim moment). Roughly forty-seven
+  narrow declarations now exist across the era; seven have been challenged, six
+  of them on the bus and one on the claim side.
+- **Nothing about a room, a queue or a race.** `saleroom`'s "the bids of one
+  beat" is a set only because dispatch is single-threaded FIFO, and the
+  application says so and depends on it.
+- **Nothing about Zengine**, for the sixth time. Not used, not vendored, not
+  read, not reached for, not missed.

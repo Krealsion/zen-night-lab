@@ -1,0 +1,38 @@
+# substrate.lock — what Zen `saleroom` (ZNL-05) experienced.
+#
+# A record, never an input. Nothing parses this file and no build reads it.
+# It exists because an installed Loom cannot say which Loom it is.
+
+loom          55fbb15fda5f8994137dc2d6e3b1c914753f3ec7
+zengine       none
+abi           6
+toolchain     gcc 11.4.0 / cmake 3.22.1 / Ubuntu 22.04.5 LTS (WSL2, kernel 6.6.87.2) on Windows 11
+loom-config   -DCMAKE_BUILD_TYPE=Debug -DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLES=OFF -DZEN_SDL=OFF
+created       2026-08-06
+
+# loom     resolved once from remote refs/heads/main at the start of ZNL-05, by
+#          two independent paths that agreed (https to the public URL, and ssh
+#          through the live Loom checkout's own remote), then held. A fresh
+#          clone was detached at this exact SHA in /tmp/znl05, outside the Zen
+#          workspace; the live Loom checkout was never a build input. Re-checked
+#          by both paths at the end of the phase: remote main had not moved.
+#
+#          THIS IS BYTE-IDENTICAL TO ../shutter-line/substrate.lock EXCEPT FOR
+#          THIS COMMENT AND `created`, and the duplicate is deliberate. ZNL-05
+#          resolved the same `main` ZNL-04 did, on the same toolchain, with the
+#          same flags, and measured the same ABI — but `current/substrate.lock`
+#          records a DIFFERENT and older Loom (c86717b0), so a `saleroom` with
+#          no lock of its own would inherit the wrong one by the era's own rule.
+#          Writing it out is cheaper than making a reader infer it, and an
+#          experiment's lock is a record of what that experiment ran on, not a
+#          pointer to somebody else's.
+#
+#          Fifth distinct pin in this era's ledger, and the second experiment on
+#          the fourth Loom: c86717b0 (ZNL-00, ZNL-01), d0d8257 (ZNL-02),
+#          b084b1c9 (ZNL-03), 55fbb15f (ZNL-04 and this one).
+# zengine  none, and it was never reached for. A saleroom wants messages,
+#          offices, a claim on a board, four separately built people and a
+#          clock; it wants no window, no renderer, no input and no timer.
+# abi      read from the installed include/zen/kernel/abi.h. Every lock in this
+#          era measures 6, which is exactly why the ABI cannot stand in for the
+#          commit: four different Looms, one compatibility class.
