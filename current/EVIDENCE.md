@@ -1041,10 +1041,13 @@ the six side by side:
 The change is between Coombe Warren and Netley Heath. **No participant holds
 this fact.** The Admiralty knows only what it sent; Portsmouth knows only what
 it received; each hill knows only its own line of it. Three accounts that share
-no counter agree on the traffic that produced it: 344 frames on the host's tap,
-294 lines across the six journals (the difference is the eight hops into the two
-offices per hoist-run, which are not hills and keep no journal), and the two
-offices' own files.
+no counter agree on the traffic that produced it: **344** frames delivered on
+the host's own tap and **294** lines across the six journals. The difference of
+50 is exactly accounted for: 49 of those deliveries land in the two *offices*,
+which are not hills and keep no journal, and the fiftieth is the stranger's
+frame on Putney Heath — delivered, and refused by Coombe Warren rather than
+written down. The two frames the grants refused are in neither number, because
+neither was ever queued.
 
 **DOES NOT PROVE.** That a journal is trustworthy — it is the hill's own account
 of itself, which is exactly why there are six of them and why the tap counts
