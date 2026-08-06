@@ -1,0 +1,9 @@
+# Shell scripts must arrive with LF, whatever the checkout platform does by
+# default. A Windows checkout with core.autocrlf=true otherwise writes CRLF, and
+# bash then reads `set -euo pipefail\r` and refuses:
+#
+#     tests/safety_honesty.sh: line 4: set: pipefail: invalid option name
+#
+# This is a checkout attribute, not a content change: every tracked .sh blob in
+# this repository is already pure LF, so nothing preserved here is rewritten.
+*.sh text eol=lf

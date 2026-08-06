@@ -1,0 +1,21 @@
+# substrate.lock — what Zen this current-era lab experienced.
+#
+# A record, never an input. Nothing parses this file and no build reads it.
+# It exists because an installed Loom cannot say which Loom it is.
+
+loom          c86717b0fcf6bbaf4144e3ab91c215824a2b6eae
+zengine       none
+abi           6
+toolchain     gcc 11.4.0 / cmake 3.22.1 / Ubuntu 22.04.5 LTS (WSL2, kernel 6.6.87.2) on Windows 11
+loom-config   -DCMAKE_BUILD_TYPE=Debug -DZEN_BUILD_TESTS=OFF -DZEN_BUILD_EXAMPLES=OFF -DZEN_SDL=OFF
+created       2026-08-05
+
+# loom     resolved once from remote refs/heads/main at the start of ZNL-00 and
+#          then held. A fresh clone was detached at this exact SHA in scratch
+#          outside the workspace; the live Loom checkout was never a build input.
+#          Re-checked at the end of the phase: remote main had not moved.
+# zengine  none, and deliberately. Zengine has no stranger package (ZNL-R §5),
+#          so a current-era experiment that wanted it would have to hand-vendor.
+#          No experiment here has needed to.
+# abi      read from the installed include/zen/kernel/abi.h. It is a
+#          compatibility class, not an identity — which is why `loom` is above it.
