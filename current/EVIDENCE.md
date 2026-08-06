@@ -1542,9 +1542,14 @@ true after five applications. This section says only what the sixth changes:
   non-claim, but the era's denial count moves from four to **seven**, and for
   the first time the three refusals in one application are of three *different
   kinds* at three *different moments* (grant at delivery, authorship before
-  anything is queued, office-holding at the claim moment). Roughly forty-seven
-  narrow declarations now exist across the era; seven have been challenged, six
-  of them on the bus and one on the claim side.
+  anything is queued, office-holding at the claim moment). The seven denials are
+  six on the bus and one returned to its caller. Roughly forty-seven narrow
+  declarations now exist across the era, held by about the same number of
+  participants; **five** of those participants have ever been refused anything
+  (`prompt-corner`'s CSM, `ringing-chamber`'s pricker, `shutter-line`'s Coombe
+  Warren, and `saleroom`'s Hallam & Rooke and Mr Selwood). Every other
+  declaration's narrowness still rests on a composed path that worked plus the
+  source read beside it.
 - **Nothing about a room, a queue or a race.** `saleroom`'s "the bids of one
   beat" is a set only because dispatch is single-threaded FIFO, and the
   application says so and depends on it.
