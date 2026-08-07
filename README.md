@@ -100,3 +100,23 @@ Loom and carry their own locks. The running ledgers are `current/FRICTION.md` an
   smallest reproducer, describes the missing seam, and continues.
 - **No file may be shared between two experiments** except a test framework and the substrate itself.
 - Sightings nominate. They do not authorize.
+
+## Repository provenance
+
+`tests/check_commit_attribution.cmake` is the one thing at this repository's root that belongs to
+no experiment: it refuses to let an AI assistant be recorded as a commit co-author anywhere
+reachable from `master`. HIST-2 removed four such trailers from this history — message-only, with
+the final tree object unchanged — and this is the mechanism that makes the next one visible. It
+reads git's trailer parser rather than the message text, so discussing Claude in a commit message
+is still perfectly legal, and it keys on the trailer's value, so a human co-author survives. It
+needs no Loom, no install prefix and no build:
+
+```text
+cmake -P tests/check_commit_attribution.cmake
+```
+
+It also runs as the repository's only CI job (`.github/workflows/attribution.yml`). That is not
+the start of build CI here, and should not become one: the historical areas are pinned to four
+different Looms across four ABI generations, which a hosted runner would have to build four times
+to say anything at all, and re-pointing them at one current Loom is exactly what this repository
+forbids.

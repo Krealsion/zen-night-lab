@@ -1,0 +1,38 @@
+name: attribution
+
+# This repository has no build CI and should not grow one: its four historical areas are
+# pinned to four different Looms across four ABI generations and are read-only forever,
+# and each current-era experiment is a standalone project against an install prefix a
+# hosted runner would have to construct first. So this workflow does one thing only.
+#
+# It is cheap, needs no Loom, no install prefix and no build, and states the invariant
+# over everything reachable rather than over today's push. The check self-tests before it
+# answers, because a clean history and a broken detector look identical from here.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  night-lab-commit-attribution:
+    name: zen-night-lab / commit attribution
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out zen-night-lab with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Refuse AI co-authorship in reachable history
+        run: cmake -P tests/check_commit_attribution.cmake
